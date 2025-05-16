@@ -39,27 +39,28 @@ body:
 
   - type: textarea
     id: dysonmqtt
-    label: Dyson MQTT Evidence
-    description: |
-      Describe how this feature is supported by the Dyson MQTT protocol. Include:
-      - A brief explanation of the observed MQTT behaviour
-      - A relevant MQTT log extract (see below)
-      - Or link to another open source project that supports this feature
-    
-      **To capture Dyson MQTT logs:**
-      - In the Matterbridge frontend: *Home* > *Plugins* > *matterbridge-dyson-robot* > ⚙️
-        - *debug* > ✅
-        - *Enable advanced debug option* > *Log MQTT Payloads*
-      - Or in `matterbridge-dyson-robot.config.json`:
-        ```json
-        "debug": true,
-        "debugFeatures": ["Log MQTT Payloads"]
-        ```
-      - View logs with: `journalctl -u matterbridge.service -n 1000 -f --output cat`
-    
-      Replace any sensitive information with `REDACTED`.
-    placeholder: |
-      Describe and paste relevant logs...
+    attributes:
+      label: Dyson MQTT Evidence
+      description: |
+        Describe how this feature is supported by the Dyson MQTT protocol. Include:
+        - A brief explanation of the observed MQTT behaviour
+        - A relevant MQTT log extract (see below)
+        - Or link to another open source project that supports this feature
+      
+        **To capture Dyson MQTT logs:**
+        - In the Matterbridge frontend: *Home* > *Plugins* > *matterbridge-dyson-robot* > ⚙️
+          - *debug* > ✅
+          - *Enable advanced debug option* > *Log MQTT Payloads*
+        - Or in `matterbridge-dyson-robot.config.json`:
+          ```json
+          "debug": true,
+          "debugFeatures": ["Log MQTT Payloads"]
+          ```
+        - View logs with: `journalctl -u matterbridge.service -n 1000 -f --output cat`
+      
+        Replace any sensitive information with `REDACTED`.
+      placeholder: |
+        Describe and paste relevant logs...
     validations:
       required: true
 
