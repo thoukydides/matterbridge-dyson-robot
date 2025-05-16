@@ -1,0 +1,93 @@
+{
+    "name": "matterbridge-dyson-robot",
+    "displayName": "Matterbridge Dyson Robot Vacuum and Air Treatment Devices Plugin",
+    "version": "0.0.1",
+    "description": "Matterbridge Dyson Robot",
+    "license": "ISC",
+    "keywords": [
+        "Matterbridge",
+        "Matter",
+        "Dyson",
+        "360 Eye",
+        "360 Heurist",
+        "360 Vis Nav",
+        "robot",
+        "vacuum",
+        "cleaner"
+    ],
+    "author": {
+        "name": "Alexander Thoukydides",
+        "url": "https://www.thouky.co.uk/"
+    },
+    "funding": [
+        {
+            "type": "github",
+            "url": "https://github.com/sponsors/thoukydides"
+        },
+        {
+            "type": "paypal",
+            "url": "https://paypal.me/thoukydides"
+        },
+        {
+            "type": "ko-fi",
+            "url": "https://ko-fi.com/thouky"
+        },
+        {
+            "type": "buymeacoffee",
+            "url": "https://www.buymeacoffee.com/thouky"
+        }
+    ],
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/thoukydides/matterbridge-dyson-robot.git"
+    },
+    "bugs": {
+        "url": "https://github.com/thoukydides/matterbridge-dyson-robot/issues"
+    },
+    "homepage": "https://github.com/thoukydides/matterbridge-dyson-robot",
+    "help": "https://github.com/thoukydides/matterbridge-dyson-robot#readme",
+    "changelog": "https://github.com/thoukydides/matterbridge-dyson-robot/blob/master/CHANGELOG.md",
+    "type": "module",
+    "main": "dist/index.js",
+    "engines": {
+        "node": "^24.0.0 || ^22.15.0 || ^20.19.1",
+        "matterbridge": "^3.0.0"
+    },
+    "dependencies": {
+        "mqtt": "^5.13.0",
+        "node-persist": "^4.0.4",
+        "semver": "^7.7.2",
+        "ts-interface-checker": "^1.0.2",
+        "ws": "^8.18.2"
+    },
+    "devDependencies": {
+        "@eslint/eslintrc": "^3.3.1",
+        "@eslint/js": "^9.26.0",
+        "@tsconfig/node20": "^20.1.5",
+        "@types/eslint__js": "^8.42.3",
+        "@types/node": "^20.17.47",
+        "@types/node-persist": "^3.1.8",
+        "@types/semver": "^7.7.0",
+        "eslint": "^9.26.0",
+        "globals": "^16.1.0",
+        "rimraf": "^6.0.1",
+        "ts-interface-builder": "^0.3.3",
+        "tsx": "^4.19.4",
+        "typescript": "^5.8.3",
+        "typescript-eslint": "^8.32.1"
+    },
+    "scripts": {
+        "setup": "npm ci && npm i -g matterbridge && npm link matterbridge",
+        "build-checkers": "mkdir -p ./src/ti && ts-interface-builder -c -o ./src/ti ./src/*-types.ts && tsx bin/ts-interface-post.ts ./src/ti",
+        "build-tsc": "tsc -p ./src",
+        "build": "npm run build-checkers && npm run build-tsc",
+        "start": "node node_modules/matterbridge/dist/cli.js -homedir $MATTERBRIDGE_DIR -novirtual -frontend 8282",
+        "start-add": "npm run start -- -add .",
+        "start-debug": "NODE_OPTIONS='--inspect-brk' npm run start",
+        "clean": "rimraf ./src/ti ./dist",
+        "lint": "eslint eslint.config.mjs 'bin/**/*.ts' 'src/**/*.ts' --max-warnings=0",
+        "postversion": "git push && git push --tags",
+        "prepublishOnly": "npm run build && npm run lint",
+        "test": "tsx bin/test-startup.ts"
+    }
+}

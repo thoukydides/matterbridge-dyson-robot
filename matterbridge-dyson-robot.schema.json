@@ -1,0 +1,359 @@
+{
+    "title": "Matterbridge Dyson Robot Vacuum and Air Treatment Devices Plugin",
+    "description": "Dyson Robot Vacuum and Air Treatment Devices",
+    "type": "object",
+    "required": [
+        "devices"
+    ],
+    "properties": {
+        "name": {
+            "description": "Plugin name",
+            "type": "string",
+            "readOnly": true,
+            "ui:widget": "hidden"
+        },
+        "type": {
+            "description": "Plugin type",
+            "type": "string",
+            "readOnly": true,
+            "ui:widget": "hidden"
+        },
+        "devices": {
+            "description": "List of Dyson robot vacuum and air treatment devices to expose.",
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "name": {
+                        "description": "Friendly name used to identify the robot vacuum or air treatment device. This is used as the Matter NodeLabel for the device.",
+                        "title": "e.g. Sweep",
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 64
+                    }
+                },
+                "required": [
+                    "name"
+                ],
+                "oneOf": [
+                    {
+                        "title": "Wi-Fi Setup Configuration",
+                        "description": "Connect to the appliance directly via the local network, deriving the MQTT configuration from the Wi-Fi setup credentials. These details can be found on a label attached to the product (behind the clear bin of robot vacuums or underneath the base of air treatment devices) or its operating manual.",
+                        "type": "object",
+                        "properties": {
+                            "host": {
+                                "$ref": "#/definitions/host"
+                            },
+                            "port": {
+                                "$ref": "#/definitions/port"
+                            },
+                            "wifi_ssid": {
+                                "description": "Product SSID from the label attached to the product or its operating manual.",
+                                "title": "e.g. DYSON-XXX-YY-ZZZZZZZZ-NNN",
+                                "type": "string",
+                                "pattern": "^(((360EYE-)?[A-Z0-9]{3}-[A-Z]{2}-[A-Z0-9]{8,})|(DYSON-[A-Z0-9]{3}-[A-Z]{2}-[A-Z0-9]{8,}-[0-9]{3}[A-Z]?))$"
+                            },
+                            "wifi_password": {
+                                "description": "Product Wi-Fi Password from the label attached to the product or its operating manual.",
+                                "title": "e.g. xxxxxxxx",
+                                "type": "string",
+                                "pattern": "^[A-Za-z0-9]{8,}$"
+                            }
+                        },
+                        "required": [
+                            "host",
+                            "port",
+                            "wifi_ssid",
+                            "wifi_password"
+                        ]
+                    },
+                    {
+                        "title": "Local MQTT Configuration",
+                        "description": "Connect to the appliance directly via the local network, providing the MQTT configuration explicitly. Use opendyson to obtain these details.",
+                        "type": "object",
+                        "properties": {
+                            "host": {
+                                "$ref": "#/definitions/host"
+                            },
+                            "port": {
+                                "$ref": "#/definitions/port"
+                            },
+                            "username": {
+                                "$ref": "#/definitions/username"
+                            },
+                            "password": {
+                                "description": "MQTT password.",
+                                "title": "From opendyson: mqtt → password",
+                                "type": "string",
+                                "pattern": "^[A-Za-z0-9+/]{86}==$"
+                            },
+                            "root_topic": {
+                                "$ref": "#/definitions/root_topic"
+                            }
+                        },
+                        "required": [
+                            "host",
+                            "port",
+                            "username",
+                            "password",
+                            "root_topic"
+                        ]
+                    },
+                    {
+                        "title": "Cloud IoT Service Configuration (do not use)",
+                        "description": "Connect to the appliance via Dyson's cloud IoT service. Use opendyson to obtain these details.",
+                        "type": "object",
+                        "properties": {
+                            "endpoint": {
+                                "description": "Cloud IoT endpoint.",
+                                "title": "From opendyson: iot → endpoint",
+                                "type": "string",
+                                "format": "hostname"
+                            },
+                            "client_id": {
+                                "description": "Cloud IoT client identifier (probably the same as the token_value).",
+                                "title": "From opendyson: iot → client_id",
+                                "type": "string",
+                                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+                            },
+                            "custom_authorizer_name": {
+                                "description": "Cloud IoT custom_authorizer_name.",
+                                "title": "From opendyson: iot → custom_authorizer_name",
+                                "type": "string",
+                                "pattern": "^[A-Za-z0-9-]+$"
+                            },
+                            "token_key": {
+                                "description": "Cloud IoT name of the token header.",
+                                "title": "From opendyson: iot → token_key",
+                                "type": "string",
+                                "default": "token",
+                                "pattern": "^[a-zA-Z0-9_-]+$"
+                            },
+                            "token_value": {
+                                "description": "Cloud IoT value for the token header (probably the same as the client_id).",
+                                "title": "From opendyson: iot → token_value",
+                                "type": "string",
+                                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
+                            },
+                            "token_signature": {
+                                "description": "Cloud IoT token signature.",
+                                "title": "From opendyson: iot → token_signature",
+                                "type": "string",
+                                "pattern": "^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{4}|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}={2})$"
+                            },
+                            "username": {
+                                "$ref": "#/definitions/username"
+                            },
+                            "root_topic": {
+                                "$ref": "#/definitions/root_topic"
+                            }
+                        },
+                        "required": [
+                            "endpoint",
+                            "client_id",
+                            "custom_authorizer_name",
+                            "token_key",
+                            "token_signature",
+                            "token_value",
+                            "root_topic"
+                        ]
+                    }
+                ]
+            },
+            "minItems": 1,
+            "uniqueItems": true
+        },
+        "wildcardTopic": {
+            "description": "Subscribe to all MQTT topics (using the '#' wildcard). This is useful for discovering new endpoints or checking that the rootTopic and username have been correctly configured. Disabling this limits subscription to the expected status topic(s).",
+            "type": "boolean",
+            "default": true
+        },
+        "whiteList": {
+            "description": "Only expose robot vacuum and air treatment devices listed here, identified by their serial number (i.e. the MQTT username). Leave empty to expose all devices.",
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/username"
+            },
+            "uniqueItems": true,
+            "selectFrom": "serial",
+            "default": []
+        },
+        "blackList": {
+            "description": "Exclude any robot vacuum and air treatment devices listed here, identified by their serial number (i.e. the MQTT username). Leave empty to expose all devices.",
+            "type": "array",
+            "items": {
+                "$ref": "#/definitions/username"
+            },
+            "uniqueItems": true,
+            "selectFrom": "serial",
+            "default": []
+        },
+        "entityWhiteList": {
+            "description": "Only expose Matter device types listed here: Air Purifier, Air Quality Sensor, Composed Air Purifier, Humidity Sensor, Temperature Sensor, or Thermostat. This applies to all air treatment devices, but does not affect robot vacuum devices. Leave empty to expose all device types.",
+            "type": "array",
+            "items": {
+                "type": "string"
+            },
+            "uniqueItems": true,
+            "selectEntityFrom": "name",
+            "default": []
+        },
+        "entityBlackList": {
+            "description": "Exclude any Matter device types listed here: Air Purifier, Air Quality Sensor, Composed Air Purifier, Humidity Sensor, Temperature Sensor, or Thermostat. This applies to all air treatment devices, but does not affect robot vacuum devices. Leave empty to expose all device types.",
+            "type": "array",
+            "items": {
+                "type": "string"
+            },
+            "uniqueItems": true,
+            "selectEntityFrom": "name",
+            "default": [
+                "Composed Air Purifier",
+                "Humidity Sensor",
+                "Temperature Sensor"
+            ]
+        },
+        "deviceEntityBlackList": {
+            "description": "Exclude Matter device types per air treatment device. This does not affect robot vacuum devices. Enter the device's serial number (i.e. the MQTT username) in the first field, and in the list add all of the device types to exclude for that device.",
+            "type": "object",
+            "uniqueItems": true,
+            "selectFrom": "serial",
+            "additionalProperties": {
+                "description": "Exclude any device types listed here.",
+                "type": "array",
+                "uniqueItems": true,
+                "items": {
+                    "type": "string"
+                },
+                "selectDeviceEntityFrom": "name"
+            }
+        },
+        "debug": {
+            "description": "Capture debug-level logging from this plugin, overriding the Matterbridge global log level setting.",
+            "type": "boolean",
+            "default": false
+        },
+        "debugFeatures": {
+            "description": "Advanced diagnostics: Enable only for troubleshooting or development.",
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+                "type": "string",
+                "enum": [
+                    "Log Endpoint Debug",
+                    "Log MQTT Client",
+                    "Log MQTT Payloads",
+                    "Log Serial Numbers",
+                    "Log Debug as Info"
+                ]
+            },
+            "default": []
+        },
+        "unregisterOnShutdown": {
+            "description": "Unregister all exposed devices on shutdown (used for development/testing).",
+            "type": "boolean",
+            "default": false,
+            "ui:widget": "hidden"
+        }
+    },
+    "definitions": {
+        "host": {
+            "description": "Local network hostname or IP address of the robot vacuum or air treatment device.",
+            "title": "e.g. sweep.local or 192.168.0.100",
+            "type": "string",
+            "format": "hostname"
+        },
+        "port": {
+            "description": "MQTT port number. This should usually be left at its default value of 1883.",
+            "title": "e.g. 1883",
+            "type": "integer",
+            "default": 1883,
+            "ui:widget": "hidden"
+        },
+        "username": {
+            "description": "MQTT username (should match the product's serial number).",
+            "title": "From opendyson: mqtt → username",
+            "type": "string",
+            "pattern": "^[A-Z0-9]{3}-[A-Z]{2}-[A-Z0-9]{8,}$"
+        },
+        "root_topic": {
+            "description": "MQTT root topic (Dyson internal product type). If using opendyson: mqtt → root_topic",
+            "title": "e.g. N223 or 475",
+            "type": "string",
+            "pattern": "^[0-9]{3}[A-Z]?$",
+            "oneOf": [
+                {
+                    "const": "N223",
+                    "title": "N223 = Dyson 360 Eye (RB01)"
+                },
+                {
+                    "const": "276",
+                    "title": "276 = Dyson 360 Heurist (RB02)"
+                },
+                {
+                    "const": "277",
+                    "title": "277 = Dyson 360 Vis Nav (RB03)"
+                },
+                {
+                    "const": "358",
+                    "title": "358 = Dyson Pure Humidify+Cool (PH01)"
+                },
+                {
+                    "const": "358E",
+                    "title": "358E = Dyson Pure Humidify+Cool (PH03)"
+                },
+                {
+                    "const": "358K",
+                    "title": "358K = Dyson Pure Humidify+Cool Formaldehyde (PH04)"
+                },
+                {
+                    "const": "438",
+                    "title": "438 = Dyson Pure Cool (TP04 or TP06)"
+                },
+                {
+                    "const": "438E",
+                    "title": "438E = Dyson Pure Cool Formaldehyde (TP07 or TP09)"
+                },
+                {
+                    "const": "438K",
+                    "title": "438K = Dyson Pure Cool Formaldehyde (TP07 or TP09)"
+                },
+                {
+                    "const": "455",
+                    "title": "455 = Dyson Pure Hot+Cool Link (HP02)"
+                },
+                {
+                    "const": "455A",
+                    "title": "455A = Dyson Pure Hot+Cool Link (HP02)"
+                },
+                {
+                    "const": "469",
+                    "title": "469 = Dyson Pure Cool Link Desk (DP01)"
+                },
+                {
+                    "const": "475",
+                    "title": "475 = Dyson Pure Cool Link (TP02)"
+                },
+                {
+                    "const": "520",
+                    "title": "520 = Dyson Pure Cool Desk (DP04)"
+                },
+                {
+                    "const": "527",
+                    "title": "527 = Dyson Pure Hot+Cool (HP04 or HP06)"
+                },
+                {
+                    "const": "527E",
+                    "title": "527E = Dyson Purifier Hot+Cool (HP07)"
+                },
+                {
+                    "const": "527K",
+                    "title": "527K = Dyson Purifier Hot+Cool Formaldehyde (HP09)"
+                },
+                {
+                    "const": "664",
+                    "title": "664 = Dyson Purifier Big+Quiet Series (BP02, BP03, BP04, or BP06)"
+                }
+            ]
+        }
+    }
+}

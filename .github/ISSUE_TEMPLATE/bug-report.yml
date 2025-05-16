@@ -1,0 +1,142 @@
+name: 🐞 Bug report
+description: "Report a bug or something that is otherwise not working as expected."
+labels: ["bug"]
+
+body:
+  - type: checkboxes
+    id: diagnostics
+    attributes:
+      label: Diagnostic Checklist
+      description: "Check these common causes to rule out basic configuration or setup issues."
+      options:
+        - label: "MyDyson [iPhone](https://apps.apple.com/gb/app/mydyson/id993135524) or [Android](https://play.google.com/store/apps/details?id=com.dyson.mobile.android) app can control the appliance."
+        - label: "Searched for [previously reported issues](https://github.com/thoukydides/matterbridge-dyson-robot/issues?q=is%3Aissue) and found none."
+    validations:
+      required: false
+      
+  - type: textarea
+    id: description
+    attributes:
+      label: Description of Issue
+      description: "Provide a clear and concise description of the bug."
+      placeholder: |
+        Describe what is going wrong, the symptoms, the frequency, and any recent changes.
+        What did you expect to happen? What actually happened?
+    validations:
+      required: true
+    
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to Reproduce
+      description: "Provide a step-by-step description of how to reproduce the issue."
+      placeholder: |
+        Steps to reproduce:
+        1. ...
+        2. ...
+    validations:
+      required: true
+  
+  - type: input
+    id: version
+    attributes:
+      label: Plugin Version
+      description: "State the plugin version exhibiting the bug. If not using the latest version, please update before reporting."
+    validations:
+      required: true
+      
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: |
+        Describe the software environment being used to run this plugin. Include:
+        - Operating System type and version (output of `lsb_release -d` or `cat /etc/os-release` on Linux)
+        - Node.js version (output of `node -v` or reported in Matterbridge frontend)
+        - Matterbridge version (output of `npm -g ls matterbridge` or reported in Matterbridge frontend)
+      placeholder: |
+        - OS: e.g. Ubuntu 24.04.1 LTS or macOS Ventura 13.5
+        - Node: e.g. v22.15.0
+        - Matterbridge: e.g. 3.0.0
+    validations:
+      required: true
+
+  - type: input
+    id: appliance
+    attributes:
+      label: Dyson Appliance(s)
+      description: |
+        Specify which Dyson appliance(s) the issue relates to. You can find the model name and number behind the clear bin on robot vacuums, or on the base of air treatment devices.
+      placeholder: "e.g. Dyson 360 Eye RB01"
+    validations:
+      required: true
+      
+  - type: input
+    id: mattercontroller
+    attributes:
+      label: Matter Controller(s)
+      description: "Provide details of the Matter controller(s) being used, including their versions."
+      placeholder: "e.g. Apple Home iOS 18.4, Amazon Alexa, Google Home, Samsung SmartThings, Home Assistant 2025.4.3, etc."
+    validations:
+      required: false
+      
+  - type: textarea
+    id: log
+    attributes:
+      label: Log File
+      description: |
+        Provide relevant Matterbridge logs, either pasted below or attached as a text file. Do NOT use a screenshot. Replace sensitive information (access tokens, etc) with `REDACTED`. Logs are most useful when they are complete; include the full output around the error message and do not omit any lines.
+
+        Enable and capture appropriate extra debug:
+        
+        - **For Plugin Debug Logging** (enable for most issues):
+          - In Matterbridge frontend: *Home* > *Plugins* > *matterbridge-dyson-robot* > ⚙️ > *debug* > ✅
+            - Or in the `matterbridge-dyson-robot.config.json` file: `"debug": true`
+          - View the log file directly (e.g. `journalctl -u matterbridge.service -n 1000 -f --output cat`); the Matterbridge frontend normally filters out debug messages.
+          
+        - **For Dyson MQTT Logging (enable for any Dyson interoperability issues)**:
+          - In Matterbridge frontend: *Home* > *Plugins* > *matterbridge-dyson-robot* > ⚙️ > *Enable advanced debug option* > *Log MQTT Payloads*
+            - Or in the `matterbridge-dyson-robot.config.json` file: `"debugFeatures": ["Log MQTT Payloads"]`
+          
+        - **For Matterbridge Logging**:
+          - In Matterbridge frontend: *Settings* > *Matterbridge settings* > *Logger level* > *Debug*.
+            - Or add `-logger debug` to the `matterbridge` command line.
+          
+        - **For Matter Logging**:
+          - In Matterbridge frontend: *Settings* > *Matter settings* > *Logger level* > *Debug*.
+            - Or add `-matterlogger debug` to the `matterbridge` command line.
+        
+        The additional debug information in the logs will provide more context for resolving your issue.
+      placeholder: |
+        Paste the logs...
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: config
+    attributes:
+      label: Configuration
+      description: "Provide your `matterbridge-dyson-robot.config.json` (if relevant). This is optional but highly recommended. Replace sensitive information (API Key and Access/Refresh Tokens) with `REDACTED`."
+      placeholder: "Paste configuration..."
+      render: json
+    validations:
+      required: false
+   
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional Information
+      description: "Provide any additional information that might assist with resolving your bug report. This could include links to product web pages, user manuals, screenshots, videos, or anything else relevant. If you have tried workarounds or debugging steps, include them here."
+      placeholder: "Any other relevant information..."
+    validations:
+      required: false
+
+  - type: markdown
+    attributes:
+      value: |
+        **Important Notes:**
+        - 🐞 Most issues cannot be diagnosed without debug logs - please include them.
+        - 🔐 Ensure sensitive information like tokens or passwords are `REDACTED` before sharing.
+        - 🔄 Always update to the latest plugin version before reporting bugs.
+        - 🧪 This is a personal project, so not all issues may be investigated or resolved. Please do not take it personally.

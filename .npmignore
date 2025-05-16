@@ -1,0 +1,9 @@
+/bin
+/eslint.config.mjs
+/nodemon.json
+/RELEASE_HEAD.md
+/src
+/tsconfig.json
+.*
+*~
+[#]*[#]

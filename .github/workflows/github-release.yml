@@ -1,0 +1,36 @@
+name: Create GitHub Release
+
+on:
+  push:
+    tags: ['v*.*.*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag'
+        required: true
+
+env:
+  VERSION: ${{ github.event.inputs.version || github.ref_name }}
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: CSchoel/release-notes-from-changelog@v1
+        with:
+          begin-pattern: '/^## \\[${RELEASE_VERSION}\\]/'
+          link-pattern: '^\\[${RELEASE_VERSION}\\]:'
+          version: "${VERSION}"
+
+      - name: Create Release using GitHub CLI
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: >
+          gh release create
+          -d
+          -F RELEASE.md
+          -t "Version $RELEASE_VERSION"
+          $VERSION

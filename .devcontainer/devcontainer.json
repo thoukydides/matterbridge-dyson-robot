@@ -1,0 +1,45 @@
+// Matterbridge plugin for Dyson robot vacuum and air treatment devices
+// Copyright © 2025 Alexander Thoukydides
+
+{
+	"name": "Matterbridge Dyson Robot (Node 20)",
+	"image": "mcr.microsoft.com/devcontainers/javascript-node:20",
+
+	// VS Code extensions to install automatically
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"amazonwebservices.amazon-q-vscode",
+				"bierner.markdown-preview-github-styles",
+				"dbaeumer.vscode-eslint",
+				"github.vscode-github-actions",
+				"mxsdev.typescript-explorer",
+				"streetsidesoftware.code-spell-checker",
+				"tyriar.sort-lines"
+			]
+		}
+	},
+	
+	// Make the /workspaces folder writable (it defaults to root:root)
+	"onCreateCommand": {
+		"workspaceUser": "sudo chown node:users $(dirname ${containerWorkspaceFolder})"
+	},
+	
+	// Environment variables
+	"containerEnv": {
+		"MATTERBRIDGE_DIR": "${containerWorkspaceFolder}/../matterbridge"
+	},
+
+	// Finish setup after creating the container
+	"postCreateCommand": {
+		"install": "npm run setup"
+	},
+
+	// Port forwarding configuration
+	"portsAttributes": {
+		"8283": {
+			"label": "Matterbridge Frontend",
+			"onAutoForward": "openPreview"
+		}
+	}
+}

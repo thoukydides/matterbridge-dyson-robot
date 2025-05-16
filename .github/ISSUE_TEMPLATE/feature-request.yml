@@ -1,0 +1,86 @@
+name: 🚧 Feature request
+description: Suggest a new feature or other enhancement.
+labels: ["enhancement"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before creating a new feature request, please search [closed/rejected issues](https://github.com/thoukydides/matterbridge-dyson-robot/issues?q=is%3Aissue) to avoid duplicates.
+
+        🚨 Feature requests that propose any of the following are unlikely to be accepted:
+        - Implementing Matter clusters not supported by Apple Home
+        - Using Matter clusters in ways that violate CSA specifications
+        - Disabling or suppressing existing functionality via additional configuration options
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description of Enhancement
+      description: |
+        Describe the feature or improvement you would like to see. 
+        Be specific: What problem does it solve? How would a user experience it differently?
+      placeholder: |
+        What should the plugin do?
+        Why is this needed?
+        How would a user interact with it in Apple Home or other Matter ecosystems?
+    validations:
+      required: true
+
+  - type: input
+    id: appliance
+    attributes:
+      label: Dyson Appliance(s)
+      description: |
+        If this enhancement relates to a specific appliance, please provide the model name and number. These details can be found behind the clear bin on robot vacuums, or on the base of air treatment devices.
+      placeholder: "e.g. Dyson 360 Eye RB01"
+    validations:
+      required: true
+
+  - type: textarea
+    id: dysonmqtt
+    label: Dyson MQTT Evidence
+    description: |
+      Describe how this feature is supported by the Dyson MQTT protocol. Include:
+      - A brief explanation of the observed MQTT behaviour
+      - A relevant MQTT log extract (see below)
+      - Or link to another open source project that supports this feature
+    
+      **To capture Dyson MQTT logs:**
+      - In the Matterbridge frontend: *Home* > *Plugins* > *matterbridge-dyson-robot* > ⚙️
+        - *debug* > ✅
+        - *Enable advanced debug option* > *Log MQTT Payloads*
+      - Or in `matterbridge-dyson-robot.config.json`:
+        ```json
+        "debug": true,
+        "debugFeatures": ["Log MQTT Payloads"]
+        ```
+      - View logs with: `journalctl -u matterbridge.service -n 1000 -f --output cat`
+    
+      Replace any sensitive information with `REDACTED`.
+    placeholder: |
+      Describe and paste relevant logs...
+    validations:
+      required: true
+
+  - type: textarea
+    id: mattermap
+    attributes:
+      label: Matter Mapping
+      description: |
+        Suggest which Matter cluster(s) from the [Matter Application Cluster Specification](https://csa-iot.org/developer-resource/specifications-download-request/) might apply.
+
+        Note: Apple Home only supports a subset of Matter clusters. The most accurate (though somewhat out-of-date) information is available in [this Apple support article](https://support.apple.com/en-gb/102135) and [the Matter.js overview of the Matter ecosystems](https://github.com/project-chip/matter.js/blob/main/docs/ECOSYSTEMS.md).
+
+        If the requested feature maps to a Matter cluster that is unsupported by Apple Home it is unlikely to be implemented, even if technically valid within Matter.
+    validations:
+      required: false
+
+  - type: markdown
+    attributes:
+      value: |
+        **Important notes:**
+        📄 Feature requests must be compatible with both the Matter specification and the Dyson API.
+        🚫 Requests that fall outside the scope of either, or that are unsupported by Apple Home, are unlikely to be implemented.
+        🧪 This is a personal project focused on my own usage. Suggestions are welcome, but may be declined without further discussion.
+        💡 Well-reasoned, clearly scoped ideas with relevant technical context, are more likely to be considered.
