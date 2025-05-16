@@ -192,20 +192,18 @@
             "description": "Only expose Matter device types listed here: Air Purifier, Air Quality Sensor, Composed Air Purifier, Humidity Sensor, Temperature Sensor, or Thermostat. This applies to all air treatment devices, but does not affect robot vacuum devices. Leave empty to expose all device types.",
             "type": "array",
             "items": {
-                "type": "string"
+                "$ref": "#/definitions/entity"
             },
             "uniqueItems": true,
-            "selectEntityFrom": "name",
             "default": []
         },
         "entityBlackList": {
             "description": "Exclude any Matter device types listed here: Air Purifier, Air Quality Sensor, Composed Air Purifier, Humidity Sensor, Temperature Sensor, or Thermostat. This applies to all air treatment devices, but does not affect robot vacuum devices. Leave empty to expose all device types.",
             "type": "array",
             "items": {
-                "type": "string"
+                "$ref": "#/definitions/entity"
             },
             "uniqueItems": true,
-            "selectEntityFrom": "name",
             "default": [
                 "Composed Air Purifier",
                 "Humidity Sensor",
@@ -256,6 +254,17 @@
         }
     },
     "definitions": {
+        "entity": {
+            "type": "string",
+            "enum": [
+                "Air Purifier",
+                "Air Quality Sensor",
+                "Composed Air Purifier",
+                "Humidity Sensor",
+                "Temperature Sensor",
+                "Thermostat"
+            ]
+        },
         "host": {
             "description": "Local network hostname or IP address of the robot vacuum or air treatment device.",
             "title": "e.g. sweep.local or 192.168.0.100",
@@ -279,7 +288,7 @@
             "description": "MQTT root topic (Dyson internal product type). If using opendyson: mqtt → root_topic",
             "title": "e.g. N223 or 475",
             "type": "string",
-            "pattern": "^[0-9]{3}[A-Z]?$",
+            "pattern": "^[A-Z]?[0-9]{3}[A-Z]?$",
             "oneOf": [
                 {
                     "const": "N223",
