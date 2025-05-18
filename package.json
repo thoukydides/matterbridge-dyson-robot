@@ -9,11 +9,19 @@
         "Matter",
         "Dyson",
         "360 Eye",
-        "360 Heurist",
-        "360 Vis Nav",
+        "Heurist",
+        "Vis Nav",
         "robot",
         "vacuum",
-        "cleaner"
+        "cleaner",
+        "Pure",
+        "Purifier",
+        "Link",
+        "Cool",
+        "Hot+Cool",
+        "Humidify+Cool",
+        "Big+Quiet",
+        "formaldehyde"
     ],
     "author": {
         "name": "Alexander Thoukydides",
