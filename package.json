@@ -58,25 +58,26 @@
     "type": "module",
     "main": "dist/index.js",
     "engines": {
-        "node": "^24.0.0 || ^22.15.0 || ^20.19.1",
-        "matterbridge": "^3.0.0"
+        "node": "^24.0.2 || ^22.15.1 || ^20.19.2",
+        "matterbridge": "^3.0.3"
     },
     "dependencies": {
         "mqtt": "^5.13.0",
         "node-persist": "^4.0.4",
         "semver": "^7.7.2",
         "ts-interface-checker": "^1.0.2",
+        "undici": "^7.10.0",
         "ws": "^8.18.2"
     },
     "devDependencies": {
         "@eslint/eslintrc": "^3.3.1",
-        "@eslint/js": "^9.26.0",
+        "@eslint/js": "^9.27.0",
         "@tsconfig/node20": "^20.1.5",
         "@types/eslint__js": "^8.42.3",
-        "@types/node": "^20.17.47",
+        "@types/node": "^20.17.48",
         "@types/node-persist": "^3.1.8",
         "@types/semver": "^7.7.0",
-        "eslint": "^9.26.0",
+        "eslint": "^9.27.0",
         "globals": "^16.1.0",
         "rimraf": "^6.0.1",
         "ts-interface-builder": "^0.3.3",
