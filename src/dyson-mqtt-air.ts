@@ -79,7 +79,7 @@ export type DysonMqttStatusAirSensor = {
 
 // Dyson air treatment machine combined status
 export type DysonMqttStatusAir =
-    Pick<DysonAirMsgHello, 'version'>
+    Partial<Pick<DysonAirMsgHello, 'version'>>
   & DysonMqttProductState
   & DysonMqttStatusAirSensor
   & Partial<Faults>;
@@ -89,7 +89,6 @@ export class DysonMqttAir extends DysonMqtt<DysonMsgMapAir, DysonMqttStatusAir> 
 
     // Messages still required for initialisation
     private initialiseMsgs = new Set([
-        'HELLO',
         'CURRENT-STATE',
         'ENVIRONMENTAL-CURRENT-SENSOR-DATA'
     ]);

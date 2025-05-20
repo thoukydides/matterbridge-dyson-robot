@@ -48,7 +48,10 @@ export class DysonMqttSubscribe extends EventEmitter<DysonMqttSubscribeEventMap>
     async subscribe(): Promise<void> {
         // Select the required subscription topics
         const topics = this.topics.subscribe.map(t => this.replaceTopicPlaceholders(t));
-        if (this.config.wildcardTopic) topics.push('#');
+        if (this.config.wildcardTopic) {
+            if (this.mqtt.options.wsOptions) this.log.warn('Ignoring wildcardTopic option for WebSocket connection');
+            else topics.push('#');
+        }
 
         // Attempt the subscription
         const grant = await this.mqtt.subscribeAsync(topics, { qos: 1 });
