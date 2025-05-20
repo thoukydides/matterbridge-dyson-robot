@@ -3,32 +3,7 @@
 
 import { AnsiLogger, LogLevel } from 'matterbridge/logger';
 import { formatList } from './utils.js';
-import { InspectOptions } from 'util';
 import { DebugFeatures } from './config-types.js';
-
-// Single-line inspection format
-export const INSPECT_SINGLE_LINE: InspectOptions = {
-    colors:             true,
-    depth:              Infinity,
-    maxArrayLength:     Infinity,
-    maxStringLength:    100,
-    breakLength:        Infinity,
-    compact:            true,
-    sorted:             true,
-    numericSeparator:   false
-};
-
-// Verbose inspection format
-export const INSPECT_VERBOSE: InspectOptions = {
-    colors:             true,
-    depth:              Infinity,
-    maxArrayLength:     Infinity,
-    maxStringLength:    Infinity,
-    breakLength:        80,
-    compact:            3,
-    sorted:             true,
-    numericSeparator:   true
-};
 
 // Regular expressions for different types of sensitive data
 const REGEXP_SERIAL_NUMBER = /[A-Z0-9]{3}-[A-Z]{2}-[A-Z0-9]{8}/g;
