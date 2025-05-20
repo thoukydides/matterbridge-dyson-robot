@@ -2,10 +2,10 @@
 // Copyright © 2025 Alexander Thoukydides
 
 import {
-    AtLeastOne,
     DeviceTypeDefinition,
     MatterbridgeEndpoint
 } from 'matterbridge';
+import { AtLeastOne } from 'matterbridge/matter';
 import {
     BasicInformation,
     BridgedDeviceBasicInformation

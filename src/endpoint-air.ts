@@ -4,13 +4,10 @@
 import {
     airPurifier,
     airQualitySensor,
-    AtLeastOne,
     bridgedNode,
-    ClusterId,
     DeviceTypeDefinition,
     humiditySensor,
     MatterbridgeEndpoint,
-    OnOff,
     temperatureSensor,
     thermostatDevice
 } from 'matterbridge';
@@ -21,6 +18,7 @@ import {
     EndpointOptionsBase,
     formatEnumLog
 } from './endpoint-base.js';
+import { AtLeastOne, ClusterId } from 'matterbridge/matter';
 import {
     ActivatedCarbonFilterMonitoring,
     AirQuality,
@@ -30,6 +28,7 @@ import {
     FormaldehydeConcentrationMeasurement,
     HepaFilterMonitoring,
     NitrogenDioxideConcentrationMeasurement,
+    OnOff,
     Pm10ConcentrationMeasurement,
     Pm25ConcentrationMeasurement,
     RelativeHumidityMeasurement,

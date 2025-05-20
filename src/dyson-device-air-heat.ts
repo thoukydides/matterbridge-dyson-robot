@@ -1,7 +1,7 @@
 // Matterbridge plugin for Dyson robot vacuum and air treatment devices
 // Copyright © 2025 Alexander Thoukydides
 
-import { Thermostat } from 'matterbridge';
+import { Thermostat } from 'matterbridge/matter/clusters';
 import { EntityName } from './config-types.js';
 import { DysonDeviceAirBase } from './dyson-device-air-base.js';
 import { DysonMqttStatusAir } from './dyson-mqtt-air.js';

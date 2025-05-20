@@ -22,7 +22,7 @@ export default tseslint.config(
             }
         },
         rules: {
-            '@typescript-eslint/no-unused-vars':                ['error', { args: 'all', argsIgnorePattern: '^_', ignoreRestSiblings: true }],
+            '@typescript-eslint/no-unused-vars':                ['error', { args: 'all', argsIgnorePattern: '^_',  'varsIgnorePattern': '^_', ignoreRestSiblings: true }],
             '@typescript-eslint/restrict-template-expressions': ['error', { allowBoolean: true, allowNullish: true, allowNumber: true}],
             'brace-style':                                      ['warn', '1tbs', { allowSingleLine: true }],
             'comma-dangle':                                     ['warn', 'never'],

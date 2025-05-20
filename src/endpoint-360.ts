@@ -2,12 +2,12 @@
 // Copyright © 2025 Alexander Thoukydides
 
 import {
-    AtLeastOne,
     bridgedNode,
     DeviceTypeDefinition,
     powerSource,
     roboticVacuumCleaner
 } from 'matterbridge';
+import { AtLeastOne } from 'matterbridge/matter';
 import {
     OperationalState,
     PowerSource,

@@ -5,6 +5,7 @@ import { Endpoint, MaybePromise } from 'matterbridge/matter';
 import { Thermostat } from 'matterbridge/matter/clusters';
 import { ThermostatServer } from 'matterbridge/matter/behaviors';
 import { MatterbridgeServer } from 'matterbridge';
+import type { ClusterType as _ClusterType } from 'matterbridge/matter/types';
 
 // Prevent Matterbridge from modifying occupiedHeatingSetpoint itself
 export class ThermostatServerAir extends ThermostatServer.with(
