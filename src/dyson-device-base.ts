@@ -2,12 +2,13 @@
 // Copyright © 2025 Alexander Thoukydides
 
 import { AnsiLogger } from 'matterbridge/logger';
-import { Config, DeviceConfig, EntityName } from './config-types.js';
+import { Config, EntityName } from './config-types.js';
 import { DysonMqttLike } from './dyson-mqtt.js';
 import { MatterbridgeEndpoint } from 'matterbridge';
 import { Constructor } from './utils.js';
 import { Changed } from './decorator-changed.js';
 import { createHash } from 'crypto';
+import { DeviceConfigMqtt } from './dyson-mqtt-client.js';
 
 // Dyson model details
 export interface DysonDeviceModel {
@@ -20,7 +21,7 @@ export interface DysonDeviceModel {
 export type DysonDeviceConstructorParams<MQTT extends DysonMqttLike = DysonMqttLike> = [
     log:    AnsiLogger,
     config: Config,
-    device: DeviceConfig,
+    device: DeviceConfigMqtt,
     mqtt:   MQTT
 ];
 
@@ -50,7 +51,7 @@ export abstract class DysonDevice<MQTT extends DysonMqttLike = DysonMqttLike> {
     constructor(
         readonly log:       AnsiLogger,
         readonly config:    Config,
-        readonly device:    DeviceConfig,
+        readonly device:    DeviceConfigMqtt,
         readonly mqtt:      MQTT
     ) {
         // Prepare the decorator support
@@ -85,5 +86,5 @@ export abstract class DysonDevice<MQTT extends DysonMqttLike = DysonMqttLike> {
 
     // Retrieve common per-device data
     get deviceName():   string { return this.device.name; }
-    get serialNumber(): string { return this.device.username; }
+    get serialNumber(): string { return this.device.serialNumber; }
 };

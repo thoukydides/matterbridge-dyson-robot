@@ -11,7 +11,7 @@
 [![Build and Lint](https://github.com/thoukydides/matterbridge-dyson-robot/actions/workflows/build.yml/badge.svg)](https://github.com/thoukydides/matterbridge-dyson-robot/actions/workflows/build.yml)
 
 A [Matterbridge](https://github.com/Luligu/matterbridge) plugin that connects [Dyson](https://www.dyson.co.uk/) robot vacuums and air treatment devices  
-to the [Matter](https://csa-iot.org/all-solutions/matter/) smart home ecosystem via their local MQTT APIs.
+to the [Matter](https://csa-iot.org/all-solutions/matter/) smart home ecosystem via their local or cloud MQTT APIs.
 
 </div>
 
@@ -19,54 +19,37 @@ Dyson, Dyson Cool, Dyson Hot, Dyson Hot+Cool, Dyson Pure, Dyson Pure Cool, Dyson
 
 ## Installation
 
+This plugin supports multiple methods for configuring and connecting to Dyson robot vacuum and air treatment devices:
+
+| Provisioning Method | Connection Via... | Configuration Using...          | IP Addresses/Hostnames | MQTT Credentials    | Compatibility        |
+| ------------------- | ----------------- | ------------------------------- | ---------------------- | ------------------- | -------------------- |
+| `Remote Account`    | ☁️ AWS IoT gateway | ☺️ Using MyDyson account         | ✅ n/a                  | ✅ Automatic         | ✅ All devices        |
+| `Local Account`     | 🏠 Local Network   | 😐 Using MyDyson account         | ❌ Manual configuration | ✅ Automatic         | ❌ Older devices only |
+| `Local Wi-Fi`       | 🏠 Local Network   | 📡 Using Wi-Fi Setup credentials | ❌ Manual configuration | ❌ Wi-Fi Setup label | ❌ Older devices only |
+| `Local MQTT`        | 🏠 Local Network   | ⚠️ Using MQTT credentials        | ❌ Manual configuration | ❌ Using `opendyson` | ❌ Older devices only |
+
+The following instructions are for the first provisioning method, which is the recommended and most compatible approach. See below for details of the other options, which connect to the devices locally, but are not supported by some recent Dyson models and firmware versions.
+
 ### Step 1 - Create Account and Connect Devices
 1. Use the MyDyson [iPhone](https://apps.apple.com/gb/app/mydyson/id993135524) or [Android](https://play.google.com/store/apps/details?id=com.dyson.mobile.android) app to create an account.
 1. Add the Dyson robot vacuum cleaner and/or air treatment devices to your Dyson account.
 
-### Step 2 - Obtain Device MQTT Credentials
-
-#### Option 1: Using Wi-Fi Setup Label
-
-1. For each device find the label with the Wi-Fi setup credentials. This may be located:
-   1. behind the clean bin of robot vacuums,
-   1. underneath the base of air treatment devices, or
-   1. attached to the operating manual.
-1. Note the **Product SSID** (`wifi_ssid`) and the **Product Wi-Fi Password** (`wifi_password`). These are case-sensitive and must be entered exactly as shown on the label.
-
-#### Option 2: Using `opendyson` <!-- (enables either local or cloud connection) -->
-
-1. Install [opendyson](https://github.com/libdyson-wg/opendyson), e.g. if `Go` is installed and configured:  
-   `go install github.com/libdyson-wg/opendyson`
-1. Login to your MyDyson account:  
-   `opendyson login`
-1. Identify devices and retrieve their connection credentials:  
-   `opendyson devices`
-1. For each device note the `mqtt` values: `username`, `password`, and `root_topic`
-
-### Step 3 - Matterbridge Plugin Installation
-
-#### Recommended Approach using Matterbridge Frontend
-
+### Step 2 - Matterbridge Plugin Installation
 1. Open the Matterbridge web interface, e.g. at http://localhost:8283/.
 1. Under *Install plugins* type `matterbridge-dyson-robot` in the *Plugin name or plugin path* search box, then click *Install ⬇️*.
 1. Click *🔄 Restart Matterbridge* to apply the change.
-1. Open the **matterbridge-dyson-robot** *⚙️ Plugin config* and configure details of each robot vacuum or air treatment device:
-   1. `name`: A friendly name (that will be used as the Matter **NodeLabel**) for the device.
-   1. Select the type of MQTT credentials (from step 2) and enter the required details, either:
-      1. **Wi-Fi Setup Configuration**  
-         `host`: The hostname or IP address of the device on your local network.  
-         `wifi_ssid` and `wifi_password`: The values from the product's Wi-Fi setup label.
-      1. **Local MQTT Configuration**  
-         `host`: The hostname or IP address of the device on your local network.  
-         `username`, `password`, and `root_topic`: The values listed by `opendyson`.
-1. Use ➕ to add additional devices, and enter their details.
-1. Click *CONFIRM* to save the plugin configuration and restart Matterbridge again.
+1. Open the **matterbridge-dyson-robot** *⚙️ Plugin config*.
+1. Ensure that **provisioningMethod** is set to `Connect via AWS IoT gateway / Configure using MyDyson account`.
+1. Under **MyDyson Account Configuration** enter the email address and password that you use with the MyDyson app.
+1. If your account is registered in China then select the `china` option.
+1. Click the **START AUTH** button.
+1. You should receive a **Log in to your MyDyson App** email message containing a code. Enter that code and click the **SUBMIT CODE** button.
+1. When you see messages indicating that the account has been authorised click CONFIRM to save the configuration, and restart Matterbridge.
 
 <details>
-<summary>Alternative method using command line (and advanced configuration)</summary>
+<summary>Advanced Configuration</summary>
 
-#### Installation using Command Line
-
+### Installation using Command Line
 1. Stop Matterbridge:  
    `systemctl stop matterbridge`
 1. Install the plugin:  
@@ -76,94 +59,171 @@ Dyson, Dyson Cool, Dyson Hot, Dyson Hot+Cool, Dyson Pure, Dyson Pure Cool, Dyson
 1. Restart Matterbridge:  
    `systemctl start matterbridge`
 
+Note that MyDyson account authorisation cannot be completed via the command line. Either configure and authorise via the Matterbridge frontend, obtain the access token via other means (e.g. if using `opendyson` it can be found in `~/.config/libdyson/config.yml`) and set `dysonAccount.token`, or use one of the other provisioning methods.
+
 #### Example `matterbridge-dyson-robot.config.json`
 
-Local network connection configured using credentials from Wi-Fi setup label:
 ```JSON
 {
-    "devices": [{
-        "name":                   "Katniss Everclean",
-        "host":                   "dyson-360eye.local",
-        "port":                   1883,
-        "wifi_ssid":              "360EYE-AA1-UK-BBB2222B",
-        "wifi_password":          "abcdefgh"
-    }]
-}
-```
-
-Local network connection configured using MQTT credentials (obtained using `opendyson`):
-```JSON
-{
-    "devices": [{
-        "name":                   "Katniss Everclean",
-        "host":                   "192.168.0.100",
-        "port":                   1883,
-        "username":               "AA1-UK-BBB2222B",
-        "password":               "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/ABCDEFGHIJKLMNOPQRSTUV==",
-        "root_topic":             "N223"
-    }]
+    "name":                     "matterbridge-dyson-robot",
+    "type":                     "DynamicPlatform",
+    "version":                  "1.0.0",
+    "provisioningMethod":       "Remote Account",
+    "dysonAccount": {
+        "email":                "ripley@xeno.clean",
+        "password":             "NoMoreDust!426",
+        "china":                false
+    },
+    "wildcardTopic":            true,
+    "blackList":                [],
+    "whiteList":                [],
+    "entityBlackList":          ["Composed Air Purifier", "Humidity Sensor", "Temperature Sensor"],
+    "entityWhiteList":          [],
+    "deviceEntityBlackList":    {},
+    "debug":                    false,
+    "debugFeatures":            [],
+    "unregisterOnShutdown":     false
 }
 ```
 
 #### Advanced Configuration
 
 You can include additional settings in `matterbridge-dyson-robot.config.json` to customise the behaviour or enable special debug features:
-```JSON
-{
-    "name":                 "matterbridge-dyson-robot",
-    "type":                 "DynamicPlatform",
-    "version":              "1.0.0",
-    "whiteList":            [],
-    "blackList":            ["360EYE-AA1-UK-BBB2222B"],
-    "entityWhiteList":      [],
-    "entityBlackList":      ["Composed Air Purifier", "Humidity Sensor", "Temperature Sensor"],
-    "deviceEntityBlackList": {
-        "CC3-UK-DDD4444D":       ["Air Purifier"],
-    },
-    "devices": [{
-        "name":                   "Obi-Wan Cleanobi",
-        "host":                   "dyson-360eye.local",
-        "port":                   1883,
-        "wifi_ssid":              "360EYE-AA1-UK-BBB2222B",
-        "wifi_password":          "abcdefgh"
-    }, {
-        "name":                   "Hoth Breeze",
-        "host":                   "192.168.0.100",
-        "port":                   1883,
-        "username":               "CC3-UK-DDD4444D",
-        "password":               "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/ABCDEFGHIJKLMNOPQRSTUV==",
-        "root_topic":             "475"
-    }],
-    "wildcardTopic":        true,
-    "composedDevices":      false,
-    "debug":                false,
-    "debugFeatures":        ["Log Endpoint Debug", "Log MQTT Client", "Log MQTT Payloads", "Log Serial Numbers", "Log Debug as Info"],
-    "unregisterOnShutdown": false
-}
-```
 
-| Key                     | Default | Description
-| ----------------------- | ------- | ---
-| `name`<br>`type`<br>`version` | n/a | These are managed by Matterbridge and do not need to be set manually.
-| `devices[]`             | `[]`    | MQTT configuration for each Dyson device. See *Step 2 - Obtain Device MQTT Credentials* (above).
-| `wildcardTopic`         | `true`  | When set to `true` the plugin subscribes to the wildcard (`#`) MQTT topic, receiving every message published or echoed by the robot vacuum and air treatment devices. This is useful for discovering new topics, seeing the commands issued by the MyDyson app to air treatment devices (but not to robot vacuums), and verifying correct `root_topic` and `username` settings.
-| `blackList`             | `[]`    | If the list is not empty, then any robot vacuum and air treatment devices with matching serial numbers will not be exposed as Matter devices.
-| `whiteList`             | `[]`    | If the list is not empty, then only robot vacuum and air treatment devices with matching serial numbers (and not on the `blacklist`) will be exposed as Matter devices.
+| Key                     | Default            | Description
+| ----------------------- | ------------------ | ---
+| `name`<br>`type`<br>`version` | n/a          | These are managed by Matterbridge and do not need to be set manually.
+| `provisioningMethod`    | `"Remote Account"` | Selects how the plugin is configured and how it connects to the Dyson devices. See *Alternate Provisioning Methods* (below) for details of each option.
+| `devices[]`             | `[]`               | Local network and MQTT configuration for each Dyson device when not using the `Remote Account` provisioning method. See below for details.
+| `wildcardTopic`         | `true`             | When set to `false` the plugin only subscribes to the essential status MQTT topic(s) appropriate for each device. Setting it to `true` additionally subscribes to the command topic (for AWS IoT connections) or to the `#` wildcard topic (for local network connections), receiving additional messages published by the devices or echoed by the MQTT brokers. This is useful for discovering new topics, seeing the commands issued by the MyDyson app (only some commands to robot vacuums), and verifying correct `root_topic` and `username` settings.
+| `blackList`             | `[]`               | If the list is not empty, then any robot vacuum and air treatment devices with matching serial numbers will not be exposed as Matter devices.
+| `whiteList`             | `[]`               | If the list is not empty, then only robot vacuum and air treatment devices with matching serial numbers (and not on the `blacklist`) will be exposed as Matter devices.
 | `entityBlackList`       | `["Composed Air Purifier", "Humidity Sensor", "Temperature Sensor"]` | If the list is not empty, then any endpoint device types listed will be excluded. This applies to all air treatment devices. It does not affect robot vacuum devices.
-| `entityWhiteList`       | `[]`    | If the list is not empty, then only endpoint device types on that list (and not on the `entityBlackList`) will be included. This applies to all air treatment devices. It does not affect robot vacuum devices.
-| `deviceEntityBlackList` | `[]`    | Per-device `entityBlackList`-style selection of endpoints. This only applies to air treatment devices. It is an object where the keys are device serial numbers, and the values are the list of endpoint device types that will be excluded for that device.
-| `debug`                 | `false` | Sets the logger level for this plugin to *Debug*, overriding the global Matterbridge logger level setting.
-| `debugFeatures`         | `[]`    | Miscellaneous options to control the information logged. None of these should be set unless you are investigating a compatibility issue, MQTT message error, or other problem.
-| `unregisterOnShutdown`  | `false` | Unregister all exposed devices on shutdown. This is used during development and testing; do not set it for normal use.
+| `entityWhiteList`       | `[]`               | If the list is not empty, then only endpoint device types on that list (and not on the `entityBlackList`) will be included. This applies to all air treatment devices. It does not affect robot vacuum devices.
+| `deviceEntityBlackList` | `{}`               | Per-device `entityBlackList`-style selection of endpoints. This only applies to air treatment devices. It is an object where the keys are device serial numbers, and the values are the list of endpoint device types that will be excluded for that device.
+| `debug`                 | `false`            | Sets the logger level for this plugin to *Debug*, overriding the global Matterbridge logger level setting.
+| `debugFeatures`         | `[]`               | Miscellaneous options to control the information logged. None of these should be set unless you are investigating a compatibility issue, MQTT message error, or other problem.
+| `unregisterOnShutdown`  | `false`            | Unregister all exposed devices on shutdown. This is used during development and testing; do not set it for normal use.
 
 The various black/white lists control which robot vacuum and air treatment devices are exposed as Matter devices. Robot vacuums are always exposed as a simple Matter device on a single endpoint, but air treatment devices are implemented as multiple devices and endpoints that can be individually included or excluded. A device or endpoint must pass all the black/white list filters to be exposed (logical AND). This applies cumulatively across global and per-device filters. Devices are identified via their serial numbers (the same as their MQTT username) and endpoints are identified using their Matter device type: `Air Purifier`, `Air Quality Sensor`, `Composed Air Purifier` (a composed device consisting of an `Air Purifier` with all other relevant device types as children), `Humidity Sensor`, `Temperature Sensor`, or `Thermostat`.
 
 The supported `debugFeatures` are:
 - `Log Endpoint Debug`: Sets the `debug` flag to the Matterbridge/Matter.js endpoint implementation.
-- `Log MQTT Client`: Enables (extremely) verbose debug logging from the low-level MQTT client. This is unlikely to be useful unless the plugin is unable to establish or maintain a connection to the Dyson device. (Requires *Debug* level logging.)
-- `Log MQTT Payloads`: Enables logging of every MQTT payload that is sent or received. This is useful for diagnosing interoperability issues or identifying how to control new features. (Requires *Debug* level logging.)
+- `Log API Headers`: Logs HTTP headers for MyDyson API requests. Rarely useful. (Requires *Debug* level logging.)
+- `Log API Bodies`: Logs message bodies for MyDyson API requests. Useful for diagnosing interoperability issues. (Requires *Debug* level logging.)
+- `Log MQTT Client`: Enables (extremely) verbose debug logging from the low-level MQTT client. Rarely useful, unless the plugin is unable to establish or maintain a connection to the Dyson device. (Requires *Debug* level logging.)
+- `Log MQTT Payloads`: Logs every MQTT payload that is sent or received. Useful for diagnosing interoperability issues or identifying how to control new features. (Requires *Debug* level logging.)
 - `Log Serial Numbers`: By default product serial numbers (a.k.a. MQTT usernames) and passwords are automatically redacted in the log. This setting logs serial numbers verbatim.
 - `Log Debug as Info`: Redirect *Debug* level logging to *Info* level. This makes it visible in the Matterbridge frontend.
+
+</details>
+<details>
+<summary>Alternate Provisioning Methods</summary>
+
+### Local Provisioning Methods
+
+The recommended provisioning method routes all MQTT messages via the AWS IoT gateway, but the other methods enable direct local connection to the robot vacuum and air treatment devices (if supported by the device and its firmware). This requires manual configuration of the local network IP addresses or hostnames, and (for some methods) the credentials used to authorise the MQTT connection.
+
+#### `Local Account` (Connect via Local Network / Configure using MyDyson account)
+
+```JSON
+{
+    ...
+    "provisioningMethod":       "Local Account",
+    "dysonAccount": {
+        "email":                "spock@logic.clean",
+        "password":             "LiveLong&Vacuum",
+        "china":                false
+    },
+    "devices": [{
+        "serialNumber":         "ST1-FD-NCC1701E",
+        "host":                 "enterprise-vac.local",
+        "port":                 1883
+    }, {
+        "serialNumber":         "SK1-NY-TRM8008X",
+        "host":                 "192.168.0.100",
+        "port":                 1883
+    }],
+    ...
+}
+```
+
+The `Local Account` provisioning obtains the MQTT credentials and configured device names from the MyDyson account; it just requires manual configuration of the IP address or hostname for each device. The device's serial number is used to uniquely identify each device.
+
+#### `Local Wi-Fi` (Connect via Local Network / Configure using Wi-Fi Setup credentials)
+
+```JSON
+{
+    ...
+    "provisioningMethod":       "Local Wi-Fi",
+    "devices": [{
+        "name":                 "Katniss Everclean",
+        "host":                 "katniss.local",
+        "port":                 1883,
+        "ssid":                 "360EYE-KE1-RE-DAH1234C",
+        "password":             "abcdefgh"
+    }, {
+        "name":                 "Hoth Breeze",
+        "host":                 "192.168.0.100",
+        "port":                 1883,
+        "ssid":                 "DYSON-HB1-ES-TAT9001F-475",
+        "password":             "abcdefgh"
+    }],
+    ...
+}
+```
+
+The `Local Wi-Fi` provisioning uses the Wi-Fi setup credentials to derive the MQTT credentials. Manual configuration is required for the credentials, IP address or hostname, and a friendly name (used as the Matter *NodeLabel*), for each device.
+
+The Wi-Fi setup information can be found on a label located:
+- behind the clean bin of robot vacuums,
+- underneath the base of air treatment devices, or
+- attached to the operating manual.
+
+The **Product SSID** (`ssid`) and **Product Wi-Fi Password** (`password`) are case-sensitive and must be entered exactly as shown on the label.
+
+#### `Local MQTT` (Connect via Local Network / Configure using MQTT credentials)
+
+```JSON
+{
+    ...
+    "provisioningMethod":       "Local MQTT",
+    "devices": [{
+        "name":                 "House Elf Hoover",
+        "serialNumber":         "HE1-HP-WIZ7654M",
+        "host":                 "dobbie.local",
+        "port":                 1883,
+        "password":             "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/ABCDEFGHIJKLMNOPQRSTUV==",
+        "rootTopic":            "276"
+    }, {
+        "name":                 "Whisper of Valinor",
+        "serialNumber":         "WV1-SI-ELF1984H",
+        "host":                 "192.168.0.100",
+        "port":                 1883,
+        "password":             "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/ABCDEFGHIJKLMNOPQRSTUV==",
+        "rootTopic":            "455"
+    }],
+    ...
+}
+```
+
+The `Local MQTT` provisioning requires manual configuration of the MQTT credentials, as well as the IP address or hostname, and a friendly name (used as the Matter *NodeLabel*), for each device.
+
+The easiest way to obtain the MQTT credentials is by using the [`opendyson`](https://github.com/libdyson-wg/opendyson) tool:
+1. Install `opendyson`, e.g. if `Go` is installed and configured:  
+   `go install github.com/libdyson-wg/opendyson`
+1. Login to your MyDyson account:  
+   `opendyson login`
+1. Identify devices and retrieve their connection credentials:  
+   `opendyson devices`
+
+The values required to configure this plugin are:
+
+| `opendyson devices` Output | Plugin Configuration |
+| -------------------------- | -------------------- |
+| `mqtt` → `username`        | `serialNumber`       |
+| `mqtt` → `password`        | `password`           |
+| `mqtt` → `root_topic`      | `rootTopic`          |
 
 </details>
 
@@ -307,8 +367,6 @@ This plugin has only been tested with the following devices:
 | Dyson Pure Hot+Cool Link   | HP02  | `455`           | `21.04.03`  |
 
 It may also work with other Dyson robot vacuums and air treatment devices, although some modifications may be required for full compatibility.
-
-Dyson Vis Nav firmware update `RB03PR.01.08.006.5079` (released 11th April 2024) disabled local MQTT capability, so cannot be supported by this plugin. (That probably comes under "Enhanced Wi-Fi connectivity" in the firmware release note...)
 
 Matter controllers vary in their support for different device types. This plugin is only tested with Apple HomeKit and the Apple Home app.
 

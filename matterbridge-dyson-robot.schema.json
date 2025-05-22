@@ -3,7 +3,7 @@
     "description": "Dyson Robot Vacuum and Air Treatment Devices",
     "type": "object",
     "required": [
-        "devices"
+        "provisioningMethod"
     ],
     "properties": {
         "name": {
@@ -18,177 +18,57 @@
             "readOnly": true,
             "ui:widget": "hidden"
         },
-        "devices": {
-            "description": "List of Dyson robot vacuum and air treatment devices to expose.",
-            "type": "array",
-            "items": {
-                "type": "object",
-                "properties": {
-                    "name": {
-                        "description": "Friendly name used to identify the robot vacuum or air treatment device. This is used as the Matter NodeLabel for the device.",
-                        "title": "e.g. Sweep",
-                        "type": "string",
-                        "minLength": 1,
-                        "maxLength": 64
-                    }
+        "provisioningMethod": {
+            "title": "Provisioning Method",
+            "description": "Select how the plugin should connect to the Dyson robot vacuum and air treatment devices. This setting determines how the plugin connects to the devices and how the MQTT broker credentials are provided. For the simplest and most compatible setup, select 'Connect via AWS IoT gateway / Configure using MyDyson account' and enter your MyDyson account credentials. The 'Connect via Local Network' options all require manual configuration of device IP addresses and other details, and may not be supported by some newer Dyson models or firmware versions, but have the benefit of connecting directly to the devices instead of routing via cloud services.",
+            "type": "string",
+            "oneOf": [
+                {
+                    "const": "Remote Account",
+                    "title": "Connect via AWS IoT gateway / Configure using MyDyson account [recommended]"
                 },
-                "required": [
-                    "name"
-                ],
-                "oneOf": [
-                    {
-                        "title": "Wi-Fi Setup Configuration",
-                        "description": "Connect to the appliance directly via the local network, deriving the MQTT configuration from the Wi-Fi setup credentials. These details can be found on a label attached to the product (behind the clear bin of robot vacuums or underneath the base of air treatment devices) or its operating manual.",
-                        "type": "object",
-                        "properties": {
-                            "host": {
-                                "$ref": "#/definitions/host"
-                            },
-                            "port": {
-                                "$ref": "#/definitions/port"
-                            },
-                            "wifi_ssid": {
-                                "description": "Product SSID from the label attached to the product or its operating manual.",
-                                "title": "e.g. DYSON-XXX-YY-ZZZZZZZZ-NNN",
-                                "type": "string",
-                                "pattern": "^(((360EYE-)?[A-Z0-9]{3}-[A-Z]{2}-[A-Z0-9]{8,})|(DYSON-[A-Z0-9]{3}-[A-Z]{2}-[A-Z0-9]{8,}-[0-9]{3}[A-Z]?))$"
-                            },
-                            "wifi_password": {
-                                "description": "Product Wi-Fi Password from the label attached to the product or its operating manual.",
-                                "title": "e.g. xxxxxxxx",
-                                "type": "string",
-                                "pattern": "^[A-Za-z0-9]{8,}$"
-                            }
-                        },
-                        "required": [
-                            "host",
-                            "port",
-                            "wifi_ssid",
-                            "wifi_password"
-                        ]
-                    },
-                    {
-                        "title": "Local MQTT Configuration",
-                        "description": "Connect to the appliance directly via the local network, providing the MQTT configuration explicitly. Use opendyson to obtain these details.",
-                        "type": "object",
-                        "properties": {
-                            "host": {
-                                "$ref": "#/definitions/host"
-                            },
-                            "port": {
-                                "$ref": "#/definitions/port"
-                            },
-                            "username": {
-                                "$ref": "#/definitions/username"
-                            },
-                            "password": {
-                                "description": "MQTT password.",
-                                "title": "From opendyson: mqtt → password",
-                                "type": "string",
-                                "pattern": "^[A-Za-z0-9+/]{86}==$"
-                            },
-                            "root_topic": {
-                                "$ref": "#/definitions/root_topic"
-                            }
-                        },
-                        "required": [
-                            "host",
-                            "port",
-                            "username",
-                            "password",
-                            "root_topic"
-                        ]
-                    },
-                    {
-                        "title": "Cloud IoT Service Configuration (do not use)",
-                        "description": "Connect to the appliance via Dyson's cloud IoT service. Use opendyson to obtain these details.",
-                        "type": "object",
-                        "properties": {
-                            "endpoint": {
-                                "description": "Cloud IoT endpoint.",
-                                "title": "From opendyson: iot → endpoint",
-                                "type": "string",
-                                "format": "hostname"
-                            },
-                            "client_id": {
-                                "description": "Cloud IoT client identifier (probably the same as the token_value).",
-                                "title": "From opendyson: iot → client_id",
-                                "type": "string",
-                                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-                            },
-                            "custom_authorizer_name": {
-                                "description": "Cloud IoT custom_authorizer_name.",
-                                "title": "From opendyson: iot → custom_authorizer_name",
-                                "type": "string",
-                                "pattern": "^[A-Za-z0-9-]+$"
-                            },
-                            "token_key": {
-                                "description": "Cloud IoT name of the token header.",
-                                "title": "From opendyson: iot → token_key",
-                                "type": "string",
-                                "default": "token",
-                                "pattern": "^[a-zA-Z0-9_-]+$"
-                            },
-                            "token_value": {
-                                "description": "Cloud IoT value for the token header (probably the same as the client_id).",
-                                "title": "From opendyson: iot → token_value",
-                                "type": "string",
-                                "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$"
-                            },
-                            "token_signature": {
-                                "description": "Cloud IoT token signature.",
-                                "title": "From opendyson: iot → token_signature",
-                                "type": "string",
-                                "pattern": "^([A-Za-z0-9+/]{4})*([A-Za-z0-9+/]{4}|[A-Za-z0-9+/]{3}=|[A-Za-z0-9+/]{2}={2})$"
-                            },
-                            "username": {
-                                "$ref": "#/definitions/username"
-                            },
-                            "root_topic": {
-                                "$ref": "#/definitions/root_topic"
-                            }
-                        },
-                        "required": [
-                            "endpoint",
-                            "client_id",
-                            "custom_authorizer_name",
-                            "token_key",
-                            "token_signature",
-                            "token_value",
-                            "root_topic"
-                        ]
-                    }
-                ]
-            },
-            "minItems": 1,
-            "uniqueItems": true
+                {
+                    "const": "Local Account",
+                    "title": "Connect via Local Network / Configure using MyDyson account"
+                },
+                {
+                    "const": "Local Wi-Fi",
+                    "title": "Connect via Local Network / Configure using Wi-Fi Setup credentials"
+                },
+                {
+                    "const": "Local MQTT",
+                    "title": "Connect via Local Network / Configure using MQTT credentials"
+                }
+            ],
+            "default": "Remote Account"
         },
         "wildcardTopic": {
-            "description": "Subscribe to all MQTT topics (using the '#' wildcard). This is useful for discovering new endpoints or checking that the rootTopic and username have been correctly configured. Disabling this limits subscription to the expected status topic(s).",
+            "description": "Subscribe to all MQTT topics. For direct connections via the local network this uses the '#' wildcard, which is useful for discovering new endpoints or checking that the rootTopic and serialNumber have been correctly configured. However, the AWS IoT gateway does not allow wildcard subscriptions. For AWS IoT connections, this option instead adds a subscription to the command topic. When this option is disabled only the expected status topic(s) are subscribed.",
             "type": "boolean",
             "default": true
         },
         "whiteList": {
-            "description": "Only expose robot vacuum and air treatment devices listed here, identified by their serial number (i.e. the MQTT username). Leave empty to expose all devices.",
+            "description": "Only expose robot vacuum and air treatment devices listed here, identified by their serial number (the MQTT username). Leave empty to expose all devices.",
             "type": "array",
             "items": {
-                "$ref": "#/definitions/username"
+                "$ref": "#/definitions/deviceSerialNumber"
             },
             "uniqueItems": true,
             "selectFrom": "serial",
             "default": []
         },
         "blackList": {
-            "description": "Exclude any robot vacuum and air treatment devices listed here, identified by their serial number (i.e. the MQTT username). Leave empty to expose all devices.",
+            "description": "Exclude any robot vacuum and air treatment devices listed here, identified by their serial number (the MQTT username). Leave empty to expose all devices.",
             "type": "array",
             "items": {
-                "$ref": "#/definitions/username"
+                "$ref": "#/definitions/deviceSerialNumber"
             },
             "uniqueItems": true,
             "selectFrom": "serial",
             "default": []
         },
         "entityWhiteList": {
+            "title": "Entity White List",
             "description": "Only expose Matter device types listed here: Air Purifier, Air Quality Sensor, Composed Air Purifier, Humidity Sensor, Temperature Sensor, or Thermostat. This applies to all air treatment devices, but does not affect robot vacuum devices. Leave empty to expose all device types.",
             "type": "array",
             "items": {
@@ -198,6 +78,7 @@
             "default": []
         },
         "entityBlackList": {
+            "title": "Entity Black List",
             "description": "Exclude any Matter device types listed here: Air Purifier, Air Quality Sensor, Composed Air Purifier, Humidity Sensor, Temperature Sensor, or Thermostat. This applies to all air treatment devices, but does not affect robot vacuum devices. Leave empty to expose all device types.",
             "type": "array",
             "items": {
@@ -211,7 +92,7 @@
             ]
         },
         "deviceEntityBlackList": {
-            "description": "Exclude Matter device types per air treatment device. This does not affect robot vacuum devices. Enter the device's serial number (i.e. the MQTT username) in the first field, and in the list add all of the device types to exclude for that device.",
+            "description": "Exclude Matter device types per air treatment device. This does not affect robot vacuum devices. Enter the device's serial number (the MQTT username) in the first field, and in the list add all of the device types to exclude for that device.",
             "type": "object",
             "uniqueItems": true,
             "selectFrom": "serial",
@@ -223,7 +104,8 @@
                     "type": "string"
                 },
                 "selectDeviceEntityFrom": "name"
-            }
+            },
+            "default": {}
         },
         "debug": {
             "description": "Capture debug-level logging from this plugin, overriding the Matterbridge global log level setting.",
@@ -238,6 +120,8 @@
                 "type": "string",
                 "enum": [
                     "Log Endpoint Debug",
+                    "Log API Headers",
+                    "Log API Bodies",
                     "Log MQTT Client",
                     "Log MQTT Payloads",
                     "Log Serial Numbers",
@@ -253,7 +137,239 @@
             "ui:widget": "hidden"
         }
     },
+    "dependencies": {
+        "provisioningMethod": {
+            "oneOf": [
+                {
+                    "properties": {
+                        "provisioningMethod": {
+                            "const": "Remote Account"
+                        },
+                        "dysonAccount": {
+                            "$ref": "#/definitions/dysonAccount"
+                        }
+                    },
+                    "required": [
+                        "dysonAccount"
+                    ]
+                },
+                {
+                    "properties": {
+                        "provisioningMethod": {
+                            "const": "Local Account"
+                        },
+                        "dysonAccount": {
+                            "$ref": "#/definitions/dysonAccount"
+                        },
+                        "devices": {
+                            "title": "Local Network Configurations for MyDyson Account Devices",
+                            "description": "Use + to add a new item for each robot vacuum or air treatment device to be exposed. For each device enter its serial number and local network configuration.",
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/deviceAccount"
+                            },
+                            "minItems": 1,
+                            "uniqueItems": true
+                        }
+                    },
+                    "required": [
+                        "dysonAccount",
+                        "devices"
+                    ]
+                },
+                {
+                    "properties": {
+                        "provisioningMethod": {
+                            "const": "Local Wi-Fi"
+                        },
+                        "devices": {
+                            "title": "Local Network Configurations and Wi-Fi Setup Credentials",
+                            "description": "Use + to add a new item for each robot vacuum or air treatment device to be exposed. For each device enter a friendly name that will be used to identify it, its Wi-Fi setup credentials, and its local network configuration. The Wi-Fi setup credentials can be found on a label attached to the product (behind the clear bin of robot vacuums or underneath the base of air treatment devices) or its operating manual. These details are used to derive the MQTT configuration, but may not be compatible with more recent Dyson models.",
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/deviceWifi"
+                            },
+                            "minItems": 1,
+                            "uniqueItems": true
+                        }
+                    },
+                    "required": [
+                        "devices"
+                    ]
+                },
+                {
+                    "properties": {
+                        "provisioningMethod": {
+                            "const": "Local MQTT"
+                        },
+                        "devices": {
+                            "title": "Local Network Configurations and MQTT Credentials",
+                            "description": "Use + to add a new item for each robot vacuum or air treatment device to be exposed. For each device enter a friendly name that will be used to identify it, its MQTT credentials, and its local network configuration. The MQTT credentials can be found using tools such as opendyson.",
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/deviceMqtt"
+                            },
+                            "minItems": 1,
+                            "uniqueItems": true
+                        }
+                    },
+                    "required": [
+                        "devices"
+                    ]
+                }
+            ]
+        }
+    },
     "definitions": {
+        "dysonAccount": {
+            "title": "MyDyson Account Configuration",
+            "description": "Enter the email address and password used to login to the MyDyson app, and then click START AUTH to begin authorising access to your account. A one-time password (OTP) code should then be sent to the specified email address. Enter the OTP code and click SUBMIT CODE to complete the authorization process. The code is only valid for a short time and can only be used once. If you do not receive a code then check your spam folder or try again.",
+            "type": "object",
+            "properties": {
+                "email": {
+                    "description": "MyDyson account email address.",
+                    "title": "e.g. leia@resistance.clean",
+                    "type": "string",
+                    "format": "email"
+                },
+                "password": {
+                    "description": "MyDyson account password.",
+                    "title": "e.g. Dyson4Life!",
+                    "type": "string",
+                    "minLength": 1
+                },
+                "china": {
+                    "description": "Select this option if your MyDyson account is registered in China. This selects the correct server URL for the account.",
+                    "type": "boolean",
+                    "default": false
+                },
+                "token": {
+                    "description": "As an alternative to providing the MyDyson account configuration, a pre-authenticated token may be used instead. (If opendyson is used then this can be found in '~/.config/libdyson/config.yml'.) This value is primarily intended for automated testing, and should normally be left blank.",
+                    "title": "Leave blank unless you know what you are doing",
+                    "type": "string",
+                    "pattern": "^[A-Z0-9]{64}-1$",
+                    "ui:widget": "hidden"
+                }
+            },
+            "dependencies": {
+                "password": {
+                    "properties": {
+                        "startAuth": {
+                            "description": "After entering the email and password start the authorization process.",
+                            "type": "boolean",
+                            "buttonText": "START AUTH",
+                            "buttonClose": false,
+                            "buttonSave": false,
+                            "default": false
+                        },
+                        "finishAuth": {
+                            "description": "One-time password (OTP) code from email.",
+                            "type": "boolean",
+                            "buttonField": "SUBMIT CODE",
+                            "buttonClose": false,
+                            "buttonSave": false,
+                            "textPlaceholder": "e.g. 123456",
+                            "default": false
+                        }
+                    }
+                }
+            },
+            "oneOf": [
+                {
+                    "required": [
+                        "email",
+                        "password",
+                        "china"
+                    ]
+                },
+                {
+                    "required": [
+                        "token",
+                        "china"
+                    ]
+                }
+            ]
+        },
+        "deviceAccount": {
+            "title": "Device Configuration",
+            "type": "object",
+            "properties": {
+                "serialNumber": {
+                    "$ref": "#/definitions/deviceSerialNumber"
+                },
+                "host": {
+                    "$ref": "#/definitions/deviceHost"
+                },
+                "port": {
+                    "$ref": "#/definitions/devicePort"
+                }
+            },
+            "required": [
+                "serialNumber",
+                "host",
+                "port"
+            ]
+        },
+        "deviceWifi": {
+            "title": "Device Configuration",
+            "type": "object",
+            "properties": {
+                "name": {
+                    "$ref": "#/definitions/deviceName"
+                },
+                "host": {
+                    "$ref": "#/definitions/deviceHost"
+                },
+                "port": {
+                    "$ref": "#/definitions/devicePort"
+                },
+                "ssid": {
+                    "$ref": "#/definitions/deviceWifiSsid"
+                },
+                "password": {
+                    "$ref": "#/definitions/deviceWifiPassword"
+                }
+            },
+            "required": [
+                "name",
+                "host",
+                "port",
+                "ssid",
+                "password"
+            ]
+        },
+        "deviceMqtt": {
+            "title": "Device Configuration",
+            "type": "object",
+            "properties": {
+                "name": {
+                    "$ref": "#/definitions/deviceName"
+                },
+                "host": {
+                    "$ref": "#/definitions/deviceHost"
+                },
+                "port": {
+                    "$ref": "#/definitions/devicePort"
+                },
+                "serialNumber": {
+                    "$ref": "#/definitions/deviceSerialNumber"
+                },
+                "password": {
+                    "$ref": "#/definitions/devicePassword"
+                },
+                "rootTopic": {
+                    "$ref": "#/definitions/deviceRootTopic"
+                }
+            },
+            "required": [
+                "name",
+                "host",
+                "port",
+                "serialNumber",
+                "password",
+                "rootTopic"
+            ]
+        },
         "entity": {
             "type": "string",
             "enum": [
@@ -265,30 +381,52 @@
                 "Thermostat"
             ]
         },
-        "host": {
+        "deviceName": {
+            "description": "Friendly name used to identify the robot vacuum or air treatment device. This is used as the Matter NodeLabel for the device.",
+            "title": "e.g. Sweep",
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64
+        },
+        "deviceHost": {
             "description": "Local network hostname or IP address of the robot vacuum or air treatment device.",
             "title": "e.g. sweep.local or 192.168.0.100",
             "type": "string",
             "format": "hostname"
         },
-        "port": {
+        "devicePort": {
             "description": "MQTT port number. This should usually be left at its default value of 1883.",
             "title": "e.g. 1883",
             "type": "integer",
             "default": 1883,
             "ui:widget": "hidden"
         },
-        "username": {
-            "description": "MQTT username (should match the product's serial number).",
-            "title": "From opendyson: mqtt → username",
+        "deviceWifiSsid": {
+            "description": "Product SSID from the label attached to the product or its operating manual.",
+            "title": "e.g. DYSON-XXX-YY-ZZZZZZZZ-NNN",
+            "type": "string",
+            "pattern": "^(((360EYE-)?[A-Z0-9]{3}-[A-Z]{2}-[A-Z0-9]{8,})|(DYSON-[A-Z0-9]{3}-[A-Z]{2}-[A-Z0-9]{8,}-[0-9]{3}[A-Z]?))$"
+        },
+        "deviceWifiPassword": {
+            "description": "Product Wi-Fi Password from the label attached to the product or its operating manual.",
+            "title": "e.g. xxxxxxxx",
+            "type": "string",
+            "pattern": "^[A-Za-z0-9]{8,}$"
+        },
+        "deviceSerialNumber": {
+            "description": "Serial number of the robot vacuum or air treatment device. (This is also used as the MQTT username and as part of its MQTT topic names.)",
+            "title": "e.g. XXX-YY-ZZZZZZZZ",
             "type": "string",
             "pattern": "^[A-Z0-9]{3}-[A-Z]{2}-[A-Z0-9]{8,}$"
         },
-        "root_topic": {
-            "description": "MQTT root topic (Dyson internal product type). If using opendyson: mqtt → root_topic",
-            "title": "e.g. N223 or 475",
+        "devicePassword": {
+            "description": "MQTT password.",
             "type": "string",
-            "pattern": "^[A-Z]?[0-9]{3}[A-Z]?$",
+            "pattern": "^[A-Za-z0-9+/]{86}==$"
+        },
+        "deviceRootTopic": {
+            "description": "MQTT root topic (Dyson internal product type).",
+            "type": "string",
             "oneOf": [
                 {
                     "const": "N223",

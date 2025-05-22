@@ -24,9 +24,10 @@ import {
     DysonDeviceAirHumidifyCoolK,
     DysonDeviceAirBigQuiet
 } from './dyson-device-air.js';
-import { Config, DeviceConfig } from './config-types.js';
+import { Config } from './config-types.js';
 import { AnsiLogger } from 'matterbridge/logger';
 import { logError, UnionToIntersection } from './utils.js';
+import { DeviceConfigMqtt } from './dyson-mqtt-client.js';
 
 // List of constructors for Dyson devices
 const DYSON_DEVICE_TYPES = [
@@ -56,12 +57,12 @@ const DYSON_DEVICE_TYPES = [
 export async function createDysonDevice(
     log:        AnsiLogger,
     config:     Config,
-    device:     DeviceConfig
+    device:     DeviceConfigMqtt
 ): Promise<DysonDevice> {
     // Select the appropriate class for this device
-    const { root_topic } = device;
-    const deviceClass = DYSON_DEVICE_TYPES.find((device) => device.model.type === root_topic);
-    if (!deviceClass) throw new Error(`Unknown Dyson device type: ${root_topic}`);
+    const { rootTopic } = device;
+    const deviceClass = DYSON_DEVICE_TYPES.find((device) => device.model.type === rootTopic);
+    if (!deviceClass) throw new Error(`Unknown Dyson device type: ${rootTopic}`);
 
     // Create the MQTT client and wait for it to finish initialising
     const mqtt = new deviceClass.mqttConstructor(log, config, device);
@@ -70,4 +71,9 @@ export async function createDysonDevice(
 
     // Create the Dyson device itself
     return new deviceClass(log, config, device, mqtt as UnionToIntersection<typeof mqtt>);
+}
+
+// Test whether a specific model is supported
+export function isSupportedModel(rootTopic: string): boolean {
+    return DYSON_DEVICE_TYPES.some((device) => device.model.type === rootTopic);
 }

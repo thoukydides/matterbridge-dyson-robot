@@ -6,7 +6,7 @@ import {
     checkers as dysonMsgCheckersAir,
     TypeMap as DysonMsgMapAir
 } from './ti/dyson-air-msg-types.js';
-import { Config, DeviceConfig } from './config-types.js';
+import { Config } from './config-types.js';
 import { AnsiLogger } from 'matterbridge/logger';
 import { formatList, tryListener } from './utils.js';
 import {
@@ -34,6 +34,7 @@ import { DysonAirCurrentSensorData } from './dyson-air-sensor-types.js';
 import { DysonAirProductState } from './dyson-air-state-types.js';
 import { DysonMsgAny } from './dyson-mqtt-parse.js';
 import { DysonModeReason } from './dyson-types.js';
+import { DeviceConfigMqtt } from './dyson-mqtt-client.js';
 
 // Configuration of a Dyson MQTT client for robot vacuums
 const DYSON_MQTT_CONFIG_AIR: DysonMqttConfig<DysonMsgMapAir> = {
@@ -94,14 +95,15 @@ export class DysonMqttAir extends DysonMqtt<DysonMsgMapAir, DysonMqttStatusAir> 
     ]);
 
     // Construct a new MQTT client
-    constructor(log: AnsiLogger, config: Config, device: DeviceConfig) {
+    constructor(log: AnsiLogger, config: Config, device: DeviceConfigMqtt) {
         super(log, config, device, DYSON_MQTT_CONFIG_AIR);
 
         // Handle MQTT events
         this.on('subscribed', tryListener(this, async () => {
             // Request the current status when (re)connected
-            await this.publish('REQUEST-CURRENT-STATE');
-            await this.publish('REQUEST-PRODUCT-ENVIRONMENT-CURRENT-SENSOR-DATA');
+            await this.publish('REQUEST-CURRENT-FAULTS', {});
+            await this.publish('REQUEST-CURRENT-STATE', {});
+            await this.publish('REQUEST-PRODUCT-ENVIRONMENT-CURRENT-SENSOR-DATA', {});
         })
         ).on('message', tryListener(this, msg => {
             // Update the robot vacuum state from the received messages

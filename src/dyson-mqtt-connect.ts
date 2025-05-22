@@ -2,15 +2,10 @@
 // Copyright © 2025 Alexander Thoukydides
 
 import { AnsiLogger } from 'matterbridge/logger';
-import { connect, IClientOptions, MqttClient } from 'mqtt';
-import {
-    Config,
-    DeviceConfig,
-    DeviceConfigIoT,
-    DeviceConfigMqtt
-} from './config-types.js';
+import { Config } from './config-types.js';
 import { formatMilliseconds, logError, MS } from './utils.js';
 import { setTimeout } from 'node:timers/promises';
+import { DysonMqttClient } from './dyson-mqtt-client.js';
 
 // Reconnection back-off timings
 const BACKOFF_MIN           =  1 * MS;  // 1 second minimum backoff
@@ -19,10 +14,7 @@ const BACKOFF_FACTOR        = 2;        // Double backoff on each failure
 const BACKOFF_RESET_UPTIME  = 10 * MS;  // >10 second connection to use MIN
 
 // Manage a Dyson MQTT broker connection
-export abstract class DysonMqttConnection<T extends DeviceConfig = DeviceConfig> {
-
-    // The MQTT client
-    readonly mqtt: MqttClient;
+export class DysonMqttConnection {
 
     // Abandon reconnection attempts
     terminate       = new AbortController();
@@ -33,34 +25,11 @@ export abstract class DysonMqttConnection<T extends DeviceConfig = DeviceConfig>
 
     // Construct a new MQTT client
     constructor(
-        readonly log:           AnsiLogger,
-        readonly config:        Config,
-        readonly deviceConfig:  T,
-        brokerUrl:              string,
-        extraOptions:           IClientOptions
+        readonly log:       AnsiLogger,
+        readonly config:    Config,
+        readonly mqtt:      DysonMqttClient
     ) {
-        // MQTT debug logging, if enabled
-        let mqttLog: IClientOptions['log'];
-        if (this.config.debugFeatures.includes('Log MQTT Client')) {
-            mqttLog = (...args: unknown[]): void => { this.log.debug('MQTT client:', ...args); };
-        }
-
-        // Common MQTT options
-        const options: IClientOptions = {
-            log:                        mqttLog,
-            keepalive:                  10,         // Max 10 seconds between packets
-            manualConnect:              true,       // Disable automatic (re)connection
-            reconnectOnConnackError:    false,      // Disable automatic connection retry
-            reconnectPeriod:            0,          // Disable automatic reconnection
-            resubscribe:                true,       // Resubscribe to topics on reconnect
-            rejectUnauthorized:         false,      // Allow self-signed certificates
-            protocolId:                 'MQIsdp',   // MQTT version 3.1
-            protocolVersion:            3,
-            ...extraOptions
-        };
-
-        // Create and configure the MQTT client
-        this.mqtt = connect(brokerUrl, options);
+        // Listen to MQTT client events to manage its connection
         this.mqtt.on('connect', () => {
             // Successful connection, so start measuring uptime
             log.info('MQTT client connected to broker');
@@ -96,8 +65,7 @@ export abstract class DysonMqttConnection<T extends DeviceConfig = DeviceConfig>
         });
 
         // Attempt the initial connection
-        this.log.info('Starting MQTT client...');
-        this.mqtt.connect();
+        void this.start();
     }
 
     // Attempt a reconnection
@@ -110,7 +78,7 @@ export abstract class DysonMqttConnection<T extends DeviceConfig = DeviceConfig>
 
             // Attempt the reconnection
             this.log.info('MQTT client attempting reconnection...');
-            this.mqtt.reconnect();
+            await this.mqtt.connect();
 
             // Increase backoff for the next attempt
             this.backoff = Math.min(this.backoff * BACKOFF_FACTOR, BACKOFF_MAX);
@@ -118,7 +86,18 @@ export abstract class DysonMqttConnection<T extends DeviceConfig = DeviceConfig>
             if (!(err instanceof Error && err.name === 'AbortError')) {
                 logError(this.log, 'MQTT Reconnect', err);
             }
-            // (Don't retry if terminated or otherwise failed synchronously)
+            // (Don't retry if failed before attempting reconnection)
+        }
+    }
+
+    // Attempt the initial connection
+    async start(): Promise<void> {
+        try {
+            this.log.info('Starting MQTT client...');
+            await this.mqtt.connect();
+        } catch (err) {
+            logError(this.log, 'MQTT Start', err);
+            // (Don't retry if failed before attempting connection)
         }
     }
 
@@ -128,38 +107,5 @@ export abstract class DysonMqttConnection<T extends DeviceConfig = DeviceConfig>
         this.terminate.abort();
         await this.mqtt.endAsync();
         this.log.info('MQTT client stopped');
-    }
-}
-
-// Manage a local Dyson MQTT broker connection
-export class DysonMqttConnectionLocal extends DysonMqttConnection<DeviceConfigMqtt> {
-
-    // Construct a new MQTT client
-    constructor(log: AnsiLogger, config: Config, deviceConfig: DeviceConfigMqtt) {
-        const brokerUrl = `mqtt://${deviceConfig.host}:${deviceConfig.port}`;
-        const options: IClientOptions = {
-            username:   deviceConfig.username,
-            password:   deviceConfig.password
-        };
-        super(log, config, deviceConfig, brokerUrl, options);
-    }
-}
-
-// Manage a Dyson IoT cloud MQTT broker connection
-export class DysonMqttConnectionIoT extends DysonMqttConnection<DeviceConfigIoT> {
-
-    // Construct a new MQTT client
-    constructor(log: AnsiLogger, config: Config, deviceConfig: DeviceConfigIoT) {
-        const brokerUrl = `wss://${deviceConfig.endpoint}/mqtt`;
-        const headers: Record<string, string> = {
-            [deviceConfig.token_key]:           deviceConfig.token_value,
-            'X-Amz-CustomAuthorizer-Name':      deviceConfig.custom_authorizer_name,
-            'X-Amz-CustomAuthorizer-Signature': deviceConfig.token_signature
-        };
-        const options: IClientOptions = {
-            clientId:   deviceConfig.client_id,
-            wsOptions:  { headers }
-        };
-        super(log, config, deviceConfig, brokerUrl, options);
     }
 }

@@ -3,9 +3,9 @@
 
 import EventEmitter from 'events';
 import { AnsiLogger } from 'matterbridge/logger';
-import { MqttClient } from 'mqtt';
 import { Config } from './config-types.js';
-import { plural, tryListener } from './utils.js';
+import { formatList, plural, tryListener } from './utils.js';
+import { DysonMqttClient } from './dyson-mqtt-client.js';
 
 // Configuration required for managing MQTT topic subscriptions
 export interface DysonMqttSubscribeConfig {
@@ -29,7 +29,7 @@ export class DysonMqttSubscribe extends EventEmitter<DysonMqttSubscribeEventMap>
     // Construct a new subscription manager
     constructor(
         readonly log:           AnsiLogger,
-        readonly mqtt:          MqttClient,
+        readonly mqtt:          DysonMqttClient,
         readonly config:        Config,
         readonly topics:        DysonMqttSubscribeConfig,
         readonly root_topic:    string,
@@ -47,13 +47,21 @@ export class DysonMqttSubscribe extends EventEmitter<DysonMqttSubscribeEventMap>
     // Subscribe to topics when the client (re)connects
     async subscribe(): Promise<void> {
         // Select the required subscription topics
-        const topics = this.topics.subscribe.map(t => this.replaceTopicPlaceholders(t));
+        const replacePlaceholders = (topics: string[]): string[] =>
+            topics.map(t => this.replaceTopicPlaceholders(t));
+        const topics = replacePlaceholders(this.topics.subscribe);
         if (this.config.wildcardTopic) {
-            if (this.mqtt.options.wsOptions) this.log.warn('Ignoring wildcardTopic option for WebSocket connection');
-            else topics.push('#');
+            if (this.config.provisioningMethod !== 'Remote Account') {
+                // Use full wildcard topic for local connections
+                topics.push('#');
+            } else {
+                // AWS IoT disconnects on wildcards; subscribe to command topic
+                topics.push(this.replaceTopicPlaceholders(this.topics.command));
+            }
         }
 
         // Attempt the subscription
+        this.log.debug(`MQTT subscribe: ${formatList(topics)}`);
         const grant = await this.mqtt.subscribeAsync(topics, { qos: 1 });
 
         // Check whether
@@ -91,11 +99,12 @@ export class DysonMqttSubscribe extends EventEmitter<DysonMqttSubscribeEventMap>
         return 'unexpected';
     }
 
+    // The full topic for publishing commands
     get commandTopic(): string {
         return this.replaceTopicPlaceholders(this.topics.command);
     }
 
-    // Replace any placeholders in a topic
+    // Replace any placeholders in topic
     replaceTopicPlaceholders(topic: string): string {
         return topic
             .replace('@', this.root_topic)

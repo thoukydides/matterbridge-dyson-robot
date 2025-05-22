@@ -67,9 +67,6 @@ import {
 import { createThermostatClusterServer } from './endpoint-air-thermostat.js';
 import { MaybePromise } from 'matterbridge/matter';
 
-// Any cluster attribute value type
-type AttributeValue = boolean | number | bigint | string | object | null;
-
 // Device-specific endpoint configuration
 export type EndpointOptionsAirSensors = {
     [K in keyof UpdateAirSensors as undefined extends UpdateAirSensors[K] ? K : never]-?: boolean
@@ -121,9 +118,9 @@ export interface UpdateAirFan {
     // Thermostat read/write attributes
     airflowDirection?:          FanControl.AirflowDirection;
     fanMode:                    FanControl.FanMode;
-    percentSetting:             number;
+    percentSetting:             number | null;
     rockSetting?:               AirFanRockSetting;
-    speedSetting:               number; // 0 = Off, or 1 ~ 10
+    speedSetting:               number | null; // null = Auto, 0 = Off, or 1 ~ 10
     windSetting?:               AirWindSetting;
     // Thermostat read-only attributes
     percentCurrent:             number;
@@ -409,9 +406,9 @@ export class EndpointsAir {
             const description = `${name} ${key}`;
 
             // Wrapper around handler to trap errors and flush the change cache
-            const handler = (newValue: T[typeof key], oldValue: T[typeof key]): void => {
+            const handler = (newValue: T[typeof key], oldValue: T[typeof key], context: { offline?: boolean }): void => {
                 // Ignore reflected local writes (and duplicates)
-                if (!this.isAttributeChanged(endpoint, clusterId, key, newValue as AttributeValue)) return;
+                if (context.offline === true) return;
 
                 // Call the handler and then ensure the next update gets applied
                 this.log.info(`${CN}${description}${RI}: ${JSON.stringify(oldValue)} → ${CV}${JSON.stringify(newValue)}${RI}`);
@@ -470,8 +467,8 @@ export class EndpointsAir {
         const fanAttributes = ['airflowDirection', 'fanMode', 'percentSetting', 'rockSetting',
                                'speedSetting', 'windSetting', 'percentCurrent', 'speedCurrent'] as const;
         await Promise.all([
-            this.setAttribute(endpoint, OnOff.Cluster.id, 'onOff', onOff),
-            ...fanAttributes.map(key => fan[key] && this.setAttribute(endpoint, FanControl.Cluster.id, key, fan[key]))
+            endpoint.setAttribute(OnOff.Cluster.id, 'onOff', onOff, this.log),
+            ...fanAttributes.map(key => fan[key] && endpoint.setAttribute(FanControl.Cluster.id, key, fan[key], this.log))
         ]);
     }
 
@@ -508,7 +505,7 @@ export class EndpointsAir {
         const attributes = ['occupiedHeatingSetpoint', 'systemMode', 'localTemperature',
                             'piHeatingDemand', 'thermostatRunningState'] as const;
         await Promise.all(
-            attributes.map(key => this.setAttribute(endpoint, Thermostat.Cluster.id, key, thermostat[key]))
+            attributes.map(key => endpoint.setAttribute(Thermostat.Cluster.id, key, thermostat[key], this.log))
         );
     }
 
@@ -528,9 +525,9 @@ export class EndpointsAir {
             // Perform the cluster attribute updates
             const endpoint = this.purifier;
             await Promise.all([
-                this.setAttribute(endpoint, clusterId, 'condition',        condition),
-                this.setAttribute(endpoint, clusterId, 'changeIndication', changeIndication),
-                inPlaceIndicator && this.setAttribute(endpoint, clusterId, 'inPlaceIndicator', inPlaceIndicator)
+                endpoint?.setAttribute(clusterId, 'condition',        condition,        this.log),
+                endpoint?.setAttribute(clusterId, 'changeIndication', changeIndication, this.log),
+                inPlaceIndicator && endpoint?.setAttribute(clusterId, 'inPlaceIndicator', inPlaceIndicator, this.log)
             ]);
         };
 
@@ -588,32 +585,8 @@ export class EndpointsAir {
             [this.airQuality,  Pm10ConcentrationMeasurement                         .Cluster.id, 'measuredValue', pm10]
         ];
         const updatePromises = attributes.flatMap(([endpoints, clusterId, attribute, value]) =>
-            value === undefined ? [] : endpoints.map(e => this.setAttribute(e, clusterId, attribute, value)));
+            value === undefined ? [] : endpoints.map(e => e.updateAttribute(clusterId, attribute, value, this.log)));
         await Promise.all(updatePromises);
-    }
-
-    // Write an attribute value, recording it to filter from subscriptions
-    async setAttribute(
-        endpoint:   MatterbridgeEndpoint | undefined,
-        clusterId:  ClusterId,
-        attribute:  string,
-        value:      AttributeValue
-    ): Promise<boolean> {
-        if (!endpoint) return false;
-        const key = [endpoint.id, clusterId, attribute].join(':');
-        this.changed.setLast(key, value);
-        return endpoint.updateAttribute(clusterId, attribute, value, this.log);
-    }
-
-    // Filter an attribute changed event
-    isAttributeChanged(
-        endpoint:   MatterbridgeEndpoint,
-        clusterId:  ClusterId,
-        attribute:  string,
-        value:      AttributeValue
-    ): boolean {
-        const key = [endpoint.id, clusterId, attribute].join(':');
-        return this.changed.isChanged(key, value);
     }
 
     // Ensure that the next MQTT status update is applied to the clusters

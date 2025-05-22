@@ -25,13 +25,20 @@ export const PLUGIN_VERSION = PACKAGE.version;
 export const PLUGIN_URL     = PACKAGE.homepage;
 
 // Default configuration options
-export const DEFAULT_CONFIG: Partial<Config> = {
+export const DEFAULT_CONFIG: Readonly<Partial<Config>> = {
     whiteList:              [],
     blackList:              [],
     entityWhiteList:        [],
     entityBlackList:        ['Composed Air Purifier', 'Humidity Sensor', 'Temperature Sensor'],
     deviceEntityBlackList:  {},
-    wildcardTopic:          true,
+    provisioningMethod:     'Remote Account',
+    ...(process.env.DYSON_TOKEN && {
+        dysonAccount: {
+            china:      false,
+            token:      process.env.DYSON_TOKEN
+        }
+    }),
+    wildcardTopic:          false,
     debug:                  false,
     debugFeatures:          [],
     unregisterOnShutdown:   false

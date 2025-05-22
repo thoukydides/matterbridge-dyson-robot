@@ -7,7 +7,8 @@ import { DebugFeatures } from './config-types.js';
 
 // Regular expressions for different types of sensitive data
 const REGEXP_SERIAL_NUMBER = /[A-Z0-9]{3}-[A-Z]{2}-[A-Z0-9]{8}/g;
-const REGEXP_PASSWORD      = /[A-Za-z0-9+/]{86}==/g;
+const REGEXP_CLOUD_TOKEN   = /[0-9A-F]{64}-1/g;
+const REGEXP_EMAIL         = /[\w-.]+@([\w-]+\.)+[\w-]+/g;
 
 // A logger with filtering and support for an additional prefix
 export class FilterLogger extends AnsiLogger {
@@ -65,22 +66,14 @@ export class FilterLogger extends AnsiLogger {
 
     // Filter sensitive data within a string
     filterString(value: string): { filtered: string, redacted: boolean } {
-        let filtered = value.replace(REGEXP_PASSWORD, maskPassword);
+        let filtered = value
+            .replace(REGEXP_CLOUD_TOKEN, v => maskToken('TOKEN',    v))
+            .replace(REGEXP_EMAIL,       v => maskToken('EMAIL',    v));
         if (!this.config.has('Log Serial Numbers')) {
-            filtered = filtered.replace(REGEXP_SERIAL_NUMBER, maskSerialNumber);
+            filtered = filtered.replace(REGEXP_SERIAL_NUMBER, v => maskToken('SERIAL_NUMBER', v));
         }
         return { filtered, redacted: filtered !== value };
     }
-}
-
-// Mask a Dyson serial number
-function maskSerialNumber(serialNumber: string): string {
-    return maskToken('SERIAL_NUMBER', serialNumber);
-}
-
-// Mask an MQTT password
-function maskPassword(password: string): string {
-    return maskToken('PASSWORD', password);
 }
 
 // Mask a token, leaving just the first and final few characters

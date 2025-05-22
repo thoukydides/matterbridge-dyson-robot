@@ -37,6 +37,15 @@ export interface Dyson360MsgGoodbye extends DysonMsg {
     reason:                 'UNKNOWN';
 }
 
+export interface Dyson360MsgGoneAway extends DysonMsg {
+    msg:                    'GONE-AWAY';
+    // Note: This is the only message that omits the 'time' property
+}
+
+export interface Dyson360MsgImBack extends DysonMsg {
+    msg:                    'IM-BACK';
+}
+
 export interface Dyson360MsgCurrentState extends DysonMsg {
     msg:                    'CURRENT-STATE';
     batteryChargeLevel:     number; // Percent remaining
@@ -112,6 +121,7 @@ export interface Dyson360MsgTelemetryData extends DysonMsg {
 
 export interface Dyson360MsgRequestCurrentState extends DysonMsg {
     msg:                    'REQUEST-CURRENT-STATE';
+    'mode-reason'?:         DysonModeReason;
 }
 
 export interface Dyson360MsgStateSet extends DysonMsg {

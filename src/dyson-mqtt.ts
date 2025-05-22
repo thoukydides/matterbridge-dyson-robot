@@ -3,12 +3,10 @@
 
 import { AnsiLogger } from 'matterbridge/logger';
 import { INSPECT_SINGLE_LINE, MM, MP, MR, RD, SR, ST } from './logger-options.js';
-import { Config, DeviceConfig } from './config-types.js';
-import { MqttClient } from 'mqtt';
+import { Config } from './config-types.js';
 import { MS, tryListener } from './utils.js';
 import EventEmitter from 'events';
 import { DysonMsg } from './dyson-types.js';
-import { isConfigMqtt } from './dyson-mqtt-config.js';
 import {
     DysonMqttParserConfig,
     DysonMsgAny,
@@ -18,14 +16,11 @@ import {
     DysonMqttSubscribe,
     DysonMqttSubscribeConfig
 } from './dyson-mqtt-subscribe.js';
-import {
-    DysonMqttConnection,
-    DysonMqttConnectionIoT,
-    DysonMqttConnectionLocal
-} from './dyson-mqtt-connect.js';
+import { DysonMqttConnection } from './dyson-mqtt-connect.js';
 import { inspect } from 'util';
 import { DysonMQTTFilter, DysonMqttFiltered } from './dyson-mqtt-filter.js';
 import { AsyncEventEmitter } from './async-eventemitter.js';
+import { DeviceConfigMqtt, DysonMqttClient, DysonMqttClientLocal, DysonMqttClientRemote } from './dyson-mqtt-client.js';
 
 // Configuration of a Dyson MQTT client
 export interface DysonMqttConfig<T> {
@@ -73,7 +68,7 @@ export abstract class DysonMqtt<T, S>
     extends AsyncEventEmitter<DysonMqttEventMap<T>> implements DysonMqttLike {
 
     // The MQTT client
-    private mqtt:           MqttClient;
+    private mqtt:           DysonMqttClient;
     private mqttConnection: DysonMqttConnection;
     private mqttSubscribe:  DysonMqttSubscribe;
     private mqttFilter:     DysonMQTTFilter;
@@ -88,22 +83,24 @@ export abstract class DysonMqtt<T, S>
     constructor(
         readonly log:           AnsiLogger,
         readonly config:        Config,
-        readonly deviceConfig:  DeviceConfig,
+        readonly deviceConfig:  DeviceConfigMqtt,
         readonly mqttConfig:    DysonMqttConfig<T>
     ) {
         super({ captureRejections: true });
 
-        // Configure the MQTT client
-        this.mqttConnection = isConfigMqtt(deviceConfig)
-            ? new DysonMqttConnectionLocal(log, config, deviceConfig)
-            : new DysonMqttConnectionIoT(log, config, deviceConfig);
-        this.mqtt = this.mqttConnection.mqtt;
+        // Create the MQTT client
+        this.mqtt = 'password' in deviceConfig
+            ? new DysonMqttClientLocal (log, config, deviceConfig)
+            : new DysonMqttClientRemote(log, config, deviceConfig);
         this.mqtt.on('close', tryListener(this, () => { this.updateReachable(false); }));
 
+        // Create an MQTT connection manager
+        this.mqttConnection = new DysonMqttConnection(log, config, this.mqtt);
+
         // Manage MQTT topic subscriptions
-        const { root_topic, username } = deviceConfig;
+        const { rootTopic, serialNumber } = deviceConfig;
         this.mqttSubscribe = new DysonMqttSubscribe(
-            log, this.mqtt, config, mqttConfig.topics, root_topic, username);
+            log, this.mqtt, config, mqttConfig.topics, rootTopic, serialNumber);
         this.mqttSubscribe.on('error', err => this.emit('error', err));
         this.mqttSubscribe.on('subscribed', () => {
             this.emit('subscribed');

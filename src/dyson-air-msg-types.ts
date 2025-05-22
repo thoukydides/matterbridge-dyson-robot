@@ -43,6 +43,11 @@ export interface DysonAirMsgHello extends DysonMsg {
     resetSource:            DysonAirResetSource;
 }
 
+export interface DysonAirMsgGoneAway extends DysonMsg {
+    msg:                    'GONE-AWAY';
+    // Note: This is the only message that omits the 'time' property
+}
+
 export interface DysonAirMsgGoodbye extends DysonMsg {
     msg:                    'GOODBYE';
     reason:                 'UNKNOWN';
@@ -123,13 +128,19 @@ export interface DysonAirMsgFaultsChange extends DysonMsg {
 
 // MQTT topic: <type>/<sn>/command
 
-export interface DysonAirMsgRequestCurrentState extends DysonMsg {
-    msg:                    'REQUEST-CURRENT-STATE';
+export interface DysonAirMsgRequestCurrentFaults extends DysonMsg {
+    msg:                    'REQUEST-CURRENT-FAULTS';
+    'mode-reason'?:         DysonModeReason;
 }
 
+export interface DysonAirMsgRequestCurrentState extends DysonMsg {
+    msg:                    'REQUEST-CURRENT-STATE';
+    'mode-reason'?:         DysonModeReason;
+}
 
 export interface DysonAirMsgRequestProductEnvironmentCurrentSensorData extends DysonMsg {
     msg:                    'REQUEST-PRODUCT-ENVIRONMENT-CURRENT-SENSOR-DATA';
+    'mode-reason'?:         DysonModeReason;
 }
 
 export interface DysonAirMsgStateSet extends DysonMsg {

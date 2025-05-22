@@ -1,35 +1,50 @@
 // Matterbridge plugin for Dyson robot vacuum and air treatment devices
 // Copyright © 2025 Alexander Thoukydides
 
-// Configuration for a single device
-export interface DeviceConfigBase {
-    name:                   string;
+// Configuration methods
+export type ProvisioningMethod =
+    'Remote Account'
+  | 'Local Account'
+  | 'Local Wi-Fi'
+  | 'Local MQTT';
+
+// Dyson account configuration
+export interface DysonAccountBase {
+    china:                  boolean;
+    // Dummy values corresponding to action buttons
+    finishAuth?:            boolean,
+    startAuth?:             boolean
 }
-export interface DeviceConfigWiFi extends DeviceConfigBase {
-    host:                   string;
-    port:                   number;
-    wifi_ssid:              string;
-    wifi_password:          string;
-}
-export interface DeviceConfigMqtt extends DeviceConfigBase {
-    host:                   string;
-    port:                   number;
-    username:               string;
+export interface DysonAccountLogin extends DysonAccountBase {
+    email:                  string;
     password:               string;
-    root_topic:             string;
 }
-export interface DeviceConfigIoT extends DeviceConfigBase {
-    endpoint:               string;
-    client_id:              string;
-    custom_authorizer_name: string;
-    token_key:              string;
-    token_signature:        string;
-    token_value:            string;
-    username:               string;
-    root_topic:             string;
+export interface DysonAccountToken extends DysonAccountBase {
+    token:                  string;
+    email?:                 string;
+    password?:              string;
 }
-export type DeviceConfig    = DeviceConfigMqtt | DeviceConfigIoT;
-export type DeviceConfigAny = DeviceConfig | DeviceConfigWiFi;
+export type DysonAccount = DysonAccountLogin | DysonAccountToken;
+
+// Device configuration
+export interface DeviceConfigNetwork {
+    host:                   string;
+    port:                   number;
+}
+export interface DeviceConfigLocalAccount extends DeviceConfigNetwork {
+    serialNumber:           string;
+}
+export interface DeviceConfigLocalWiFi extends DeviceConfigNetwork {
+    name:                   string;
+    ssid:                   string;
+    password:               string;
+}
+export interface DeviceConfigLocalMqtt extends DeviceConfigNetwork {
+    name:                   string;
+    serialNumber:           string;
+    password:               string;
+    rootTopic:              string;
+}
 
 // Entity names used for validation
 export type EntityName =
@@ -43,13 +58,15 @@ export type EntityName =
 // Debugging features
 export type DebugFeatures =
     'Log Endpoint Debug'
+  | 'Log API Headers'
+  | 'Log API Bodies'
   | 'Log MQTT Client'
   | 'Log MQTT Payloads'
   | 'Log Serial Numbers'
   | 'Log Debug as Info';
 
 // The user plugin configuration
-export interface Config {
+export interface ConfigBase {
     // Matterbridge additions
     name:                   string;
     type:                   string;
@@ -60,9 +77,28 @@ export interface Config {
     entityBlackList:        EntityName[],
     deviceEntityBlackList:  { [serialNumber: string]: EntityName[] },
     // Plugin configuration
-    devices:                DeviceConfigAny[];
+    provisioningMethod:     ProvisioningMethod;
     wildcardTopic:          boolean;
     debug:                  boolean;
     debugFeatures:          DebugFeatures[];
     unregisterOnShutdown:   boolean;
 }
+export interface ConfigAccount extends ConfigBase {
+    dysonAccount:           DysonAccount;
+}
+export interface ConfigRemoteAccount extends ConfigAccount {
+    provisioningMethod:     'Remote Account';
+}
+export interface ConfigLocalAccount extends ConfigAccount {
+    provisioningMethod:     'Local Account';
+    devices:                DeviceConfigLocalAccount[];
+}
+export interface ConfigLocalWiFi extends ConfigBase {
+    provisioningMethod:     'Local Wi-Fi';
+    devices:                DeviceConfigLocalWiFi[];
+}
+export interface ConfigLocalMqtt extends ConfigBase {
+    provisioningMethod:     'Local MQTT';
+    devices:                DeviceConfigLocalMqtt[];
+}
+export type Config = ConfigRemoteAccount | ConfigLocalAccount | ConfigLocalWiFi | ConfigLocalMqtt;

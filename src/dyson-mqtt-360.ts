@@ -2,7 +2,7 @@
 // Copyright © 2025 Alexander Thoukydides
 
 import { AnsiLogger } from 'matterbridge/logger';
-import { Config, DeviceConfig } from './config-types.js';
+import { Config } from './config-types.js';
 import { DysonMqtt, DysonMqttConfig } from './dyson-mqtt.js';
 import {
     checkers as dysonMsgCheckers360,
@@ -19,6 +19,7 @@ import {
     Dyson360PowerMode
 } from './dyson-360-types.js';
 import { DysonModeReason } from './dyson-types.js';
+import { DeviceConfigMqtt } from './dyson-mqtt-client.js';
 
 // Configuration of a Dyson MQTT client for robot vacuums
 const DYSON_MQTT_CONFIG_360: DysonMqttConfig<DysonMsgMap360> = {
@@ -44,13 +45,13 @@ export type DysonMqtt360Action = 'START' | 'PAUSE' | 'RESUME' | 'ABORT';
 export class DysonMqtt360 extends DysonMqtt<DysonMsgMap360, DysonMqttStatus360> {
 
     // Construct a new MQTT client
-    constructor(log: AnsiLogger, config: Config, device: DeviceConfig) {
+    constructor(log: AnsiLogger, config: Config, device: DeviceConfigMqtt) {
         super(log, config, device, DYSON_MQTT_CONFIG_360);
 
         // Handle MQTT events
         this.on('subscribed', tryListener(this, async () =>
             // Request the current status when (re)connected
-            this.publish('REQUEST-CURRENT-STATE'))
+            this.publish('REQUEST-CURRENT-STATE', {}))
         ).on('message', tryListener(this, msg => {
             // Update the robot vacuum state from the received messages
             switch (msg.msg) {

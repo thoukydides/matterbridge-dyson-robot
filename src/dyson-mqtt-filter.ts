@@ -21,8 +21,8 @@ export class DysonMQTTFilter {
     filter(msg: DysonMsg): DysonMqttFiltered | undefined {
         const lastMsg = this.lastMsg.get(msg.msg);
         if (lastMsg) {
-            if (msg.time < lastMsg.time)            return 'reordered';
-            if (isDeepStrictEqual(msg, lastMsg))    return 'duplicate';
+            if (msg.time && lastMsg.time && msg.time < lastMsg.time) return 'reordered';
+            if (isDeepStrictEqual(msg, lastMsg))                     return 'duplicate';
         }
         this.lastMsg.set(msg.msg, structuredClone(msg));
     }

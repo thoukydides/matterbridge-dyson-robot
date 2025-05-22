@@ -11,21 +11,28 @@ import NodePersist from 'node-persist';
 import Path from 'path';
 import { checkDependencyVersions } from './check-versions.js';
 import { Config } from './config-types.js';
-import { checkConfiguration } from './check-configuration.js';
+import { checkConfiguration, getDysonAccount } from './config-check.js';
 import { FilterLogger } from './logger-filter.js';
 import { RI } from './logger-options.js';
 import { PLUGIN_NAME } from './settings.js';
-import { getDeviceConfigMqtt } from './dyson-mqtt-config.js';
 import { createDysonDevice } from './dyson-device.js';
 import { DysonDevice } from './dyson-device-base.js';
 import { formatList, logError, plural } from './utils.js';
 import { PrefixLogger } from './logger-prefix.js';
+import {
+    DysonCloudAuth,
+    DysonCloudLocal,
+    DysonCloudRemote
+} from './dyson-cloud.js';
+import { DeviceConfigMqtt } from './dyson-mqtt-client.js';
+import { getDeviceConfigMqtt } from './dyson-mqtt-config.js';
 
 // A Dyson devices platform
 export class PlatformDyson extends MatterbridgeDynamicPlatform {
 
     // Strongly typed configuration
     declare config: Config & PlatformConfig;
+    declare log:    FilterLogger;
 
     // Persistent storage
     persist:        NodePersist.LocalStorage;
@@ -39,10 +46,8 @@ export class PlatformDyson extends MatterbridgeDynamicPlatform {
         filterLog.info(`Initialising platform ${PLUGIN_NAME}`);
         super(matterbridge, filterLog, config);
 
-        // Check the dependencies and configuration
+        // Check the dependencies
         checkDependencyVersions(this);
-        checkConfiguration(this.log, config);
-        filterLog.configure(config.debugFeatures);
 
         // Create storage for this plugin (initialised in onStart)
         const persistDir = Path.join(this.matterbridge.matterbridgePluginDirectory, PLUGIN_NAME, 'persist');
@@ -63,23 +68,94 @@ export class PlatformDyson extends MatterbridgeDynamicPlatform {
         return Promise.resolve();
     }
 
+    // Handle action button presses in the Matterbridge frontend
+    async onAction(action: string, value?: string, id?: string, config?: PlatformConfig): Promise<void> {
+        const { frontend } = this.matterbridge;
+        this.log.debug(`Action ${PLUGIN_NAME}: ${action}${value ? ` with ${value}` : ''}${id ? ` for schema ${id}` : ''}`);
+
+        // Select the Dyson account configuration to authorise
+        if (config && typeof config === 'object' && Object.keys(config).length) {
+            this.log.debug(`Action configuration: ${JSON.stringify(config)}`);
+        } else {
+            this.log.debug('No configuration provided for action; using saved configuration');
+            config = this.config;
+        }
+        const account = getDysonAccount(this.log, config);
+        const { email, china } = account;
+        this.log.info(`Account: ${email} (${china ? 'china' : 'global'})`);
+
+        // Handle the specific button that was pressed
+        const api = new DysonCloudAuth(this.log, this.config, this.persist, account);
+        switch (action) {
+        case 'startAuth': {
+            // Start authorisation for the configured account
+            const success = await api.startAuth();
+            this.log.warn('Check your email (and spam filters) for a MyDyson message containing an OTP code');
+            this.log.warn('Enter the OTP code and click SUBMIT CODE to complete authorisation');
+            if (success) {
+                frontend.wssSendSnackbarMessage('MyDyson account authorisation started - enter OTP code from email', 5);
+            } else {
+                frontend.wssSendSnackbarMessage('Continuing previous MyDyson account authorisation', 5, 'warning');
+            }
+            break;
+        }
+        case 'finishAuth':
+            // Use the provided OTP code to finish authorisation
+            await api.finishAuth(value ?? '');
+            this.log.warn('MyDyson account access authorised; Restart Matterbridge');
+            frontend.wssSendSnackbarMessage('MyDyson account authorised; restart required', 10, 'success');
+            frontend.wssSendRestartRequired();
+            break;
+        default:
+            this.log.error(`Unexpected action: ${action}`);
+        }
+    }
+
     // Create the devices and clusters when Matterbridge loads the plugin
     override async onStart(reason?: string): Promise<void> {
         this.log.info(`Starting ${PLUGIN_NAME}: ${reason ?? 'none'}`);
 
-        // Wait for the platform to start
-        await this.ready;
-        await this.clearSelect();
-
         // Initialise persistent storage
         await this.persist.init();
 
+        // Check the configuration
+        checkConfiguration(this.log, this.config);
+        this.log.configure(this.config.debugFeatures);
+
+        // Convert the configuration to usable device details
+        let mappedDevices: DeviceConfigMqtt[];
+        switch (this.config.provisioningMethod) {
+        case 'Remote Account': {
+            // Obtain list of details from the MyDyson account
+            const api = new DysonCloudRemote(this.log, this.config, this.persist);
+            mappedDevices = await api.getDevices();
+            break;
+        }
+        case 'Local Account': {
+            // Cross-reference the configured devices with the MyDyson account
+            const api = new DysonCloudLocal(this.log, this.config, this.persist);
+            mappedDevices = await api.getDevices();
+            break;
+        }
+        case 'Local Wi-Fi':
+            // Derive the MQTT credentials from the configured Wi-Fi setup credentials
+            mappedDevices = this.config.devices.map(getDeviceConfigMqtt);
+            break;
+        case 'Local MQTT':
+            // Configuration is already in the required format for local MQTT
+            mappedDevices = this.config.devices;
+            break;
+        }
+
+        // Wait for the platform to start
+        await this.ready;
+
         // Create and register Matter devices for each Dyson device
-        await Promise.all(this.config.devices.map(async deviceConfigAny => {
+        await this.clearSelect();
+        await Promise.all(mappedDevices.map(async deviceConfig => {
             try {
                 // Check whether the device should be created
-                const deviceConfig = getDeviceConfigMqtt(deviceConfigAny);
-                const { username: serialNumber, name: deviceName} = deviceConfig;
+                const { serialNumber, name: deviceName} = deviceConfig;
                 const deviceLog = new PrefixLogger(this.log, deviceName);
                 const device = await createDysonDevice(deviceLog, this.config, deviceConfig);
 
