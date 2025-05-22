@@ -379,7 +379,7 @@ export abstract class DysonDeviceAirBase extends DysonDevice<DysonMqttAir> {
         const isSpinning = fnst === DysonAirFanState.Running;
 
         // Link models do not preserve speed setting in auto, so default to max
-        let speedSetting = typeof fnsp === 'number' ? fnsp : 10;
+        let speedSetting: number | null = typeof fnsp === 'number' ? fnsp : 10;
 
         // Start by mapping the speed to a mode
         let fanMode = FanControl.FanMode[
@@ -399,6 +399,7 @@ export abstract class DysonDeviceAirBase extends DysonDevice<DysonMqttAir> {
             if (isAuto) {
                 // Auto mode: assume fan either at maximum speed or stopped
                 fanMode = FanControl.FanMode.Auto;
+                speedSetting = null;
                 speedCurrent = isSpinning ? 10 : 0;
             } else {
                 // Manual mode: the fan is at the requested speed
@@ -441,7 +442,7 @@ export abstract class DysonDeviceAirBase extends DysonDevice<DysonMqttAir> {
             fanMode,
             onOff,
             percentCurrent: speedCurrent * 10,
-            percentSetting: speedSetting * 10,
+            percentSetting: speedSetting === null ? null : speedSetting * 10,
             rockSetting,
             speedCurrent,
             speedSetting,
