@@ -467,8 +467,8 @@ export class EndpointsAir {
         const fanAttributes = ['airflowDirection', 'fanMode', 'percentSetting', 'rockSetting',
                                'speedSetting', 'windSetting', 'percentCurrent', 'speedCurrent'] as const;
         await Promise.all([
-            endpoint.setAttribute(OnOff.Cluster.id, 'onOff', onOff, this.log),
-            ...fanAttributes.map(key => fan[key] && endpoint.setAttribute(FanControl.Cluster.id, key, fan[key], this.log))
+            endpoint.updateAttribute(OnOff.Cluster.id, 'onOff', onOff, this.log),
+            ...fanAttributes.map(key => fan[key] && endpoint.updateAttribute(FanControl.Cluster.id, key, fan[key], this.log))
         ]);
     }
 
@@ -505,7 +505,7 @@ export class EndpointsAir {
         const attributes = ['occupiedHeatingSetpoint', 'systemMode', 'localTemperature',
                             'piHeatingDemand', 'thermostatRunningState'] as const;
         await Promise.all(
-            attributes.map(key => endpoint.setAttribute(Thermostat.Cluster.id, key, thermostat[key], this.log))
+            attributes.map(key => endpoint.updateAttribute(Thermostat.Cluster.id, key, thermostat[key], this.log))
         );
     }
 
@@ -525,9 +525,9 @@ export class EndpointsAir {
             // Perform the cluster attribute updates
             const endpoint = this.purifier;
             await Promise.all([
-                endpoint?.setAttribute(clusterId, 'condition',        condition,        this.log),
-                endpoint?.setAttribute(clusterId, 'changeIndication', changeIndication, this.log),
-                inPlaceIndicator && endpoint?.setAttribute(clusterId, 'inPlaceIndicator', inPlaceIndicator, this.log)
+                endpoint?.updateAttribute(clusterId, 'condition',        condition,        this.log),
+                endpoint?.updateAttribute(clusterId, 'changeIndication', changeIndication, this.log),
+                inPlaceIndicator && endpoint?.updateAttribute(clusterId, 'inPlaceIndicator', inPlaceIndicator, this.log)
             ]);
         };
 
