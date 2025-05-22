@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v0.2.1] - 2025-05-22
+### Fixed
+* Avoid unnecessary attribute updates.
+
 ## [v0.2.0] - 2025-05-22
 ### Added
 * MQTT credentials for each device can be obtained from the associated MyDyson account, minimising the required manual configuration.
@@ -26,7 +30,8 @@ All notable changes to this project will be documented in this file.
 
 Copyright © 2025 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v0.2.0...HEAD
+[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v0.2.1...HEAD
+[v0.2.1]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v0.2.0...v0.2.1
 [v0.2.0]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v0.1.1...v0.2.0
 [v0.1.1]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v0.1.0...v0.1.1
 [v0.1.0]:           https://github.com/thoukydides/matterbridge-dyson-robot/releases/tag/v0.1.0
