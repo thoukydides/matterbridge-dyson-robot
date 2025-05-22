@@ -21,12 +21,12 @@ Dyson, Dyson Cool, Dyson Hot, Dyson Hot+Cool, Dyson Pure, Dyson Pure Cool, Dyson
 
 This plugin supports multiple methods for configuring and connecting to Dyson robot vacuum and air treatment devices:
 
-| Provisioning Method | Connection Via... | Configuration Using...          | IP Addresses/Hostnames | MQTT Credentials    | Compatibility        |
-| ------------------- | ----------------- | ------------------------------- | ---------------------- | ------------------- | -------------------- |
-| `Remote Account`    | ☁️ AWS IoT gateway | ☺️ Using MyDyson account         | ✅ n/a                  | ✅ Automatic         | ✅ All devices        |
-| `Local Account`     | 🏠 Local Network   | 😐 Using MyDyson account         | ❌ Manual configuration | ✅ Automatic         | ❌ Older devices only |
-| `Local Wi-Fi`       | 🏠 Local Network   | 📡 Using Wi-Fi Setup credentials | ❌ Manual configuration | ❌ Wi-Fi Setup label | ❌ Older devices only |
-| `Local MQTT`        | 🏠 Local Network   | ⚠️ Using MQTT credentials        | ❌ Manual configuration | ❌ Using `opendyson` | ❌ Older devices only |
+| Provisioning Method | Connection Via... | Configuration Using...          | IP Addresses / Hostnames | MQTT Credentials    | Compatibility        |
+| ------------------- | ----------------- | ------------------------------- | ------------------------ | ------------------- | -------------------- |
+| `Remote Account`    | ☁️ AWS IoT gateway | ☺️ Using MyDyson account         | ✅ n/a                    | ✅ Automatic         | ✅ All devices        |
+| `Local Account`     | 🏠 Local Network   | 😐 Using MyDyson account         | ❌ Manual configuration   | ✅ Automatic         | ❌ Older devices only |
+| `Local Wi-Fi`       | 🏠 Local Network   | 📡 Using Wi-Fi Setup credentials | ❌ Manual configuration   | ❌ Wi-Fi Setup label | ❌ Older devices only |
+| `Local MQTT`        | 🏠 Local Network   | ⚠️ Using MQTT credentials        | ❌ Manual configuration   | ❌ Using `opendyson` | ❌ Older devices only |
 
 The following instructions are for the first provisioning method, which is the recommended and most compatible approach. See below for details of the other options, which connect to the devices locally, but are not supported by some recent Dyson models and firmware versions.
 
@@ -128,7 +128,6 @@ The recommended provisioning method routes all MQTT messages via the AWS IoT gat
 
 ```JSON
 {
-    ...
     "provisioningMethod":       "Local Account",
     "dysonAccount": {
         "email":                "spock@logic.clean",
@@ -144,7 +143,6 @@ The recommended provisioning method routes all MQTT messages via the AWS IoT gat
         "host":                 "192.168.0.100",
         "port":                 1883
     }],
-    ...
 }
 ```
 
@@ -154,7 +152,6 @@ The `Local Account` provisioning obtains the MQTT credentials and configured dev
 
 ```JSON
 {
-    ...
     "provisioningMethod":       "Local Wi-Fi",
     "devices": [{
         "name":                 "Katniss Everclean",
@@ -169,7 +166,6 @@ The `Local Account` provisioning obtains the MQTT credentials and configured dev
         "ssid":                 "DYSON-HB1-ES-TAT9001F-475",
         "password":             "abcdefgh"
     }],
-    ...
 }
 ```
 
@@ -186,7 +182,6 @@ The **Product SSID** (`ssid`) and **Product Wi-Fi Password** (`password`) are ca
 
 ```JSON
 {
-    ...
     "provisioningMethod":       "Local MQTT",
     "devices": [{
         "name":                 "House Elf Hoover",
@@ -203,7 +198,6 @@ The **Product SSID** (`ssid`) and **Product Wi-Fi Password** (`password`) are ca
         "password":             "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/ABCDEFGHIJKLMNOPQRSTUV==",
         "rootTopic":            "455"
     }],
-    ...
 }
 ```
 
