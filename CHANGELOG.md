@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v0.2.2] - 2025-05-23
+### Added
+* Support `MACHINE_OFF` robot vacuum state (sometimes reported by the AWS IoT MQTT broker).
+* Use `GONE-AWAY` and `GOODBYE` messages as indications that the device is unreachable.
+* Accept `HELLO` commands from robot vacuums.
+### Fixed
+* Reachability is indicated for air treatment machines. Previously it was only set for robot vacuums.
+### Changed
+* Update of multiple attributes in the same cluster are now sequenced to avoid transaction collisions.
+
 ## [v0.2.1] - 2025-05-22
 ### Fixed
 * Avoid unnecessary attribute updates.
@@ -30,7 +40,8 @@ All notable changes to this project will be documented in this file.
 
 Copyright © 2025 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v0.2.1...HEAD
+[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v0.2.2...HEAD
+[v0.2.2]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v0.2.1...v0.2.2
 [v0.2.1]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v0.2.0...v0.2.1
 [v0.2.0]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v0.1.1...v0.2.0
 [v0.1.1]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v0.1.0...v0.1.1
