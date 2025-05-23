@@ -42,7 +42,7 @@ The following instructions are for the first provisioning method, which is the r
 1. Ensure that **provisioningMethod** is set to `Connect via AWS IoT gateway / Configure using MyDyson account`.
 1. Under **MyDyson Account Configuration** enter the email address and password that you use with the MyDyson app.
 1. If your account is registered in China then select the `china` option.
-1. Click the<kbd>START AUTH</kbd> button.
+1. Click the <kbd>START AUTH</kbd> button.
 1. You should receive a **Log in to your MyDyson App** email message containing a code. Enter that code and click the <kbd>SUBMIT CODE</kbd> button.
 1. When you see messages indicating that the account has been authorised click CONFIRM to save the configuration, and restart Matterbridge.
 
