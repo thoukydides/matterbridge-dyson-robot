@@ -3,6 +3,7 @@
 
 // Dyson robot vacuum state
 export enum Dyson360State {
+    MachineOff                      = 'MACHINE_OFF',
     FaultCallHelpline               = 'FAULT_CALL_HELPLINE',
     FaultContactHelpline            = 'FAULT_CONTACT_HELPLINE',
     FaultCritical                   = 'FAULT_CRITICAL',

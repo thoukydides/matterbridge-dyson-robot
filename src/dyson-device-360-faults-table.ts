@@ -24,6 +24,7 @@ export type Dyson360FaultPatternOrRange = Dyson360FaultPattern | Dyson360FaultRa
 
 // Dyson robot vacuum states that map to errors
 export const DYSON_360_FAULT_STATES = new Map<Dyson360State, Dyson360FaultDetail>([
+    [Dyson360State.MachineOff,              { msg: 'Offline'                                                                                                    }],
     [Dyson360State.FaultCallHelpline,       { msg: 'Call Dyson helpline'                                                                                        }],
     [Dyson360State.FaultContactHelpline,    { msg: 'Contact Dyson helpline'                                                                                     }],
     [Dyson360State.FaultCritical,           { msg: 'Critical fault'                                                                                             }],

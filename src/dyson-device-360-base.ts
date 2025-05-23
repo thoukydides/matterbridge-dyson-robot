@@ -38,6 +38,7 @@ type StateMapColumns = [
 ]
 const STATE_MAP: Record<Dyson360State, StateMapColumns> = {
     //                                      RunMode         OperationalState    isDocked
+    [Dyson360State.MachineOff]:             ['Idle',        'Error',            false],
     [Dyson360State.FaultCallHelpline]:      ['Idle',        'Error',            false],
     [Dyson360State.FaultContactHelpline]:   ['Idle',        'Error',            false],
     [Dyson360State.FaultCritical]:          ['Idle',        'Error',            false],

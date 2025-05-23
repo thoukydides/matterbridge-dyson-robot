@@ -18,6 +18,7 @@ type StateAction =
   | Lowercase<DysonMqtt360Action>;  // Perform command  => Wait for state change
 const STATE_COLUMNS =                       ['Idle',    'Cleaning', 'Mapping',  'Pause',    'Resume',   'GoHome'] as const;
 const STATE_MAP: Record<Dyson360State, StateAction[]> = {
+    [Dyson360State.MachineOff]:             [true,      undefined,  undefined,  undefined,  undefined,  undefined   ],
     [Dyson360State.FaultCallHelpline]:      ['abort',   'START',    undefined,  undefined,  undefined,  'ABORT'     ],
     [Dyson360State.FaultContactHelpline]:   ['abort',   'START',    undefined,  undefined,  undefined,  'ABORT'     ],
     [Dyson360State.FaultCritical]:          ['abort',   'START',    undefined,  undefined,  undefined,  'ABORT'     ],
