@@ -52,6 +52,7 @@ export interface Dyson360MsgGoneAway extends DysonMsg {
 
 export interface Dyson360MsgImBack extends DysonMsg {
     msg:                    'IM-BACK';
+    state?:                 Dyson360State;
 }
 
 export interface Dyson360MsgCurrentState extends DysonMsg {
