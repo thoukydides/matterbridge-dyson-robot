@@ -175,7 +175,7 @@ export interface UpdateAirSensors {
 export class EndpointsAir {
 
     // Bridge node endpoints
-    bridged:        MatterbridgeEndpoint[] = [];
+    bridged:        EndpointBase[] = [];
 
     // Aliases to endpoints for specific clusters
     purifier?:      MatterbridgeEndpoint;           // On/Off + Air Purifier + X Filter Monitoring
@@ -426,6 +426,12 @@ export class EndpointsAir {
             const success = await endpoint.subscribeAttribute(clusterId, key, handler, this.log);
             if (!success) this.log.warn(`${description} subscription failed`);
         }));
+    }
+
+    // Update the Bridged Device Basic Information cluster attributes
+    @ifValueChanged
+    async updateReachable(reachable: boolean): Promise<void> {
+        await Promise.all(this.bridged.map(e => e.updateReachable(reachable)));
     }
 
     // Update the On/Off and Fan Control cluster attributes

@@ -361,6 +361,7 @@ export abstract class DysonDeviceAirBase extends DysonDevice<DysonMqttAir> {
         const filterStatus = this.mapDysonFilterStatus(status);
         const sensorStatus = mapDysonAirSensorStatus(this.log, status);
         await Promise.all([
+            this.endpoints?.updateReachable(status.reachable),
             this.endpoints?.updateFanControl(fanStatus),
             this.endpoints?.updateFilterMonitoring(filterStatus),
             this.endpoints?.updateSensors(sensorStatus)
