@@ -470,12 +470,13 @@ export class EndpointsAir {
         this.log.info(`${AN}Fan Control${RI}: ${formatList(logParts)}`);
 
         // Perform the cluster attribute updates
+        await endpoint.updateAttribute(OnOff.Cluster.id, 'onOff', onOff, this.log);
         const fanAttributes = ['airflowDirection', 'fanMode', 'percentSetting', 'rockSetting',
                                'speedSetting', 'windSetting', 'percentCurrent', 'speedCurrent'] as const;
-        await Promise.all([
-            endpoint.updateAttribute(OnOff.Cluster.id, 'onOff', onOff, this.log),
-            ...fanAttributes.map(key => fan[key] && endpoint.updateAttribute(FanControl.Cluster.id, key, fan[key], this.log))
-        ]);
+        for (const attribute of fanAttributes) {
+            const value = fan[attribute];
+            if (value !== undefined) await endpoint.updateAttribute(FanControl.Cluster.id, attribute, value, this.log);
+        }
     }
 
     // Update the Thermostat cluster attributes
@@ -510,9 +511,9 @@ export class EndpointsAir {
         // Perform the cluster attribute updates
         const attributes = ['occupiedHeatingSetpoint', 'systemMode', 'localTemperature',
                             'piHeatingDemand', 'thermostatRunningState'] as const;
-        await Promise.all(
-            attributes.map(key => endpoint.updateAttribute(Thermostat.Cluster.id, key, thermostat[key], this.log))
-        );
+        for (const attribute of attributes) {
+            await endpoint.updateAttribute(Thermostat.Cluster.id, attribute, thermostat[attribute], this.log);
+        }
     }
 
     // Update the HEPA and Activated Carbon Filter Monitoring cluster attributes
@@ -530,11 +531,9 @@ export class EndpointsAir {
 
             // Perform the cluster attribute updates
             const endpoint = this.purifier;
-            await Promise.all([
-                endpoint?.updateAttribute(clusterId, 'condition',        condition,        this.log),
-                endpoint?.updateAttribute(clusterId, 'changeIndication', changeIndication, this.log),
-                inPlaceIndicator && endpoint?.updateAttribute(clusterId, 'inPlaceIndicator', inPlaceIndicator, this.log)
-            ]);
+            await endpoint?.updateAttribute(clusterId, 'condition',        condition,        this.log);
+            await endpoint?.updateAttribute(clusterId, 'changeIndication', changeIndication, this.log);
+            if (inPlaceIndicator) await endpoint?.updateAttribute(clusterId, 'inPlaceIndicator', inPlaceIndicator, this.log);
         };
 
         // Update the status of both filters
