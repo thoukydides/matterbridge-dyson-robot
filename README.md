@@ -21,12 +21,12 @@ Dyson, Dyson Cool, Dyson Hot, Dyson Hot+Cool, Dyson Pure, Dyson Pure Cool, Dyson
 
 This plugin supports multiple methods for configuring and connecting to Dyson robot vacuum and air treatment devices:
 
-| Provisioning Method | Connection Via... | Configuration Using...          | IP Addresses / Hostnames | MQTT Credentials    | Compatibility        |
-| ------------------- | ----------------- | ------------------------------- | ------------------------ | ------------------- | -------------------- |
-| `Remote Account`    | ☁️ AWS IoT gateway | ☺️ Using MyDyson account         | ✅ n/a                    | ✅ Automatic         | ✅ All devices        |
-| `Local Account`     | 🏠 Local Network   | 😐 Using MyDyson account         | ❌ Manual configuration   | ✅ Automatic         | ❌ Older devices only |
-| `Local Wi-Fi`       | 🏠 Local Network   | 📡 Using Wi-Fi Setup credentials | ❌ Manual configuration   | ❌ Wi-Fi Setup label | ❌ Older devices only |
-| `Local MQTT`        | 🏠 Local Network   | ⚠️ Using MQTT credentials        | ❌ Manual configuration   | ❌ Using `opendyson` | ❌ Older devices only |
+| Provisioning Method | Connection Via... | Configuration Using...    | IP Addresses / Hostnames | MQTT Credentials    | Compatibility        |
+| ------------------- | ----------------- | ------------------------- | ------------------------ | ------------------- | -------------------- |
+| `Remote Account`    | ☁️ AWS IoT gateway | ☺️ MyDyson account         | ✅ Automatic              | ✅ Automatic         | ✅ All devices        |
+| `Local Account`     | 🏠 Local Network   | 😐 MyDyson account         | ❌ Manual configuration   | ✅ Automatic         | ❌ Older devices only |
+| `Local Wi-Fi`       | 🏠 Local Network   | 📡 Wi-Fi Setup credentials | ❌ Manual configuration   | ❌ Wi-Fi Setup label | ❌ Older devices only |
+| `Local MQTT`        | 🏠 Local Network   | ⚠️ MQTT credentials        | ❌ Manual configuration   | ❌ Using `opendyson` | ❌ Older devices only |
 
 The following instructions are for the first provisioning method, which is the recommended and most compatible approach. See below for details of the other options, which connect to the devices locally, but are not supported by some recent Dyson models and firmware versions.
 
@@ -42,8 +42,8 @@ The following instructions are for the first provisioning method, which is the r
 1. Ensure that **provisioningMethod** is set to `Connect via AWS IoT gateway / Configure using MyDyson account`.
 1. Under **MyDyson Account Configuration** enter the email address and password that you use with the MyDyson app.
 1. If your account is registered in China then select the `china` option.
-1. Click the **START AUTH** button.
-1. You should receive a **Log in to your MyDyson App** email message containing a code. Enter that code and click the **SUBMIT CODE** button.
+1. Click the<kbd>START AUTH</kbd> button.
+1. You should receive a **Log in to your MyDyson App** email message containing a code. Enter that code and click the <kbd>SUBMIT CODE</kbd> button.
 1. When you see messages indicating that the account has been authorised click CONFIRM to save the configuration, and restart Matterbridge.
 
 <details>
