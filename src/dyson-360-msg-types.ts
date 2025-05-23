@@ -32,6 +32,14 @@ export interface Dyson360MsgConnectionStatus extends DysonMsg {
 
 // MQTT topic: <type>/<sn>/status
 
+// (This is also sometimes received with an empty MQTT topic)
+export interface Dyson360MsgHello extends DysonMsg {
+    msg:                    'HELLO',
+    protocol:               string; // e.g. '1.0.0'
+    serial:                 string; // e.g. '<SERIAL_NUMBER: JJ5-...HDA1502A>'
+    version:                string; // e.g. '11.3.5.10'
+}
+
 export interface Dyson360MsgGoodbye extends DysonMsg {
     msg:                    'GOODBYE';
     reason:                 'UNKNOWN';

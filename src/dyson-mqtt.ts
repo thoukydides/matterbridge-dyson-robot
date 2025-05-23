@@ -57,6 +57,9 @@ export type PublishArgs<T, O extends string> = {
 // Minimum disconnection time before indicating device not reachable
 const MIN_DOWN_TIME = 5 * MS; // 5 seconds
 
+// Messages that indicate that the device is unreachable
+const UNREACHABLE_MESSAGES = ['GOODBYE', 'GONE-AWAY'];
+
 // Non-generic interface
 export interface DysonMqttLike extends EventEmitter {
     waitUntilInitialised(): Promise<void>;
@@ -92,7 +95,7 @@ export abstract class DysonMqtt<T, S>
         this.mqtt = 'password' in deviceConfig
             ? new DysonMqttClientLocal (log, config, deviceConfig)
             : new DysonMqttClientRemote(log, config, deviceConfig);
-        this.mqtt.on('close', tryListener(this, () => { this.updateReachable(false); }));
+        this.mqtt.on('close', tryListener(this, () => { this.updateReachable('mqtt', false); }));
 
         // Create an MQTT connection manager
         this.mqttConnection = new DysonMqttConnection(log, config, this.mqtt);
@@ -104,7 +107,7 @@ export abstract class DysonMqtt<T, S>
         this.mqttSubscribe.on('error', err => this.emit('error', err));
         this.mqttSubscribe.on('subscribed', () => {
             this.emit('subscribed');
-            this.updateReachable(true);
+            this.updateReachable('mqtt', true);
         });
 
         // Handle received MQTT messages
@@ -119,6 +122,7 @@ export abstract class DysonMqtt<T, S>
             // Dispatch the validated message and indicate a status update
             this.logPayload('receive', topic, msg, filter);
             if (!filter && topicStatus === 'subscribed') {
+                this.updateReachable('msg', !UNREACHABLE_MESSAGES.includes(msg.msg));
                 this.emit('message', msg);
                 this.emit('status');
             }
@@ -126,28 +130,32 @@ export abstract class DysonMqtt<T, S>
     }
 
     // Update the device reachability, with hysteresis on unreachable indications
-    downTimerHandle?: NodeJS.Timeout;
-    updateReachable(reachable: boolean): void {
+    downTimerHandle = new Map<string, NodeJS.Timeout>();
+    updateReachable(key: 'mqtt' | 'msg', reachable: boolean): void {
         if (reachable) {
-            // Cancel any pending down timer
-            clearTimeout(this.downTimerHandle);
-            this.downTimerHandle = undefined;
+            // Cancel any pending down timer for this reason
+            const handle = this.downTimerHandle.get(key);
+            clearTimeout(handle);
+            this.downTimerHandle.delete(key);
 
-            // Mark the device as reachable
-            if (!this.status.reachable) {
+            // Mark the device as reachable if there are no active down timers
+            if (!this.status.reachable && this.downTimerHandle.size === 0) {
                 this.status.reachable = true;
                 this.emit('status');
             }
         } else {
             // Only start down timer if not already running
-            if (!this.downTimerHandle && this.status.reachable) {
-                this.downTimerHandle = setTimeout(() => {
+            if (!this.downTimerHandle.has(key) && this.status.reachable) {
+                this.log.debug(`Starting down timer for '${key}'`);
+                const handle = setTimeout(() => {
                     // Mark the device as not reachable after a delay
-                    this.log.error('MQTT client is down');
-                    this.downTimerHandle = undefined;
-                    this.status.reachable = false;
-                    this.emit('status');
+                    if (this.status.reachable) {
+                        this.log.error('Unreachable');
+                        this.status.reachable = false;
+                        this.emit('status');
+                    }
                 }, MIN_DOWN_TIME);
+                this.downTimerHandle.set(key, handle);
             }
         }
     }
