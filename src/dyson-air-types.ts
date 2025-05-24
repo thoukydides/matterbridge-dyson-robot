@@ -338,7 +338,8 @@ export enum DysonAirResetHEPAFilterLife {
 // Dyson air treatment carbon filter
 export enum DysonAirCarbonFilterType {
     None                    = 'NONE',
-    Carbon                  = 'CARF'
+    Carbon                  = 'CARF',
+    SelectiveCatalytic      = 'SCOG'
 }
 export enum DysonAirCarbonFilterEnum {
     Invalid                 = 'INV'
