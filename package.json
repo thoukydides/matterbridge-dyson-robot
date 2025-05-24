@@ -1,7 +1,7 @@
 {
     "name": "matterbridge-dyson-robot",
     "displayName": "Matterbridge Dyson Robot Vacuum and Air Treatment Devices Plugin",
-    "version": "0.2.2",
+    "version": "0.2.3",
     "description": "Matterbridge Dyson Robot",
     "license": "ISC",
     "keywords": [
