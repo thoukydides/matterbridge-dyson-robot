@@ -19,7 +19,7 @@ import {
 import { checkers } from './ti/dyson-cloud-types.js';
 import NodePersist from 'node-persist';
 import { DysonCloudAPI } from './dyson-cloud-api.js';
-import { formatMilliseconds, logError, MS, plural } from './utils.js';
+import { columns, formatMilliseconds, logError, MS, plural } from './utils.js';
 import { isSupportedModel } from './dyson-device.js';
 import { DeviceConfigRemoteMqtt } from './dyson-mqtt-client.js';
 import { DysonCloudStatusCodeError } from './dyson-cloud-error.js';
@@ -224,23 +224,24 @@ export class DysonCloudRemote extends DysonCloud<ConfigRemoteAccount> {
         const manifest = await api.getManifest();
 
         // Extract details of the devices supported by this plugin
+        const rows: string[][] = [];
         const deviceConfigs: DeviceConfigRemoteMqtt[] = [];
         for (const device of manifest) {
             const { serialNumber, name, model, type, productName } = device;
-            const description = `${type}/${serialNumber} ${model} ${productName} "${name}"`;
+            let status: string;
             if (isSupportedModel(type)) {
-                this.log.info(`Found supported device: ${description}`);
+                status = 'SUPPORTED';
                 const { mqttRootTopicLevel: rootTopic } = device.connectedConfiguration.mqtt;
                 const getCredentials = async () => this.getIoT(serialNumber);
                 deviceConfigs.push({ name, serialNumber, rootTopic, getCredentials });
-            } else {
-                this.log.info(`Ignoring unsupported device: ${description}`);
-            }
+            } else status = '(unsupported)';
+            rows.push([serialNumber, `"${name}"`, type, model, productName, status]);
         }
+        this.log.info(`${plural(manifest.length, 'device')} in account,`
+                    + ` ${plural(deviceConfigs.length, 'device')} selected:`);
+        columns(rows).forEach(line => { this.log.info(`    ${line}`); });
 
         // Return the remote MQTT details of the selected devices
-        this.log.info(`${plural(manifest.length, 'device')} in account,`
-                    + ` ${plural(deviceConfigs.length, 'device')} selected`);
         return deviceConfigs;
     }
 
@@ -324,23 +325,21 @@ export class DysonCloudLocal extends DysonCloud<ConfigLocalAccount> {
         }
 
         // Next display a summary of all devices in the account
+        const rows: string[][] = [];
         for (const device of manifest) {
             const { serialNumber, name, model, type, productName } = device;
-            const description = `${type}/${serialNumber} ${model} ${productName} "${name}"`;
-            const matchedDevice = deviceConfigs.find(d => d.serialNumber === serialNumber);
-            if (matchedDevice) {
-                const { host, port } = matchedDevice;
-                this.log.info(`Found configured device: ${description} = ${host}:${port}`);
-            } else if (isSupportedModel(type)) {
-                this.log.info(`Ignoring supported but unconfigured device: ${description}`);
-            } else {
-                this.log.info(`Ignoring unsupported device: ${description}`);
-            }
+            const matched = deviceConfigs.find(d => d.serialNumber === serialNumber);
+            let status: string;
+            if (matched)                        status = `= ${matched.host}:${matched.port}`;
+            else if (isSupportedModel(type))    status = '(unconfigured)';
+            else                                status = '(unsupported)';
+            rows.push([serialNumber, `"${name}"`, type, model, productName, status]);
         }
+        this.log.info(`${plural(manifest.length, 'device')} in MyDyson account,`
+                    + ` ${plural(deviceConfigs.length, 'device')} selected:`);
+        columns(rows).forEach(line => { this.log.info(`    ${line}`); });
 
         // Return the remote MQTT details of the selected devices
-        this.log.info(`${plural(manifest.length, 'device')} in MyDyson account,`
-                    + ` ${plural(deviceConfigs.length, 'device')} selected`);
         return deviceConfigs;
     }
 }
