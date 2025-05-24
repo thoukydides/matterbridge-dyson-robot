@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v0.2.3] - 2025-05-24
+### Added
+* Added missing MQTT status value.
+### Changed
+* Minor logging improvements.
+
 ## [v0.2.2] - 2025-05-23
 ### Added
 * Support `MACHINE_OFF` robot vacuum state (sometimes reported by the AWS IoT MQTT broker).
@@ -40,7 +46,8 @@ All notable changes to this project will be documented in this file.
 
 Copyright © 2025 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v0.2.2...HEAD
+[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v0.2.3...HEAD
+[v0.2.3]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v0.2.2...v0.2.3
 [v0.2.2]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v0.2.1...v0.2.2
 [v0.2.1]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v0.2.0...v0.2.1
 [v0.2.0]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v0.1.1...v0.2.0
