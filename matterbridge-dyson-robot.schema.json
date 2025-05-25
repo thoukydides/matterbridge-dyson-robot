@@ -25,7 +25,7 @@
             "oneOf": [
                 {
                     "const": "Remote Account",
-                    "title": "Connect via AWS IoT gateway / Configure using MyDyson account [recommended]"
+                    "title": "Connect via AWS IoT Gateway / Configure using MyDyson account [recommended]"
                 },
                 {
                     "const": "Local Account",

@@ -19,16 +19,7 @@ Dyson, Dyson Cool, Dyson Hot, Dyson Hot+Cool, Dyson Pure, Dyson Pure Cool, Dyson
 
 ## Installation
 
-This plugin supports multiple methods for configuring and connecting to Dyson robot vacuum and air treatment devices:
-
-| Provisioning Method | Connection Via... | Configuration Using...    | IP Addresses / Hostnames | MQTT Credentials    | Compatibility        |
-| ------------------- | ----------------- | ------------------------- | ------------------------ | ------------------- | -------------------- |
-| `Remote Account`    | ☁️ AWS IoT gateway | ☺️ MyDyson account         | ✅ Automatic              | ✅ Automatic         | ✅ All devices        |
-| `Local Account`     | 🏠 Local Network   | 😐 MyDyson account         | ❌ Manual configuration   | ✅ Automatic         | ❌ Older devices only |
-| `Local Wi-Fi`       | 🏠 Local Network   | 📡 Wi-Fi Setup credentials | ❌ Manual configuration   | ❌ Wi-Fi Setup label | ❌ Older devices only |
-| `Local MQTT`        | 🏠 Local Network   | ⚠️ MQTT credentials        | ❌ Manual configuration   | ❌ Using `opendyson` | ❌ Older devices only |
-
-The following instructions are for the first provisioning method, which is the recommended and most compatible approach. See below for details of the other options, which connect to the devices locally, but are not supported by some recent Dyson models and firmware versions.
+This plugin supports multiple methods for configuring and connecting to Dyson robot vacuum and air treatment devices. The following instructions are for cloud-based connection via a MyDyson account and the Dyson AWS IoT MQTT gateway, which is the recommended and most compatible approach. See [Alternative Provisioning Methods](#provisioning-methods) (below) for options to connect to supported devices locally.
 
 ### Step 1 - Create Account and Connect Devices
 1. Use the MyDyson [iPhone](https://apps.apple.com/gb/app/mydyson/id993135524) or [Android](https://play.google.com/store/apps/details?id=com.dyson.mobile.android) app to create an account.
@@ -44,22 +35,85 @@ The following instructions are for the first provisioning method, which is the r
 1. If your account is registered in China then select the `china` option.
 1. Click the <kbd>START AUTH</kbd> button.
 1. You should receive a **Log in to your MyDyson App** email message containing a code. Enter that code and click the <kbd>SUBMIT CODE</kbd> button.
-1. When you see messages indicating that the account has been authorised click CONFIRM to save the configuration, and restart Matterbridge.
+1. When you see messages indicating that the account has been authorised click <kbd>CONFIRM</kbd> to save the configuration, and restart Matterbridge.
+
+> [!WARNING]
+> The Apple Home app only supports robot vacuums when they are standalone individually-paired Matter nodes. Attempting to pair a Matterbridge instance with multiple robot vacuums, or a robot vacuum plus other device types, can cause the Home app to crash or fail to properly recognise some of the devices. If you are using HomeKit with a robot vacuum then configure a separate Matterbridge instance for each robot vacuum.
 
 <details>
-<summary>Advanced Configuration</summary>
+<summary>Separate Matterbridge Instance per Robot Vacuum</summary>
+
+### Separate Matterbridge Instances
+
+Each additional Matterbridge instance should specify the following command line options:
+
+| Command Line Options    | Default                     | Description
+| ----------------------- | --------------------------- | --
+| `-homedir <directory>`  | `$HOME` or `USERPROFILE`    | Matterbridge defaults to creating `Matterbridge`, `.matterbridge`, and `.mattercert` directories within the user's home directory. A different "home" directory is required by each Matterbridge instance.
+| `-port <number>`        | `5540`                      | The port number for the Matterbridge commissioning server. This should be unique for each instance to allow pairing with a Matter controller.
+| `-frontend <number>`    | `8283`                      | The port number for the Matterbridge frontend. This should be unique for each instance to allow use of the web interface.
+| `-vendorName "<name>"`  | `"Matterbridge"`            | Apple Home uses the vendor name of the Matter bridge for robot vacuums; use this option to override Matterbridge's default with `Dyson`.
+| `-productName "<name>"` | `"Matterbridge aggregator"` | Apple Home uses the product name of the Matter bridge for robot vacuums; use this option to override Matterbridge's default with model name of your robot vacuum.
+
+Select a single robot vacuum for each instance using the `whiteList` plugin configuration option. Conversely, the main Matterbridge instance can use the `blacklist` configuration option to exclude robot vacuums, if necessary.
+
+#### Example `systemd` Configuration
+
+The following example assumes that:
+* `systemd` is being used to launch Matterbridge (instead of via Docker or other means).
+* Matterbridge is run as user `matterbridge` and group `matterbridge`.
+* Matterbridge configuration files for this instance are being kept under `/var/lib/matterbridge-dyson-robot`.
+* The commissioning server will be on port `5541` and the web frontend on port `8284`.
+* This instance is for a Dyson 360 Eye robot vacuum.
+
+Modify as appropriate to suit your setup.
+
+1. Create a directory for this instance's configuration files:
+   ```shell
+   sudo mkdir /var/lib/matterbridge-dyson-robot
+   sudo chown matterbridge:matterbridge /var/lib/matterbridge-dyson-robot
+   ```
+1. Create a `/etc/systemd/system/matterbridge-dyson-robot.service` file containing:
+   ```ini
+   [Unit]
+   Description=Matterbridge Dyson Robot
+   After=network-online.target
+   
+   [Service]
+   Type=simple
+   ExecStart=/usr/local/bin/matterbridge -service -nosudo -novirtual -homedir /var/lib/matterbridge-dyson-robot -port 5541 -frontend 8284 -vendorName 'Dyson' -productName '360 Eye'
+   WorkingDirectory=/var/lib/matterbridge-dyson-robot
+   StandardOutput=inherit
+   StandardError=inherit
+   Restart=always
+   RestartSec=10s
+   TimeoutStopSec=30s
+   User=matterbridge
+   Group=matterbridge
+   
+   [Install]
+   WantedBy=multi-user.target
+   ```
+1. Reload the `systemd` service files and enable the new unit:
+   ```shell
+   sudo systemctl daemon-reload
+   sudo systemctl enable --now matterbridge-dyson-robot.service
+   ```
+</details>
+<details>
+<summary>Command Line Installation</summary>
 
 ### Installation using Command Line
 1. Stop Matterbridge:  
-   `systemctl stop matterbridge`
+   `sudo systemctl stop matterbridge`
 1. Install the plugin:  
    `npm install -g matterbridge-dyson-robot`
 1. Register it with Matterbridge:  
-   `matterbridge -add matterbridge-dyson-robot`
+   `sudo -u matterbridge matterbridge -add matterbridge-dyson-robot`
 1. Restart Matterbridge:  
-   `systemctl start matterbridge`
+   `sudo systemctl start matterbridge`
 
-Note that MyDyson account authorisation cannot be completed via the command line. Either configure and authorise via the Matterbridge frontend, obtain the access token via other means (e.g. if using `opendyson` it can be found in `~/.config/libdyson/config.yml`) and set `dysonAccount.token`, or use one of the other provisioning methods.
+MyDyson account authorisation cannot be completed via the command line. See [Alternative Provisioning Methods](#provisioning-methods) (below) for token acquisition details or other provisioning methods that do not require MyDyson account access.
 
 #### Example `matterbridge-dyson-robot.config.json`
 
@@ -86,14 +140,18 @@ Note that MyDyson account authorisation cannot be completed via the command line
 }
 ```
 
-#### Advanced Configuration
+</details>
+<details>
+<summary>Advanced Configuration Options</summary>
+
+### Advanced Configuration
 
 You can include additional settings in `matterbridge-dyson-robot.config.json` to customise the behaviour or enable special debug features:
 
 | Key                     | Default            | Description
 | ----------------------- | ------------------ | ---
 | `name`<br>`type`<br>`version` | n/a          | These are managed by Matterbridge and do not need to be set manually.
-| `provisioningMethod`    | `"Remote Account"` | Selects how the plugin is configured and how it connects to the Dyson devices. See *Alternate Provisioning Methods* (below) for details of each option.
+| `provisioningMethod`    | `"Remote Account"` | Selects how the plugin is configured and how it connects to the Dyson devices. See [Alternative Provisioning Methods](#provisioning-methods) (below) for details of each option.
 | `devices[]`             | `[]`               | Local network and MQTT configuration for each Dyson device when not using the `Remote Account` provisioning method. See below for details.
 | `wildcardTopic`         | `true`             | When set to `false` the plugin only subscribes to the essential status MQTT topic(s) appropriate for each device. Setting it to `true` additionally subscribes to the command topic (for AWS IoT connections) or to the `#` wildcard topic (for local network connections), receiving additional messages published by the devices or echoed by the MQTT brokers. This is useful for discovering new topics, seeing the commands issued by the MyDyson app (only some commands to robot vacuums), and verifying correct `root_topic` and `username` settings.
 | `blackList`             | `[]`               | If the list is not empty, then any robot vacuum and air treatment devices with matching serial numbers will not be exposed as Matter devices.
@@ -105,7 +163,7 @@ You can include additional settings in `matterbridge-dyson-robot.config.json` to
 | `debugFeatures`         | `[]`               | Miscellaneous options to control the information logged. None of these should be set unless you are investigating a compatibility issue, MQTT message error, or other problem.
 | `unregisterOnShutdown`  | `false`            | Unregister all exposed devices on shutdown. This is used during development and testing; do not set it for normal use.
 
-The various black/white lists control which robot vacuum and air treatment devices are exposed as Matter devices. Robot vacuums are always exposed as a simple Matter device on a single endpoint, but air treatment devices are implemented as multiple devices and endpoints that can be individually included or excluded. A device or endpoint must pass all the black/white list filters to be exposed (logical AND). This applies cumulatively across global and per-device filters. Devices are identified via their serial numbers (the same as their MQTT username) and endpoints are identified using their Matter device type: `Air Purifier`, `Air Quality Sensor`, `Composed Air Purifier` (a composed device consisting of an `Air Purifier` with all other relevant device types as children), `Humidity Sensor`, `Temperature Sensor`, or `Thermostat`.
+The various black/white lists control which robot vacuum and air treatment devices are exposed as Matter devices. Robot vacuums are always exposed as a simple Matter device on a single endpoint, but air treatment devices are implemented as multiple devices and endpoints that can be individually included or excluded. Devices and endpoints are exposed only if they pass all specified black/white list filters (logical AND operation applies). This applies cumulatively across global and per-device filters. Devices are identified via their serial numbers (the same as their MQTT username) and endpoints are identified using their Matter device type: `Air Purifier`, `Air Quality Sensor`, `Composed Air Purifier` (a composed device consisting of an `Air Purifier` with all other relevant device types as children), `Humidity Sensor`, `Temperature Sensor`, or `Thermostat`.
 
 The supported `debugFeatures` are:
 - `Log Endpoint Debug`: Sets the `debug` flag to the Matterbridge/Matter.js endpoint implementation.
@@ -117,12 +175,48 @@ The supported `debugFeatures` are:
 - `Log Debug as Info`: Redirect *Debug* level logging to *Info* level. This makes it visible in the Matterbridge frontend.
 
 </details>
+<a name="provisioning-methods"></a>
 <details>
 <summary>Alternate Provisioning Methods</summary>
 
-### Local Provisioning Methods
+### Provisioning Methods
 
-The recommended provisioning method routes all MQTT messages via the AWS IoT gateway, but the other methods enable direct local connection to the robot vacuum and air treatment devices (if supported by the device and its firmware). This requires manual configuration of the local network IP addresses or hostnames, and (for some methods) the credentials used to authorise the MQTT connection.
+| Provisioning Method | Connection Via... | Configuration Using...    | IP Addresses / Hostnames | MQTT Credentials    | Compatibility        |
+| ------------------- | ----------------- | ------------------------- | ------------------------ | ------------------- | -------------------- |
+| `Remote Account`    | ☁️ AWS IoT Gateway | ☺️ MyDyson account         | ✅ Automatic              | ✅ Automatic         | ✅ All devices        |
+| `Local Account`     | 🏠 Local Network   | 😐 MyDyson account         | ❌ Manual configuration   | ✅ Automatic         | ❌ Older devices only |
+| `Local Wi-Fi`       | 🏠 Local Network   | 📡 Wi-Fi Setup credentials | ❌ Manual configuration   | ❌ Wi-Fi Setup label | ❌ Older devices only |
+| `Local MQTT`        | 🏠 Local Network   | ⚠️ MQTT credentials        | ❌ Manual configuration   | ❌ Using `opendyson` | ❌ Older devices only |
+
+The recommended `Remote Account` provisioning method routes all MQTT messages via the AWS IoT gateway, but the other methods enable direct local connection to the robot vacuum and air treatment devices (if supported by the device and its firmware). This requires manual configuration of the local network IP addresses or hostnames, and (for some methods) the credentials used to authorise the MQTT connection.
+
+#### `Remote Account` (Connect via AWS IoT Gateway / Configure using MyDyson account)
+
+```JSON
+{
+    "provisioningMethod":       "Remote Account",
+    "dysonAccount": {
+        "email":                "neo@matrix.clean",
+        "password":             "ThereIsNoDust1",
+        "china":                false
+    }
+}
+```
+
+The `Remote Account` provisioning obtains all required details from the MyDyson account. Connection to the devices is via the AWS IoT gateway, with new credentials retrieved from the MyDyson account for each (re)connection. No other configuration is required.
+
+As an alternative to authorising MyDyson account access using an email, password, and OTP code, it is possible to use a previously authorised access token (e.g. if using `opendyson` it can be found in `~/.config/libdyson/config.yml`):
+```JSON
+{
+    "provisioningMethod":       "Remote Account",
+    "dysonAccount": {
+        "token":                "0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF0123456789ABCDEF-1",
+        "china":                false
+    }
+}
+```
+
+The access token may also be supplied via a `DYSON_TOKEN` environment variable.
 
 #### `Local Account` (Connect via Local Network / Configure using MyDyson account)
 
@@ -148,6 +242,8 @@ The recommended provisioning method routes all MQTT messages via the AWS IoT gat
 
 The `Local Account` provisioning obtains the MQTT credentials and configured device names from the MyDyson account; it just requires manual configuration of the IP address or hostname for each device. The device's serial number is used to uniquely identify each device.
 
+The MyDyson account is accessed each time that the plugin is (re)started. All subsequent access is restricted to the local network.
+
 #### `Local Wi-Fi` (Connect via Local Network / Configure using Wi-Fi Setup credentials)
 
 ```JSON
@@ -170,6 +266,8 @@ The `Local Account` provisioning obtains the MQTT credentials and configured dev
 ```
 
 The `Local Wi-Fi` provisioning uses the Wi-Fi setup credentials to derive the MQTT credentials. Manual configuration is required for the credentials, IP address or hostname, and a friendly name (used as the Matter *NodeLabel*), for each device.
+
+This provisioning method does not use the MyDyson account or any other cloud services. Only local network access is used.
 
 The Wi-Fi setup information can be found on a label located:
 - behind the clean bin of robot vacuums,
@@ -202,6 +300,8 @@ The **Product SSID** (`ssid`) and **Product Wi-Fi Password** (`password`) are ca
 ```
 
 The `Local MQTT` provisioning requires manual configuration of the MQTT credentials, as well as the IP address or hostname, and a friendly name (used as the Matter *NodeLabel*), for each device.
+
+This provisioning method does not use the MyDyson account or any other cloud services. Only local network access is used.
 
 The easiest way to obtain the MQTT credentials is by using the [`opendyson`](https://github.com/libdyson-wg/opendyson) tool:
 1. Install `opendyson`, e.g. if `Go` is installed and configured:  
@@ -259,7 +359,7 @@ Zone cleaning and mapping control are not currently supported, as Dyson's MQTT A
   - Battery charge level and charging status.
   - Any active fault.
 
-No **Service Area** cluster is implemented, due to absence of information about how to control zone cleaning via MQTT.
+No **Service Area** cluster is implemented; zone cleaning does not appear to be controllable via MQTT commands.
 
 </details>
 
@@ -360,43 +460,62 @@ This plugin has only been tested with the following devices:
 | Dyson Pure Cool Link       | TP02  | `475`           | `21.04.03`  |
 | Dyson Pure Hot+Cool Link   | HP02  | `455`           | `21.04.03`  |
 
-It may also work with other Dyson robot vacuums and air treatment devices, although some modifications may be required for full compatibility.
+It should also work with other Dyson robot vacuums and air treatment devices, although some modifications may be required for full compatibility.
 
 Matter controllers vary in their support for different device types. This plugin is only tested with Apple HomeKit and the Apple Home app.
 
 ### Matter Limitations
 
-The Matter 1.4 specification does not define any device types or clusters for controlling humidification, so this plugin does not support that aspect of Pure Humidify+Cool devices.
+The following functionality is not supported by this plugin due to lack of appropriate device types, clusters, or attributes, in the Matter 1.4 specification:
+<details>
+<summary>Air Purifiers</summary>
+
+* Fan diffuser/focus *(Pure (Hot+)Cool Link)*
+* Humidification *(Pure Humidify+Cool)*
+* Oscillation angles *(Pure (Hot)+Cool family)* or tilt angles *(Big+Quiet family)*
+* Sleep timer
+* Faults
+</details>
 
 ### Apple Home Limitations
 
-The Apple Home app in iOS/iPadOS 18.4 has limited Matter support, with multiple idiosyncrasies.
+The Apple Home app in iOS/iPadOS 18.4 and macOS Sequoia has limited Matter support and exhibits multiple idiosyncrasies.
 
-#### Robot Vacuums
+<a name="apple-home-rvc"></a>
+<details>
+<summary>Robot Vacuums</summary>
 
 The Apple Home app expects each robot vacuum to be a standalone, individually-paired Matter node implementing a single endpoint. However, Matterbridge acts as a Matter bridge - either a single bridge node for all plugins (*bridge* mode), or a separate bridge node per plugin (*childbridge* mode) - with each plugin's device exposed as an additional child endpoint. This causes a few issues when using this plugin with the Home app:
-* **One robot vacuum per Matterbridge instance:** A separate Matterbridge instance is required for each robot vacuum. Each must use unique port numbers (both `-port <port>` and `-frontend <port>`) and their own home directory (`-homedir <path>`). This plugin should be the only one enabled in each instance, and only a single robot vacuum device should be configured in each instance.
-* **Device-specific information is ignored:** The Home app shows the bridge device information from Matterbridge’s own root **Device Basic Information** cluster, ignoring the plugin’s **Bridged Device Basic Information** cluster. As a result, the Home app displays the bridge’s name, manufacturer, model, serial number, and firmware version; *not* those of the robot vacuum.
+* **Multiple bridged devices:** A Matter bridge that exposes a robot vacuum plus other devices can crash the Home app. Hence, a separate Matterbridge instance is required for each robot vacuum. This plugin should be the only one enabled in each instance, and only a single robot vacuum device should be configured in each instance.
+* **Device-specific information is ignored:** The Home app shows the bridge device information from Matterbridge's own root **Device Basic Information** cluster, ignoring the plugin's **Bridged Device Basic Information** cluster. As a result, the Home app displays the bridge's name, manufacturer, model, serial number, and firmware version; *not* those of the robot vacuum. The correct values can be specified using Matterbridge's command line options.
 
 Other quirks in the Home app:
-* **Incorrect clean mode display:** The Home app displays ModeTag values (e.g. *Deep Clean*, *Low Noise*) rather than the advertised modes (*Quiet*, *Max*, etc) reported by the vacuum. It also only shows these when not cleaning, even though Dyson robot vacuums support changing the power mode during a clean.
-
-#### Air Treatment Devices
+* **Incorrect RVC Clean Mode display:** The Home app displays ModeTag values (e.g. *Deep Clean*, *Low Noise*) rather than the advertised modes (*Quiet*, *Max*, etc) reported by the robot vacuum. It also only shows these when not cleaning, even though Dyson robot vacuums support changing the power mode during a clean.
+</details>
+<details>
+<summary>Air Purifiers</summary>
 
 The Apple Home app only supports simple Matter devices correctly. When multiple devices are composed into a single bridged device, or subset device types are included, the Home app exhibits multiple issues:
 * The device icon can be for any of the composed or subset device types, instead of selecting the most relevant (the first recognised device type on the parent endpoint), e.g. an **Air Purifier** device may be randomly shown as a **Fan Device** or **Air Quality Sensor** instead.
-* Controls may be duplicated in the user interface if they can correspond to multiple overlapping device types, e.g. two fan speed sliders are shown if a device describes itself as both an Air Purifier and a Fan Device.
-* Functionality is often reduced, e.g. including an **Air Quality** device in an **Air Purifier** device hides *Auto* mode, fan oscillation controls, and all sensor measurements.
+* Controls may be duplicated in the user interface if they can correspond to multiple overlapping device types, e.g. two fan speed sliders are shown if a device describes itself as both an **Air Purifier** and a **Fan** device.
+* Functionality is often reduced, e.g. an **Air Purifier** incorporating an **Air Quality** device results in the *Auto* mode, fan oscillation controls, and all sensor measurements, being hidden.
 
-For these reasons, this plugin defaults to bridging each Matter device type separately. A composed device can be selected instead by setting `entityWhiteList` to `["Composed Air Purifier"]` and `entityBlackList` to `[]`.
+For these reasons, this plugin defaults to bridging each Matter device type separately. A composed device can be selected instead by setting:
+```JSON
+{
+    "entityWhiteList": ["Composed Air Purifier"],
+    "entityBlackList": []
+}
+```
 
-Other quirks in the Home app:
-* HEPA and carbon filter status is not shown (despite being part of the Matter Air Purifier device specification, and them being supported via the HomeKit Accessory Protocol).
-* Other sensor measurements (CO2, Formaldehyde, NOx, PM2.5, PM10, and VOC) are not shown.
+The Home app does not show any of the following (despite being part of the Matter **Air Purifier** device specification, and supported via the HomeKit Accessory Protocol):
+* HEPA and carbon filter status.
+* Other sensor measurements (CO2, Formaldehyde, NOx, PM2.5, PM10, and VOC).
+</details>
 
 ## Changelog
 
-All notable changes to this project are documented in the [CHANGELOG.md](CHANGELOG.md) file.
+All notable changes to this project are documented in [CHANGELOG.md](CHANGELOG.md).
 
 ## Reporting Issues
           
