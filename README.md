@@ -163,16 +163,25 @@ You can include additional settings in `matterbridge-dyson-robot.config.json` to
 | `debugFeatures`         | `[]`               | Miscellaneous options to control the information logged. None of these should be set unless you are investigating a compatibility issue, MQTT message error, or other problem.
 | `unregisterOnShutdown`  | `false`            | Unregister all exposed devices on shutdown. This is used during development and testing; do not set it for normal use.
 
-The various black/white lists control which robot vacuum and air treatment devices are exposed as Matter devices. Robot vacuums are always exposed as a simple Matter device on a single endpoint, but air treatment devices are implemented as multiple devices and endpoints that can be individually included or excluded. Devices and endpoints are exposed only if they pass all specified black/white list filters (logical AND operation applies). This applies cumulatively across global and per-device filters. Devices are identified via their serial numbers (the same as their MQTT username) and endpoints are identified using their Matter device type: `Air Purifier`, `Air Quality Sensor`, `Composed Air Purifier` (a composed device consisting of an `Air Purifier` with all other relevant device types as children), `Humidity Sensor`, `Temperature Sensor`, or `Thermostat`.
+The various black/white lists control which robot vacuum and air treatment devices are exposed as Matter devices. Robot vacuums are always exposed as a simple Matter device on a single endpoint, but air treatment devices are implemented as multiple devices and endpoints that can be individually included or excluded. Devices and endpoints are exposed only if they pass all specified black/white list filters (logical AND operation applies). This applies cumulatively across global and per-device filters. Devices are identified via their serial numbers (the same as their MQTT username) and endpoints are identified using their Matter device type:
+* `Air Purifier`
+* `Air Quality Sensor`
+* `Composed Air Purifier` (a composed device consisting of an `Air Purifier` with all other relevant device types as children)
+* `Humidity Sensor`
+* `Temperature Sensor`
+* `Thermostat`
 
 The supported `debugFeatures` are:
-- `Log Endpoint Debug`: Sets the `debug` flag to the Matterbridge/Matter.js endpoint implementation.
-- `Log API Headers`: Logs HTTP headers for MyDyson API requests. Rarely useful. (Requires *Debug* level logging.)
-- `Log API Bodies`: Logs message bodies for MyDyson API requests. Useful for diagnosing interoperability issues. (Requires *Debug* level logging.)
-- `Log MQTT Client`: Enables (extremely) verbose debug logging from the low-level MQTT client. Rarely useful, unless the plugin is unable to establish or maintain a connection to the Dyson device. (Requires *Debug* level logging.)
-- `Log MQTT Payloads`: Logs every MQTT payload that is sent or received. Useful for diagnosing interoperability issues or identifying how to control new features. (Requires *Debug* level logging.)
-- `Log Serial Numbers`: By default product serial numbers (a.k.a. MQTT usernames) and passwords are automatically redacted in the log. This setting logs serial numbers verbatim.
-- `Log Debug as Info`: Redirect *Debug* level logging to *Info* level. This makes it visible in the Matterbridge frontend.
+
+| Debug Feature          | Description
+| ---------------------- | ---
+| `Log Endpoint Debug`   | Sets the `debug` flag to the Matterbridge/Matter.js endpoint implementation.
+| `Log API Headers`      | Logs HTTP headers for MyDyson API requests. Rarely useful. (Requires *Debug* level logging.)
+| `Log API Bodies`       | Logs message bodies for MyDyson API requests. Useful for diagnosing interoperability issues. (Requires *Debug* level logging.)
+| `Log MQTT Client`      | Enables (extremely) verbose debug logging from the low-level MQTT client. Rarely useful, unless the plugin is unable to establish or maintain a connection to the Dyson device. (Requires *Debug* level logging.)
+| `Log MQTT Payloads`    | Logs every MQTT payload that is sent or received. Useful for diagnosing interoperability issues or identifying how to control new features. (Requires *Debug* level logging.)
+| `Log Serial Numbers`   | By default product serial numbers (a.k.a. MQTT usernames) and passwords are automatically redacted in the log. This setting logs serial numbers verbatim.
+| `Log Debug as Info`    | Redirect *Debug* level logging to *Info* level. This makes it visible in the Matterbridge frontend.
 
 </details>
 <a name="provisioning-methods"></a>
