@@ -1,6 +1,10 @@
 name: Build and Lint
 
-on: [push, pull_request]
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: '15 9 * * SUN'
 
 jobs:
   build:
