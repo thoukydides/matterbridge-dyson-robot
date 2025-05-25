@@ -346,6 +346,11 @@ export enum DysonAirCarbonFilterEnum {
 }
 export type DysonAirCarbonFilterLife = DysonAirCarbonFilterEnum | string;
 
+// Dyson air treatment selective catalytic oxidisation filter
+export enum DysonAirSelectiveCatalyticOxidisationFilterType {
+    SelectiveCatalytic      = 'SCOH'
+}
+
 // Dyson air treatment display brightness
 export enum DysonAirBrightness {
     Low                     = '0001',

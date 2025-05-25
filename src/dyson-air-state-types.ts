@@ -34,7 +34,8 @@ import {
     DysonAirHumidificationProcess,
     DysonAirBrightness,
     DysonAirOscillationStatus,
-    DysonAirTiltOscillationStatus
+    DysonAirTiltOscillationStatus,
+    DysonAirSelectiveCatalyticOxidisationFilterType
 } from './dyson-air-types.js';
 
 // Dyson air treatment product state
@@ -61,7 +62,7 @@ export interface DysonAirProductState {
     otal?:  DysonAirTiltAngle;          // Tilt angle lower bound °
     otau?:  DysonAirTiltAngle;          // Tilt angle upper bound °
     oton?:  DysonAirTiltOscillation;
-    sflt?:  'SCOH';                     // ???
+    sflt?:  DysonAirSelectiveCatalyticOxidisationFilterType;
     otcs?:  DysonAirTiltOscillationStatus;
 
     // All models except Pure (Hot+)Cool Link
