@@ -1,8 +1,8 @@
 {
     "name": "matterbridge-dyson-robot",
-    "displayName": "Matterbridge Dyson Robot Vacuum and Air Treatment Devices Plugin",
+    "description": "A Matterbridge plugin that connects Dyson robot vacuums and air treatment devices to the Matter smart home ecosystem via their local or cloud MQTT APIs.",
+    "displayName": "Dyson Robot",
     "version": "0.2.3",
-    "description": "Matterbridge Dyson Robot",
     "license": "ISC",
     "keywords": [
         "Matterbridge",

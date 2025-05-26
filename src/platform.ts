@@ -14,7 +14,7 @@ import { Config } from './config-types.js';
 import { checkConfiguration, getDysonAccount } from './config-check.js';
 import { FilterLogger } from './logger-filter.js';
 import { RI } from './logger-options.js';
-import { PLUGIN_NAME } from './settings.js';
+import { PLATFORM_NAME, PLUGIN_NAME } from './settings.js';
 import { createDysonDevice } from './dyson-device.js';
 import { DysonDevice } from './dyson-device-base.js';
 import { formatList, logError, plural } from './utils.js';
@@ -42,6 +42,7 @@ export class PlatformDyson extends MatterbridgeDynamicPlatform {
 
     // Constructor
     constructor(matterbridge: Matterbridge, log: AnsiLogger, config: PlatformConfig) {
+        log.logName = PLATFORM_NAME;
         const filterLog = new FilterLogger(log);
         filterLog.info(`Initialising platform ${PLUGIN_NAME}`);
         super(matterbridge, filterLog, config);
