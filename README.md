@@ -9,6 +9,7 @@
 [![npm](https://badgen.net/npm/dt/matterbridge-dyson-robot)](https://www.npmjs.com/package/matterbridge-dyson-robot)
 [![npm](https://badgen.net/npm/dw/matterbridge-dyson-robot)](https://www.npmjs.com/package/matterbridge-dyson-robot)
 [![Build and Lint](https://github.com/thoukydides/matterbridge-dyson-robot/actions/workflows/build.yml/badge.svg)](https://github.com/thoukydides/matterbridge-dyson-robot/actions/workflows/build.yml)
+[![Test](https://github.com/thoukydides/matterbridge-dyson-robot/actions/workflows/test.yml/badge.svg)](https://github.com/thoukydides/matterbridge-dyson-robot/actions/workflows/test.yml)
 
 A [Matterbridge](https://github.com/Luligu/matterbridge) plugin that connects [Dyson](https://www.dyson.co.uk/) robot vacuums and air treatment devices  
 to the [Matter](https://csa-iot.org/all-solutions/matter/) smart home ecosystem via their local or cloud MQTT APIs.
@@ -524,7 +525,7 @@ The Home app does not show any of the following (despite being part of the Matte
 
 ## Changelog
 
-All notable changes to this project are documented in [CHANGELOG.md](CHANGELOG.md).
+All notable changes to this project are documented in [`CHANGELOG.md`](CHANGELOG.md).
 
 ## Reporting Issues
           
@@ -532,7 +533,7 @@ If you have discovered an issue or have an idea for how to improve this project,
 
 ### Pull Requests
 
-This project does **NOT** accept pull requests. Any PRs submitted will be closed without discussion. For more details refer to the [`CONTRIBUTING.md`](https://github.com/thoukydides/.github/blob/master/CONTRIBUTING.md) file.
+As explained in [`CONTRIBUTING.md`](https://github.com/thoukydides/.github/blob/master/CONTRIBUTING.md), this project does **NOT** accept pull requests. Any PRs submitted will be closed without discussion.
 
 ## ISC License (ISC)
 
