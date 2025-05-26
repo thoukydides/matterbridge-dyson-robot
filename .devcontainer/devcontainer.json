@@ -27,6 +27,7 @@
 	
 	// Environment variables
 	"containerEnv": {
+		"DYSON_TOKEN": "${localEnv:DYSON_TOKEN}",
 		"MATTERBRIDGE_DIR": "${containerWorkspaceFolder}/../matterbridge"
 	},
 
