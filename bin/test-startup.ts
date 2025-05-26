@@ -21,8 +21,9 @@ const PLUGIN_CONFIG_CONTENT: Partial<Config> = {
 
 // Log messages indicating success
 const SUCCESS_TESTS: { name: string, regexp: RegExp }[] = [
-    { name: 'Discovery',    regexp: /\[Matterbridge Dyson Robot\] \d+ devices in account, [1-9]\d* device[s]? selected/ },
-    { name: 'Configured',   regexp: /\[Matterbridge Dyson Robot\] Configured [1-9]\d* Dyson device/ }
+    { name: 'Discovery',    regexp: /\[Dyson Robot\] \d+ devices in account, [1-9]\d* device[s]? selected/ },
+    { name: 'Registered',   regexp: /\[Dyson Robot\] Registered [1-9]\d* Dyson device/ },
+    { name: 'Configured',   regexp: /\[Dyson Robot\] Configured [1-9]\d* Dyson device/ }
 ];
 
 // Match ANSI colour codes so that they can be stripped
