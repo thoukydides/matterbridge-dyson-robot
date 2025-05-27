@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v0.2.5] - 2025-05-27
+### Added
+* Added missing MQTT state and fault values for TP04. (#1)
+
 ## [v0.2.4] - 2025-05-26
 ### Changed
 * Revised README and package identifiers.
@@ -50,7 +54,8 @@ All notable changes to this project will be documented in this file.
 
 Copyright © 2025 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v0.2.4...HEAD
+[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v0.2.5...HEAD
+[v0.2.5]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v0.2.4...v0.2.5
 [v0.2.4]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v0.2.3...v0.2.4
 [v0.2.3]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v0.2.2...v0.2.3
 [v0.2.2]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v0.2.1...v0.2.2
