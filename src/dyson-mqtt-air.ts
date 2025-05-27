@@ -51,7 +51,7 @@ const DYSON_MQTT_CONFIG_AIR: DysonMqttConfig<DysonMsgMapAir> = {
 };
 
 // Dyson air treatment machine product data status
-type ProductStateNumericEnumKeys = 'cflr' | 'fnsp' | 'nmdv';
+type ProductStateNumericEnumKeys = 'cflr' | 'fnsp' | 'nmdv' | 'sltm';
 const PRODUCT_STATE_NUMERIC_KEYS = ['hmax', 'hflr', 'filf', 'osal', 'osau', 'cdrr', 'cltr', 'humt', 'rect'] as const;
 type ProductStateNumericKeys = typeof PRODUCT_STATE_NUMERIC_KEYS[number];
 type ProductStateVerbatimKeys = Exclude<keyof DysonAirProductState, ProductStateNumericEnumKeys | ProductStateNumericKeys>;
@@ -74,8 +74,6 @@ interface Faults {
 type SensorDataV2 = 'hchr' | 'p25r' | 'p10r' | 'va10';
 export type DysonMqttStatusAirSensor = {
     [K in keyof Omit<DysonAirCurrentSensorData, 'sltm' | SensorDataV2>]: DysonAirSensorValueEnum | number;
-} & {
-    sltm?: DysonAirSleepTimerEnum | number;
 }
 
 // Dyson air treatment machine combined status
@@ -187,6 +185,11 @@ export class DysonMqttAir extends DysonMqtt<DysonMsgMapAir, DysonMqttStatusAir> 
         this.status.fnsp = this.parseNumericOrEnumValue('fnsp', DysonAirFanSpeed,         productState.fnsp);
         this.status.nmdv = this.parseNumericOrEnumValue('nmdv', DysonAirFanSpeed,         productState.nmdv);
 
+        // Similarly for the sleep timer (not overwriting any updateSensorData value)
+        if (productState.sltm !== undefined) {
+            this.status.sltm = this.parseNumericOrEnumValue('sltm', DysonAirSleepTimerEnum,   productState.sltm);
+        }
+
         // Parse values that should always be numeric strings
         for (const key of PRODUCT_STATE_NUMERIC_KEYS) {
             const value = productState[key];
@@ -216,8 +219,10 @@ export class DysonMqttAir extends DysonMqtt<DysonMsgMapAir, DysonMqttStatusAir> 
         const kelvin = parse('tact', 10);
         this.status.tact = typeof kelvin === 'number' ? KtoC(kelvin) : kelvin;
 
-        // Similarly for the sleep timer
-        this.status.sltm = this.parseNumericOrEnumValue('sltm', DysonAirSleepTimerEnum, msg.data.sltm);
+        // Similarly for the sleep timer (not overwriting any updateState value)
+        if (msg.data.sltm !== undefined) {
+            this.status.sltm = this.parseNumericOrEnumValue('sltm', DysonAirSleepTimerEnum, msg.data.sltm);
+        }
     }
 
     // Update environmental sensor data from a received message

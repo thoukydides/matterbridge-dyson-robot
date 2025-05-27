@@ -73,21 +73,26 @@ export enum DysonAirProductError {
     ILSS                    = 'ilss',  // Light (illuminance) sensor
     IUA1                    = 'iua1',  // Input unit?
     IUA2                    = 'iua2',  // Input unit?
+    IUA3                    = 'iua3',  // Input unit?
     IUA4                    = 'iua4',  // Input unit?
     IUC1                    = 'iuc1',  // Input unit?
     IUC2                    = 'iuc2',  // Input unit?
+    IUC3                    = 'iuc3',  // Input unit?
     IUC4                    = 'iuc4',  // Input unit?
     IUH0                    = 'iuh0',  // Input unit?
     IUH1                    = 'iuh1',  // Input unit?
     IUH2                    = 'iuh2',  // Input unit?
+    IUH3                    = 'iuh3',  // Input unit?
     IUH4                    = 'iuh4',  // Input unit?
     IUP0                    = 'iup0',  // Input unit?
     IUU1                    = 'iuu1',  // Input unit?
     IUU2                    = 'iuu2',  // Input unit?
+    IUU3                    = 'iuu3',  // Input unit?
     IUU4                    = 'iuu4',  // Input unit?
     IUW0                    = 'iuw0',  // Input unit?
     IUW1                    = 'iuw1',  // Input unit?
     IUW2                    = 'iuw2',  // Input unit?
+    IUW3                    = 'iuw3',  // Input unit?
     IUW4                    = 'iuw4',  // Input unit?
     NVMR                    = 'nvmr',  // Non-volatile memory read error
     NVMW                    = 'nvmw',  // Non-volatile memory write error
@@ -95,12 +100,16 @@ export enum DysonAirProductError {
     PROT                    = 'prot',  // Protection mode (deep clean cycle overdue)
     PSU1                    = 'psu1',  // Power supply unit fault
     PSU2                    = 'psu2',  // Power supply unit fault
+    PSU3                    = 'psu3',  // Power supply unit fault
     SEN1                    = 'sen1',  // Sensor error
     SEN2                    = 'sen2',  // Sensor error
     SEN3                    = 'sen3',  // Sensor error
     SEN4                    = 'sen4',  // Sensor error
+    SEN5                    = 'sen5',  // Sensor error
+    SEN6                    = 'sen6',  // Sensor error
     SHRT                    = 'shrt',  // Short circuit detected
     STAL                    = 'stal',  // Stalled motor
+    STE1                    = 'ste1',  // ?
     STTO                    = 'stto',  // Set temperature timeout
     TAHS                    = 't&hs',  // Temperature and humidity sensor fault
     TILT                    = 'tilt',  // Tilt sensor error
@@ -315,7 +324,7 @@ export enum DysonAirTemperatureUnits {
 // Dyson air treatment scheduler state
 export interface DysonAirScheduler {
     dstv:                   DysonAirDaylightSaving;
-    srsc:                   string;     // Schedule checksum, e.g. 'f27f'
+    srsc:                   string;     // Schedule checksum, e.g. 'f27f' or '0000000000000000'
     tzid:                   string;     // Timezone identifier, e.g. '0001'
 }
 export enum DysonAirDaylightSaving {

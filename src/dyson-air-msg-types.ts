@@ -62,6 +62,8 @@ export interface DysonAirMsgCurrentState extends DysonMsg {
     dial?:                  string; // e.g. 'OFF'
     rssi?:                  string; // Wi-Fi RSSI dBm
     channel?:               string; // Wi-Fi channel number
+    fghp?:                  string; // e.g. '74456'
+    fqhp?:                  string; // e.g. '91608'
     productState:           DysonAirProductState;
     scheduler:              DysonAirScheduler;
 }

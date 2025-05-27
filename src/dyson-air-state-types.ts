@@ -35,7 +35,8 @@ import {
     DysonAirBrightness,
     DysonAirOscillationStatus,
     DysonAirTiltOscillationStatus,
-    DysonAirSelectiveCatalyticOxidisationFilterType
+    DysonAirSelectiveCatalyticOxidisationFilterType,
+    DysonAirSleepTimer
 } from './dyson-air-types.js';
 
 // Dyson air treatment product state
@@ -75,6 +76,7 @@ export interface DysonAirProductState {
     hflr?:  string;                     // HEPA filter life:    '0000'~'0100' %
     hflt?:  DysonAirHEPAFilterType;
     nmdv?:  DysonAirFanSpeed;           // Night mode (max?) fan speed
+    sltm?:  DysonAirSleepTimer;         // Sleep timer:     '0000'~'9999' minutes or 'OFF'
 
     // Pure (Hot+)Cool Link models only
     filf?:  string;                     // Remaining filter life: '4300' hours = 1 year at ~12 hours/day
