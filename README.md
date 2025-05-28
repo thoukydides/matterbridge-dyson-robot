@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/wiki/thoukydides/matterbridge-dyson-robot/matterbridge-dyson-robot.png" height="200">
+  <img src="https://raw.githubusercontent.com/wiki/thoukydides/matterbridge-dyson-robot/matterbridge-dyson-robot.svg" height="200">
 </p>
 <div align=center>
 
