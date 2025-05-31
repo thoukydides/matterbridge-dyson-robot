@@ -465,6 +465,10 @@
                     "title": "438K = Dyson Pure Cool Formaldehyde (TP07 or TP09)"
                 },
                 {
+                    "const": "438M",
+                    "title": "438M = Dyson Pure Cool (TP11 or PC1)"
+                },
+                {
                     "const": "455",
                     "title": "455 = Dyson Pure Hot+Cool Link (HP02)"
                 },

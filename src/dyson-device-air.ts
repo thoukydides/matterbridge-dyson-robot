@@ -54,6 +54,9 @@ export class DysonDeviceAirCoolE extends DysonDeviceAirCool {
 export class DysonDeviceAirCoolK extends DysonDeviceAirCool {
     static readonly model = { type: '438K', number: 'TP07/TP09', name: 'Pure Cool Formaldehyde' };
 }
+export class DysonDeviceAirCoolM extends DysonDeviceAirCool {
+    static readonly model = { type: '438M', number: 'TP11/PC1', name: 'Pure Cool' };
+}
 export class DysonDeviceAirCoolDesk extends DysonDeviceAirCool {
     static readonly model = { type: '520', number: 'DP04', name: 'Pure Cool Desk' };
 }
