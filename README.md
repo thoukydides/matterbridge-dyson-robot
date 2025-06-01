@@ -16,8 +16,6 @@ to the [Matter](https://csa-iot.org/all-solutions/matter/) smart home ecosystem 
 
 </div>
 
-Dyson, Dyson Cool, Dyson Hot, Dyson Hot+Cool, Dyson Pure, Dyson Pure Cool, Dyson Pure Cool Link, Dyson Pure Hot+Cool Link, Dyson Pure Humidify+Cool, Dyson 360 Eye, Dyson 360 Heurist, and Dyson 360 Vis Nav, are trademarks of [Dyson Technology Limited](https://www.dyson.co.uk/).
-
 ## Installation
 
 This plugin supports multiple methods for configuring and connecting to Dyson robot vacuum and air treatment devices. The following instructions are for cloud-based connection via a MyDyson account and the Dyson AWS IoT MQTT gateway, which is the recommended and most compatible approach. See [Alternative Provisioning Methods](#provisioning-methods) (below) for options to connect to supported devices locally.
@@ -38,8 +36,9 @@ This plugin supports multiple methods for configuring and connecting to Dyson ro
 1. You should receive a **Log in to your MyDyson App** email message containing a code. Enter that code and click the <kbd>SUBMIT CODE</kbd> button.
 1. When you see messages indicating that the account has been authorised click <kbd>CONFIRM</kbd> to save the configuration, and restart Matterbridge.
 
-> [!WARNING]
-> The Apple Home app only supports robot vacuums when they are standalone individually-paired Matter nodes. Attempting to pair a Matterbridge instance with multiple robot vacuums, or a robot vacuum plus other device types, can cause the Home app to crash or fail to properly recognise some of the devices. If you are using HomeKit with a robot vacuum then configure a separate Matterbridge instance for each robot vacuum.
+| ⚠️ Apple HomeKit + Robot Vacuums  |
+| --- |
+| *The Apple Home app only supports robot vacuums when they are standalone individually-paired Matter nodes. Attempting to pair a Matterbridge instance with multiple robot vacuums, or a robot vacuum plus other device types, can cause the Home app to crash or fail to properly recognise some of the devices. If you are using HomeKit with a robot vacuum then configure a separate Matterbridge instance for each robot vacuum.* |
 
 <details>
 <summary>Separate Matterbridge Instance per Robot Vacuum</summary>
@@ -535,7 +534,17 @@ If you have discovered an issue or have an idea for how to improve this project,
 
 As explained in [`CONTRIBUTING.md`](https://github.com/thoukydides/.github/blob/master/CONTRIBUTING.md), this project does **NOT** accept pull requests. Any PRs submitted will be closed without discussion.
 
-## ISC License (ISC)
+## Legal
+
+This is an independent open-source project that is not affiliated with, endorsed by, or officially supported by [Dyson Technology Limited](https://www.dyson.co.uk/). This plugin interacts with Dyson devices and cloud services using APIs that have been discovered through reverse engineering, as permitted under Section 50B of the UK Copyright, Designs and Patents Act 1988, which implements the EU Directive 2009/24/EC on the legal protection of computer programs. These APIs are not publicly documented or supported by Dyson.
+
+This plugin enables essential status monitoring and control interoperability between supported Dyson devices and home automation ecosystems, while making conservative use of the Dyson cloud services, typically resulting in fewer API requests than the official Dyson app.
+
+However, Dyson may change their APIs or terms of service at any time, potentially rendering this plugin non-functional or causing unexpected behaviour. By using this plugin, you acknowledge and accept the inherent risks associated with interacting with unofficial APIs. Your use of this plugin is entirely at your own risk. If Dyson chooses to offer an official API or integration mechanism, this project will aim to migrate to that instead.
+
+Dyson, Dyson Cool, Dyson Hot, Dyson Hot+Cool, Dyson Pure, Dyson Pure Cool, Dyson Pure Cool Link, Dyson Pure Hot+Cool Link, Dyson Pure Humidify+Cool, Dyson 360 Eye, Dyson 360 Heurist, and Dyson 360 Vis Nav, are trademarks of Dyson Technology Limited.
+
+### ISC License (ISC)
 
 <details>
 <summary>Copyright © 2025 Alexander Thoukydides</summary>
