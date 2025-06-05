@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v0.2.7] - 2025-05-27
+### Fixed
+* Added missing MQTT state and fault values for TP09. (#1, #2)
+* Corrected update of CO2 and Formaldehyde sensor readings. (#2)
+
 ## [v0.2.6] - 2025-05-31
 ### Added
 * Added support for TP11/PC1.
@@ -60,7 +65,8 @@ All notable changes to this project will be documented in this file.
 
 Copyright © 2025 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v0.2.6...HEAD
+[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v0.2.7...HEAD
+[v0.2.7]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v0.2.6...v0.2.7
 [v0.2.6]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v0.2.5...v0.2.6
 [v0.2.5]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v0.2.4...v0.2.5
 [v0.2.4]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v0.2.3...v0.2.4
