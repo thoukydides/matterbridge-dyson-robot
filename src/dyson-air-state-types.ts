@@ -145,6 +145,7 @@ export interface DysonAirProductStateChange {
     hflr?:  [string,                            string];
     hflt?:  [DysonAirHEPAFilterType,            DysonAirHEPAFilterType];
     nmdv?:  [DysonAirFanSpeed,                  DysonAirFanSpeed];
+    sltm?:  [DysonAirSleepTimer,                DysonAirSleepTimer];
     filf?:  [string,                            string];
     fmod?:  [DysonAirFanAutoPower,              DysonAirFanAutoPower];
     qtar?:  [DysonAirQualityTarget,             DysonAirQualityTarget];

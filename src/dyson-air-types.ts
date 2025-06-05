@@ -13,6 +13,7 @@ export enum DysonAirErrorCodeEnum {
     Unknown02C0             = '02C0',
     Unknown02C9             = '02C9',
     OscillationDisabled     = '11E1',
+    Unknown51C2             = '51C2',
     Unknown57C2             = '57C2',
 }
 export type DysonAirErrorCode = DysonAirErrorCodeEnum | string;
