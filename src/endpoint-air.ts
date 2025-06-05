@@ -583,9 +583,9 @@ export class EndpointsAir {
             [this.temperature, TemperatureMeasurement                               .Cluster.id, 'measuredValue', temperature],
             [this.humidity,    RelativeHumidityMeasurement                          .Cluster.id, 'measuredValue', humidity],
             [this.airQuality,  TotalVolatileOrganicCompoundsConcentrationMeasurement.Cluster.id, 'levelValue',    voc],
-            [this.airQuality,  CarbonDioxideConcentrationMeasurement                .Cluster.id, 'levelValue',    co2],
+            [this.airQuality,  CarbonDioxideConcentrationMeasurement                .Cluster.id, 'measuredValue', co2],
             [this.airQuality,  NitrogenDioxideConcentrationMeasurement              .Cluster.id, 'levelValue',    nox],
-            [this.airQuality,  FormaldehydeConcentrationMeasurement                 .Cluster.id, 'levelValue',    hcho],
+            [this.airQuality,  FormaldehydeConcentrationMeasurement                 .Cluster.id, 'measuredValue', hcho],
             [this.airQuality,  Pm25ConcentrationMeasurement                         .Cluster.id, 'measuredValue', pm25],
             [this.airQuality,  Pm10ConcentrationMeasurement                         .Cluster.id, 'measuredValue', pm10]
         ];
