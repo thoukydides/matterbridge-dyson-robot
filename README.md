@@ -18,7 +18,7 @@ to the [Matter](https://csa-iot.org/all-solutions/matter/) smart home ecosystem 
 
 ## Installation
 
-This plugin supports multiple methods for configuring and connecting to Dyson robot vacuum and air treatment devices. The following instructions are for cloud-based connection via a MyDyson account and the Dyson AWS IoT MQTT gateway, which is the recommended and most compatible approach. See [Alternative Provisioning Methods](#provisioning-methods) (below) for options to connect to supported devices locally.
+This plugin supports multiple methods for configuring and connecting to Dyson robot vacuum and air treatment devices. The following instructions are for cloud-based connection via a MyDyson account and the Dyson AWS IoT MQTT gateway, which is the recommended approach (and the only one compatible with Dyson 360 Vis Nav robot vacuums). See [Alternative Provisioning Methods](#provisioning-methods) (below) for options to connect to supported devices locally.
 
 ### Step 1 - Create Account and Connect Devices
 1. Use the MyDyson [iPhone](https://apps.apple.com/gb/app/mydyson/id993135524) or [Android](https://play.google.com/store/apps/details?id=com.dyson.mobile.android) app to create an account.
@@ -190,12 +190,12 @@ The supported `debugFeatures` are:
 
 ### Provisioning Methods
 
-| Provisioning Method | Connection Via... | Configuration Using...    | IP Addresses / Hostnames | MQTT Credentials    | Compatibility        |
-| ------------------- | ----------------- | ------------------------- | ------------------------ | ------------------- | -------------------- |
-| `Remote Account`    | ☁️ AWS IoT Gateway | ☺️ MyDyson account         | ✅ Automatic              | ✅ Automatic         | ✅ All devices        |
-| `Local Account`     | 🏠 Local Network   | 😐 MyDyson account         | ❌ Manual configuration   | ✅ Automatic         | ❌ Older devices only |
-| `Local Wi-Fi`       | 🏠 Local Network   | 📡 Wi-Fi Setup credentials | ❌ Manual configuration   | ❌ Wi-Fi Setup label | ❌ Older devices only |
-| `Local MQTT`        | 🏠 Local Network   | ⚠️ MQTT credentials        | ❌ Manual configuration   | ❌ Using `opendyson` | ❌ Older devices only |
+| Provisioning Method | Connection Via... | Configuration Using...    | IP Addresses / Hostnames | MQTT Credentials    | Compatibility           |
+| ------------------- | ----------------- | ------------------------- | ------------------------ | ------------------- | ----------------------- |
+| `Remote Account`    | ☁️ AWS IoT Gateway | ☺️ MyDyson account         | ✅ Automatic              | ✅ Automatic         | ✅ All devices           |
+| `Local Account`     | 🏠 Local Network   | 😐 MyDyson account         | ❌ Manual configuration   | ✅ Automatic         | ❌ Not Dyson 360 Vis Nav |
+| `Local Wi-Fi`       | 🏠 Local Network   | 📡 Wi-Fi Setup credentials | ❌ Manual configuration   | ❌ Wi-Fi Setup label | ❌ Not Dyson 360 Vis Nav |
+| `Local MQTT`        | 🏠 Local Network   | ⚠️ MQTT credentials        | ❌ Manual configuration   | ❌ Using `opendyson` | ❌ Not Dyson 360 Vis Nav |
 
 The recommended `Remote Account` provisioning method routes all MQTT messages via the AWS IoT gateway, but the other methods enable direct local connection to the robot vacuum and air treatment devices (if supported by the device and its firmware). This requires manual configuration of the local network IP addresses or hostnames, and (for some methods) the credentials used to authorise the MQTT connection.
 
