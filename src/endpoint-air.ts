@@ -376,9 +376,8 @@ export class EndpointsAir {
         await this.subscribeAttributes(endpoint, Thermostat.Cluster.id, 'Thermostat', handlers);
 
         // Install Thermostat command handler
-        endpoint.addCommandHandler('setpointRaiseLower', async (
-            { mode, amount }: Thermostat.SetpointRaiseLowerRequest
-        ) => {
+        endpoint.addCommandHandler('setpointRaiseLower', async ({ request }) => {
+            const { mode, amount } = request as Thermostat.SetpointRaiseLowerRequest;
             this.log.debug(`Thermostat SetpointRaiseLower command: ${Thermostat.SetpointRaiseLowerMode[mode]} ${amount}`);
             if ([Thermostat.SetpointRaiseLowerMode.Heat, Thermostat.SetpointRaiseLowerMode.Both].includes(mode)) {
                 // Treat the command as a write to occupiedHeatingSetpoint
