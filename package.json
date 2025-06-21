@@ -58,8 +58,8 @@
     "type": "module",
     "main": "dist/index.js",
     "engines": {
-        "node": "^24.0.2 || ^22.15.1 || ^20.19.2",
-        "matterbridge": "^3.0.3"
+        "node": "^24.2.0 || ^22.16.0 || ^20.19.2",
+        "matterbridge": "^3.0.7"
     },
     "dependencies": {
         "mqtt": "^5.13.1",
@@ -71,19 +71,19 @@
     },
     "devDependencies": {
         "@eslint/eslintrc": "^3.3.1",
-        "@eslint/js": "^9.28.0",
-        "@tsconfig/node20": "^20.1.5",
+        "@eslint/js": "^9.29.0",
+        "@tsconfig/node20": "^20.1.6",
         "@types/eslint__js": "^8.42.3",
-        "@types/node": "^20.19.0",
+        "@types/node": "^20.19.1",
         "@types/node-persist": "^3.1.8",
         "@types/semver": "^7.7.0",
-        "eslint": "^9.28.0",
+        "eslint": "^9.29.0",
         "globals": "^16.2.0",
         "rimraf": "^6.0.1",
         "ts-interface-builder": "^0.3.3",
         "tsx": "^4.20.3",
         "typescript": "^5.8.3",
-        "typescript-eslint": "^8.34.0"
+        "typescript-eslint": "^8.34.1"
     },
     "scripts": {
         "presetup-matterbridge-github-clone": "rimraf $MATTERBRIDGE_DIR",
