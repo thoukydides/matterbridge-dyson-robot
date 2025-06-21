@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v0.2.9] - 2025-06-21
+### Changed
+* Added missing MQTT messages and values for BP03.
+* Updated dependencies.
+
 ## [v0.2.8] - 2025-06-13
 ### Changed
 * Workaround breaking changes in Matterbridge 3.0.6.
@@ -70,7 +75,8 @@ All notable changes to this project will be documented in this file.
 
 Copyright © 2025 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v0.2.8...HEAD
+[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v0.2.9...HEAD
+[v0.2.9]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v0.2.8...v0.2.9
 [v0.2.8]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v0.2.7...v0.2.8
 [v0.2.7]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v0.2.6...v0.2.7
 [v0.2.6]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v0.2.5...v0.2.6
