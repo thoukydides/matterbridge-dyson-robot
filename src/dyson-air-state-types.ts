@@ -63,6 +63,7 @@ export interface DysonAirProductState {
     otal?:  DysonAirTiltAngle;          // Tilt angle lower bound °
     otau?:  DysonAirTiltAngle;          // Tilt angle upper bound °
     oton?:  DysonAirTiltOscillation;
+    sflr?:  string;                     // SCO filter life:     '0000'~'0100' %
     sflt?:  DysonAirSelectiveCatalyticOxidisationFilterType;
     otcs?:  DysonAirTiltOscillationStatus;
 
@@ -121,49 +122,52 @@ export interface DysonAirProductState {
 //   }
 // ... but ts-interface-builder doesn't support that
 export interface DysonAirProductStateChange {
-    ercd?:  [DysonAirErrorCode,                 DysonAirErrorCode];
-    fnsp?:  [DysonAirFanSpeed,                  DysonAirFanSpeed];
-    fnst?:  [DysonAirFanState,                  DysonAirFanState];
-    nmod?:  [DysonAirNightMode,                 DysonAirNightMode];
-    rhtm?:  [DysonAirContinuousMonitoring,      DysonAirContinuousMonitoring];
-    wacd?:  [DysonAirWarningCode,               DysonAirWarningCode];
-    ffoc?:  [DysonAirFanFocus,                  DysonAirFanFocus];
-    hmax?:  [string,                            string];
-    hmod?:  [DysonAirHeatingMode,               DysonAirHeatingMode];
-    hsta?:  [DysonAirHeatingStatus,             DysonAirHeatingStatus];
-    oson?:  [DysonAirOscillation,               DysonAirOscillation];
-    anct?:  [DysonAirAnemometerControlTilt,                  DysonAirAnemometerControlTilt];
-    otal?:  [DysonAirTiltAngle,                 DysonAirTiltAngle];
-    otau?:  [DysonAirTiltAngle,                 DysonAirTiltAngle];
-    oton?:  [DysonAirTiltOscillation,           DysonAirTiltOscillation];
-    auto?:  [DysonAirAutoMode,                  DysonAirAutoMode];
-    cflr?:  [DysonAirCarbonFilterLife,          DysonAirCarbonFilterLife];
-    cflt?:  [DysonAirCarbonFilterType,          DysonAirCarbonFilterType];
-    corf?:  [DysonAirTemperatureUnits,          DysonAirTemperatureUnits];
-    fdir?:  [DysonAirFanDirection,              DysonAirFanDirection];
-    fpwr?:  [DysonAirFanPower,                     DysonAirFanPower];
-    hflr?:  [string,                            string];
-    hflt?:  [DysonAirHEPAFilterType,            DysonAirHEPAFilterType];
-    nmdv?:  [DysonAirFanSpeed,                  DysonAirFanSpeed];
-    sltm?:  [DysonAirSleepTimer,                DysonAirSleepTimer];
-    filf?:  [string,                            string];
-    fmod?:  [DysonAirFanAutoPower,              DysonAirFanAutoPower];
-    qtar?:  [DysonAirQualityTarget,             DysonAirQualityTarget];
-    tilt?:  [DysonAirTiltSensor,                DysonAirTiltSensor];
-    oscs?:  [DysonAirOscillationStatus,         DysonAirOscillationStatus];
-    osal?:  [string,                            string];
-    osau?:  [string,                            string];
-    ancp?:  [DysonAirAnemometerControlProfile,           DysonAirAnemometerControlProfile];
-    cdrr?:  [string,                            string];
-    cltr?:  [string,                            string];
-    haut?:  [DysonAirHumidificationAutoMode,    DysonAirHumidificationAutoMode];
-    hume?:  [DysonAirHumidification,            DysonAirHumidification];
-    humt?:  [string,                            string];
-    rect?:  [string,                            string];
-    wath?:  [DysonAirWaterHardness,             DysonAirWaterHardness];
-    clcr?:  [DysonAirDeepCleanCycle,            DysonAirDeepCleanCycle];
-    msta?:  [DysonAirHumidificationState,       DysonAirHumidificationState];
-    psta?:  [DysonAirHumidificationProcess,     DysonAirHumidificationProcess];
-    bril?:  [DysonAirBrightness,                DysonAirBrightness];
-    fqhp?:  [string,                            string];
+    ercd?:  [DysonAirErrorCode,                                 DysonAirErrorCode];
+    fnsp?:  [DysonAirFanSpeed,                                  DysonAirFanSpeed];
+    fnst?:  [DysonAirFanState,                                  DysonAirFanState];
+    nmod?:  [DysonAirNightMode,                                 DysonAirNightMode];
+    rhtm?:  [DysonAirContinuousMonitoring,                      DysonAirContinuousMonitoring];
+    wacd?:  [DysonAirWarningCode,                               DysonAirWarningCode];
+    ffoc?:  [DysonAirFanFocus,                                  DysonAirFanFocus];
+    hmax?:  [string,                                            string];
+    hmod?:  [DysonAirHeatingMode,                               DysonAirHeatingMode];
+    hsta?:  [DysonAirHeatingStatus,                             DysonAirHeatingStatus];
+    oson?:  [DysonAirOscillation,                               DysonAirOscillation];
+    anct?:  [DysonAirAnemometerControlTilt,                     DysonAirAnemometerControlTilt];
+    otal?:  [DysonAirTiltAngle,                                 DysonAirTiltAngle];
+    otau?:  [DysonAirTiltAngle,                                 DysonAirTiltAngle];
+    oton?:  [DysonAirTiltOscillation,                           DysonAirTiltOscillation];
+    sflr?:  [string,                                            string];
+    sflt?:  [DysonAirSelectiveCatalyticOxidisationFilterType,   DysonAirSelectiveCatalyticOxidisationFilterType];
+    otcs?:  [DysonAirTiltOscillationStatus,                     DysonAirTiltOscillationStatus];
+    auto?:  [DysonAirAutoMode,                                  DysonAirAutoMode];
+    cflr?:  [DysonAirCarbonFilterLife,                          DysonAirCarbonFilterLife];
+    cflt?:  [DysonAirCarbonFilterType,                          DysonAirCarbonFilterType];
+    corf?:  [DysonAirTemperatureUnits,                          DysonAirTemperatureUnits];
+    fdir?:  [DysonAirFanDirection,                              DysonAirFanDirection];
+    fpwr?:  [DysonAirFanPower,                                  DysonAirFanPower];
+    hflr?:  [string,                                            string];
+    hflt?:  [DysonAirHEPAFilterType,                            DysonAirHEPAFilterType];
+    nmdv?:  [DysonAirFanSpeed,                                  DysonAirFanSpeed];
+    sltm?:  [DysonAirSleepTimer,                                DysonAirSleepTimer];
+    filf?:  [string,                                            string];
+    fmod?:  [DysonAirFanAutoPower,                              DysonAirFanAutoPower];
+    qtar?:  [DysonAirQualityTarget,                             DysonAirQualityTarget];
+    tilt?:  [DysonAirTiltSensor,                                DysonAirTiltSensor];
+    oscs?:  [DysonAirOscillationStatus,                         DysonAirOscillationStatus];
+    osal?:  [string,                                            string];
+    osau?:  [string,                                            string];
+    ancp?:  [DysonAirAnemometerControlProfile,                  DysonAirAnemometerControlProfile];
+    cdrr?:  [string,                                            string];
+    cltr?:  [string,                                            string];
+    clcr?:  [DysonAirDeepCleanCycle,                            DysonAirDeepCleanCycle];
+    haut?:  [DysonAirHumidificationAutoMode,                    DysonAirHumidificationAutoMode];
+    hume?:  [DysonAirHumidification,                            DysonAirHumidification];
+    humt?:  [string,                                            string];
+    msta?:  [DysonAirHumidificationState,                       DysonAirHumidificationState];
+    psta?:  [DysonAirHumidificationProcess,                     DysonAirHumidificationProcess];
+    rect?:  [string,                                            string];
+    wath?:  [DysonAirWaterHardness,                             DysonAirWaterHardness];
+    bril?:  [DysonAirBrightness,                                DysonAirBrightness];
+    fqhp?:  [string,                                            string];
 }

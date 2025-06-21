@@ -53,6 +53,12 @@ export interface DysonAirMsgGoodbye extends DysonMsg {
     reason:                 'UNKNOWN';
 }
 
+export interface DysonAirMsgImBack extends DysonMsg {
+    msg:                    'IM-BACK';
+    reason:                 'WIFI-RECONNECT',
+    version:                string; // e.g. '0664PF.00.08.005.0002'
+}
+
 // MQTT topic: <type>/<sn>/status/current
 
 export interface DysonAirMsgCurrentState extends DysonMsg {
@@ -128,6 +134,13 @@ export interface DysonAirMsgFaultsChange extends DysonMsg {
     }
 }
 
+// MQTT topic: <type>/<sn>/status/scheduler
+
+export interface DysonAirMsgScheduleUpdated extends DysonMsg {
+    msg:                    'SCHEDULE-UPDATED';
+    version:                string; // Schedule version e.g. '80a0' or 'a770'
+}
+
 // MQTT topic: <type>/<sn>/command
 
 export interface DysonAirMsgRequestCurrentFaults extends DysonMsg {
@@ -157,5 +170,5 @@ export interface DysonAirMsgStateSet extends DysonMsg {
 
 export interface DysonAirMsgScheduleSet extends DysonMsg {
     msg:                    'SCHEDULE-SET';
-    version:                string; // Schedule version? e.g. '80a0' or 'a770'
+    version:                string; // Schedule version e.g. '80a0' or 'a770'
 }

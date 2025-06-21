@@ -9,6 +9,7 @@ export interface DysonAirCurrentSensorData {
     tact?:  DysonAirSensorValue;    // Temperature:     '2430'~'3530' deci-K or 'OFF'
     hact?:  DysonAirSensorValue;    // Humidity:        '0062'~'0100' % or 'OFF'
     // Air quality measurements
+    co2a?:  DysonAirSensorValue;    // CO2:             ?
     co2r?:  DysonAirSensorValue;    // CO2:             '0000'~'9999' ppm
     pact?:  DysonAirSensorValue;    // Dust:            '0000'~'0009' index
     hcho?:  DysonAirSensorValue;    // Formaldehyde v1: '0000'~'0099' µg/m³

@@ -62,6 +62,9 @@ export enum DysonAirProductError {
     FS0A                    = 'fs0a',  // Fan subsystem fault
     FS0B                    = 'fs0b',  // Fan subsystem fault
     FS0C                    = 'fs0c',  // Fan subsystem fault
+    FS0D                    = 'fs0d',  // Fan subsystem fault
+    FS0E                    = 'fs0e',  // Fan subsystem fault
+    FS0F                    = 'fs0f',  // Fan subsystem fault
     HALL                    = 'hall',  // Hall sensor fault
     HAMB                    = 'hamb',  // Humidity sensor error
     HAMP                    = 'hamp',  // Humidity sensor error
@@ -108,12 +111,15 @@ export enum DysonAirProductError {
     SEN4                    = 'sen4',  // Sensor error
     SEN5                    = 'sen5',  // Sensor error
     SEN6                    = 'sen6',  // Sensor error
+    SEN7                    = 'sen7',  // Sensor error
+    SEN8                    = 'sen8',  // Sensor error
     SHRT                    = 'shrt',  // Short circuit detected
     STAL                    = 'stal',  // Stalled motor
     STE1                    = 'ste1',  // ?
     STTO                    = 'stto',  // Set temperature timeout
     TAHS                    = 't&hs',  // Temperature and humidity sensor fault
     TILT                    = 'tilt',  // Tilt sensor error
+    TOSL                    = 'tosl',  // Tilt error
     UI01                    = 'ui01',  // User interface module fault
     UI02                    = 'ui02',  // User interface module fault
     UI03                    = 'ui03',  // User interface module fault
