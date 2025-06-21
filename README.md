@@ -190,14 +190,16 @@ The supported `debugFeatures` are:
 
 ### Provisioning Methods
 
-| Provisioning Method | Connection Via... | Configuration Using...    | IP Addresses / Hostnames | MQTT Credentials    | Compatibility           |
-| ------------------- | ----------------- | ------------------------- | ------------------------ | ------------------- | ----------------------- |
-| `Remote Account`    | ☁️ AWS IoT Gateway | ☺️ MyDyson account         | ✅ Automatic              | ✅ Automatic         | ✅ All devices           |
-| `Local Account`     | 🏠 Local Network   | 😐 MyDyson account         | ❌ Manual configuration   | ✅ Automatic         | ❌ Not Dyson 360 Vis Nav |
-| `Local Wi-Fi`       | 🏠 Local Network   | 📡 Wi-Fi Setup credentials | ❌ Manual configuration   | ❌ Wi-Fi Setup label | ❌ Not Dyson 360 Vis Nav |
-| `Local MQTT`        | 🏠 Local Network   | ⚠️ MQTT credentials        | ❌ Manual configuration   | ❌ Using `opendyson` | ❌ Not Dyson 360 Vis Nav |
+| Provisioning Method | Connection Via... | Configuration Using...    | IP Addresses / Hostnames | MQTT Credentials    | Compatibility        |
+| ------------------- | ----------------- | ------------------------- | ------------------------ | ------------------- | -------------------- |
+| `Remote Account`    | ☁️ AWS IoT Gateway | ☺️ MyDyson account         | ✅ Automatic              | ✅ Automatic         | ✅ All devices        |
+| `Local Account`     | 🏠 Local Network   | 😐 MyDyson account         | ❌ Manual configuration   | ✅ Automatic         | ❌ Not recent devices |
+| `Local Wi-Fi`       | 🏠 Local Network   | 📡 Wi-Fi Setup credentials | ❌ Manual configuration   | ❌ Wi-Fi Setup label | ❌ Not recent devices |
+| `Local MQTT`        | 🏠 Local Network   | ⚠️ MQTT credentials        | ❌ Manual configuration   | ❌ Using `opendyson` | ❌ Not recent devices |
 
-The recommended `Remote Account` provisioning method routes all MQTT messages via the AWS IoT gateway, but the other methods enable direct local connection to the robot vacuum and air treatment devices (if supported by the device and its firmware). This requires manual configuration of the local network IP addresses or hostnames, and (for some methods) the credentials used to authorise the MQTT connection.
+The recommended `Remote Account` provisioning method routes all MQTT messages via the AWS IoT gateway. No per-device configuration is required with this method.
+
+The other provisioning methods enable direct local connection to the robot vacuum and air treatment devices, but are not supported by some recent products (such as the Dyson 360 Vis Nav and Dyson Purifier Big + Quiet Formaldehyde). These methods require manual configuration of the local network IP addresses or hostnames, and (for some methods) the credentials used to authorise the MQTT connection.
 
 #### `Remote Account` (Connect via AWS IoT Gateway / Configure using MyDyson account)
 
@@ -462,12 +464,15 @@ Sensor devices can be duplicated, e.g. the measured temperature may be reported 
 
 ## Compatibility
 
-This plugin has only been tested with the following devices:
-| Description                | Model | MQTT Root Topic | Firmware    |
-| -------------------------- | :---: | :-------------: | :---------: |
-| Dyson 360 Eye robot vacuum | RB01  | `N223`          | `11.3.5.10` |
-| Dyson Pure Cool Link       | TP02  | `475`           | `21.04.03`  |
-| Dyson Pure Hot+Cool Link   | HP02  | `455`           | `21.04.03`  |
+This plugin has been tested with the following devices:
+| Description                             | Model | MQTT Root Topic | Firmware                | Tested By
+| --------------------------------------- | :---: | :-------------: | :---------------------: | ---
+| Dyson Purifier Big + Quiet Formaldehyde | BP03  | `664`           | `0664PF.00.08.005.0002` | Developer
+| Dyson Pure Hot+Cool Link                | HP02  | `455`           | `21.04.03`              | Developer
+| Dyson 360 Eye robot vacuum              | RB01  | `N223`          | `11.3.5.10`             | Developer
+| Dyson Pure Cool Link                    | TP02  | `475`           | `21.04.03`              | Developer
+| Dyson Pure Cool                         | TP04  | `438`           |                         | [smuteau](https://github.com/smuteau) ([#1](https://github.com/thoukydides/matterbridge-dyson-robot/issues/1))
+| Dyson HEPA Purifier Cool Formaldehyde   | TP09  | `438E`          |                         | [Nagromdark](https://github.com/Nagromdark) ([#2](https://github.com/thoukydides/matterbridge-dyson-robot/issues/2))
 
 It should also work with other Dyson robot vacuums and air treatment devices, although some modifications may be required for full compatibility.
 
