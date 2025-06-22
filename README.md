@@ -523,8 +523,10 @@ For these reasons, this plugin defaults to bridging each Matter device type sepa
 ```
 
 The Home app does not show any of the following (despite being part of the Matter **Air Purifier** device specification, and supported via the HomeKit Accessory Protocol):
-* HEPA and carbon filter status.
-* Other sensor measurements (CO2, Formaldehyde, NOx, PM2.5, PM10, and VOC).
+* HEPA or carbon filter status.
+* Formaldehyde, NOx, or VOC sensor measurements.
+
+Additionally, when sensor readings are unavailable (i.e. their Matter attributes are set to `null`) the Home App incorrect displays them as zero (e.g. `0ppm` or `0.0°`).
 </details>
 
 ## Changelog
