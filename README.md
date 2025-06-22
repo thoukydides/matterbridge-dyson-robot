@@ -471,7 +471,7 @@ This plugin has been tested with the following devices:
 | Dyson Pure Hot+Cool Link                | HP02  | `455`           | `21.04.03`              | Developer
 | Dyson 360 Eye robot vacuum              | RB01  | `N223`          | `11.3.5.10`             | Developer
 | Dyson Pure Cool Link                    | TP02  | `475`           | `21.04.03`              | Developer
-| Dyson Pure Cool                         | TP04  | `438`           |                         | [smuteau](https://github.com/smuteau) ([#1](https://github.com/thoukydides/matterbridge-dyson-robot/issues/1))
+| Dyson Pure Cool                         | TP04  | `438`           | `ECG2PF.02.06.003.0002` | [smuteau](https://github.com/smuteau) ([#1](https://github.com/thoukydides/matterbridge-dyson-robot/issues/1))
 | Dyson HEPA Purifier Cool Formaldehyde   | TP09  | `438E`          |                         | [Nagromdark](https://github.com/Nagromdark) ([#2](https://github.com/thoukydides/matterbridge-dyson-robot/issues/2))
 
 It should also work with other Dyson robot vacuums and air treatment devices, although some modifications may be required for full compatibility.
