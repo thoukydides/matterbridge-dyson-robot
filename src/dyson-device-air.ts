@@ -90,6 +90,9 @@ export class DysonDeviceAirHotCoolE extends DysonDeviceAirHotCool {
 export class DysonDeviceAirHotCoolK extends DysonDeviceAirHotCool {
     static readonly model = { type: '527K', number: 'HP09', name: 'Purifier Hot+Cool Formaldehyde' };
 }
+export class DysonDeviceAirHotCoolM extends DysonDeviceAirHotCool {
+    static readonly model = { type: '527M', number: 'HP1/HP11', name: 'Purifier Hot+Cool' };
+}
 
 // =============================================================================
 // Dyson Big+Quiet family...

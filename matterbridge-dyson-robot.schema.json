@@ -501,6 +501,10 @@
                     "title": "527K = Dyson Purifier Hot+Cool Formaldehyde (HP09)"
                 },
                 {
+                    "const": "527M",
+                    "title": "527M = Dyson Purifier Hot+Cool (HP1/HP11)"
+                },
+                {
                     "const": "664",
                     "title": "664 = Dyson Purifier Big+Quiet Series (BP02, BP03, BP04, or BP06)"
                 }
