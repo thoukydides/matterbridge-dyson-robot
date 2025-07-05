@@ -9,7 +9,6 @@ import { DysonMqtt360, DysonMqttStatus360 } from './dyson-mqtt-360.js';
 import { EntityName } from './config-types.js';
 import { assertIsDefined, tryListener } from './utils.js';
 import { DysonMqttStatus } from './dyson-mqtt.js';
-import { MatterbridgeEndpoint } from 'matterbridge';
 import { BasicInformation } from 'matterbridge/matter/clusters';
 import { ifValueChanged } from './decorator-changed.js';
 import { RvcCleanModeLabels } from './endpoint-360-rvc.js';
@@ -19,7 +18,7 @@ import {
     UpdatePowerSource360,
     UpdateRvcOperationalState360
 } from './endpoint-360.js';
-import { PLUGIN_URL, VENDOR_NAME } from './settings.js';
+import { PLUGIN_URL, VENDOR_ID, VENDOR_NAME } from './settings.js';
 import { RvcCleanMode360, RvcRunMode360 } from './endpoint-360-behavior.js';
 import { PowerSource, RvcOperationalState } from 'matterbridge/matter/clusters';
 import { Dyson360PowerMode, Dyson360State } from './dyson-360-types.js';
@@ -29,6 +28,7 @@ import {
 } from './dyson-device-360-faults.js';
 import { assert } from 'console';
 import { attachDevice360CommandHandlers } from './dyson-device-360-commands.js';
+import { EndpointBase } from './endpoint-base.js';
 
 // Mapping of robot vacuum state to Matter equivalents
 type StateMapColumns = [
@@ -121,15 +121,17 @@ export abstract class DysonDevice360Base extends DysonDevice<DysonMqtt360> {
         const endpointOptions: EndpointOptions360 = {
             uniqueStorageKey:       this.uniqueId,
             matterbridgeDeviceName: this.deviceName,
-            deviceBasicInformation: {
+            basicInformation: {
                 nodeLabel:          this.deviceName,
                 partNumber:         this.modelNumber,
                 productAppearance:  this.getProductAppearance(),
+                productId:          this.productId,
                 productLabel:       this.modelNumber,
                 productName:        this.modelName,
                 productUrl:         PLUGIN_URL,
                 serialNumber:       this.serialNumber,
                 uniqueId:           this.uniqueId,
+                vendorId:           VENDOR_ID,
                 vendorName:         VENDOR_NAME
             },
             powerSource: {
@@ -153,7 +155,7 @@ export abstract class DysonDevice360Base extends DysonDevice<DysonMqtt360> {
     }
 
     // Retrieve the root device endpoints after validation
-    override getEndpoints(_validatedNames: EntityName[]): MatterbridgeEndpoint[] {
+    override getEndpoints(_validatedNames: EntityName[]): EndpointBase[] {
         return [this.endpoint ??= this.makeEndpoint()];
     }
 

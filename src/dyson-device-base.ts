@@ -4,11 +4,11 @@
 import { AnsiLogger } from 'matterbridge/logger';
 import { Config, EntityName } from './config-types.js';
 import { DysonMqttLike } from './dyson-mqtt.js';
-import { MatterbridgeEndpoint } from 'matterbridge';
 import { Constructor } from './utils.js';
 import { Changed } from './decorator-changed.js';
 import { createHash } from 'crypto';
 import { DeviceConfigMqtt } from './dyson-mqtt-client.js';
+import { EndpointBase } from './endpoint-base.js';
 
 // Dyson model details
 export interface DysonDeviceModel {
@@ -62,7 +62,7 @@ export abstract class DysonDevice<MQTT extends DysonMqttLike = DysonMqttLike> {
     abstract getEntities(): { name: EntityName, description: string }[];
 
     // Retrieve the root device endpoints after validation
-    abstract getEndpoints(validatedNames: EntityName[]): MatterbridgeEndpoint[];
+    abstract getEndpoints(validatedNames: EntityName[]): EndpointBase[];
 
     // Start the device after the endpoints are active
     abstract start(): Promise<void>;
@@ -87,4 +87,11 @@ export abstract class DysonDevice<MQTT extends DysonMqttLike = DysonMqttLike> {
     // Retrieve common per-device data
     get deviceName():   string { return this.device.name; }
     get serialNumber(): string { return this.device.serialNumber; }
+
+    // Convert the MQTT root topic to a ProductID
+    get productId(): number {
+        const hex = this.classStatic.model.type.replace(/[^A-F0-9]/ig, '');
+        const parsed = parseInt(hex.substring(0, 4), 16);
+        return isNaN(parsed) ? 0x0000 : parsed;
+    }
 };

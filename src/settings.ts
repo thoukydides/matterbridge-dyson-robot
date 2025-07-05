@@ -39,6 +39,7 @@ export const DEFAULT_CONFIG: Readonly<Partial<Config>> = {
         }
     }),
     wildcardTopic:          false,
+    enableServerRvc:        true,
     debug:                  false,
     debugFeatures:          [],
     unregisterOnShutdown:   false
@@ -46,3 +47,4 @@ export const DEFAULT_CONFIG: Readonly<Partial<Config>> = {
 
 // Vendor name
 export const VENDOR_NAME = 'Dyson';
+export const VENDOR_ID   = 0xFFF1; // Test Vendor #1

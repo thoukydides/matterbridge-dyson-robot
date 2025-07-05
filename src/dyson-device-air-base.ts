@@ -11,7 +11,6 @@ import {
     DysonMqttStatusAir
 } from './dyson-mqtt-air.js';
 import { EntityName } from './config-types.js';
-import { MatterbridgeEndpoint } from 'matterbridge';
 import {
     FanControl,
     ResourceMonitoring
@@ -27,7 +26,7 @@ import {
     UpdateAirFan,
     AirFanRockSetting
 } from './endpoint-air.js';
-import { PLUGIN_URL, VENDOR_NAME } from './settings.js';
+import { PLUGIN_URL, VENDOR_ID, VENDOR_NAME } from './settings.js';
 import { mapDysonAirSensorStatus } from './dyson-device-air-quality.js';
 import {
     DysonAirAnemometerControlProfile,
@@ -45,6 +44,7 @@ import {
 } from './dyson-air-types.js';
 import { CC, RI } from './logger-options.js';
 import { ifValueChanged } from './decorator-changed.js';
+import { EndpointBase } from './endpoint-base.js';
 
 // Mappings between FanMode and SpeedSetting
 const FAN_MODE_TO_SPEED_LOW     = 1;
@@ -104,15 +104,17 @@ export abstract class DysonDeviceAirBase extends DysonDevice<DysonMqttAir> {
             uniqueStorageKey:       this.uniqueId,
             matterbridgeDeviceName: this.deviceName,
             validatedNames,
-            deviceBasicInformation: {
+            basicInformation: {
                 nodeLabel:          this.deviceName,
                 partNumber:         this.modelNumber,
+                productId:          this.productId,
                 productLabel:       this.modelNumber,
                 productName:        this.modelName,
                 productUrl:         PLUGIN_URL,
                 serialNumber:       this.serialNumber,
                 softwareVersion:    this.mqtt.status.version,
                 uniqueId:           this.uniqueId,
+                vendorId:           VENDOR_ID,
                 vendorName:         VENDOR_NAME
             },
             fanControl: {
@@ -204,7 +206,7 @@ export abstract class DysonDeviceAirBase extends DysonDevice<DysonMqttAir> {
     }
 
     // Retrieve the root device endpoints after validation
-    override getEndpoints(validatedNames: EntityName[]): MatterbridgeEndpoint[] {
+    override getEndpoints(validatedNames: EntityName[]): EndpointBase[] {
         this.endpoints ??= this.makeEndpoints(validatedNames);
         return this.endpoints.bridgedNodeEndpoints;
     }

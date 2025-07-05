@@ -2,40 +2,43 @@
 // Copyright © 2025 Alexander Thoukydides
 
 import {
+    bridgedNode,
     DeviceTypeDefinition,
-    MatterbridgeEndpoint
+    MatterbridgeEndpoint,
+    roboticVacuumCleaner
 } from 'matterbridge';
-import { AtLeastOne } from 'matterbridge/matter';
+import { AtLeastOne, ServerNode } from 'matterbridge/matter';
 import {
-    BasicInformation,
-    BridgedDeviceBasicInformation
+    BasicInformation
 } from 'matterbridge/matter/clusters';
 import { AnsiLogger } from 'matterbridge/logger';
 import { Config } from './config-types.js';
 import {
+    BasicInformationServer,
     BridgedDeviceBasicInformationServer
 } from 'matterbridge/matter/behaviors';
 import { Changed, ifValueChanged } from './decorator-changed.js';
 import { AN, AV, CN, RI } from './logger-options.js';
 
-// Details required to configure the Bridged Device Basic Information cluster
-export interface DeviceBasicInformationOptions {
+// Details required to configure the (Bridged Device) Basic Information cluster
+export interface BasicInformationOptions {
     // Mandatory attribute
     uniqueId:               string; // 32 characters max
-    // Optional attributes
+    // Mandatory attributes for non-bridged nodes
     hardwareVersion?:       string; // 64 characters max
+    nodeLabel:              string, // 32 characters max
+    productId:              number; // uint16
+    productName:            string; // 32 characters max
+    softwareVersion?:       string; // 64 characters max
+    vendorId:               number; // uint16
+    vendorName:             string; // 32 characters max
+    // Optional attributes
     manufacturingDate?:     string; // 'YYYMMDD'
-    nodeLabel?:             string, // 32 characters max
     partNumber?:            string; // 32 characters max
     productAppearance?:     BasicInformation.ProductAppearance;
-    productId?:             number; // uint16
     productLabel?:          string; // 64 characters max
-    productName?:           string; // 32 characters max
     productUrl?:            string; // 256 characters max
     serialNumber?:          string; // 32 characters max
-    softwareVersion?:       string; // 64 characters max
-    vendorId?:              number; // uint16
-    vendorName?:            string; // 32 characters max
 }
 export interface EndpointOptionsBase {
     // Matter.js endpoint identifier
@@ -43,7 +46,7 @@ export interface EndpointOptionsBase {
     // Matterbridge's unique endpoint name
     matterbridgeDeviceName: string;
     // Static configuration of cluster attributes
-    deviceBasicInformation: DeviceBasicInformationOptions;
+    basicInformation:       BasicInformationOptions;
 }
 
 // A simplified endpoint interface that can be used by mixins
@@ -61,25 +64,49 @@ export class EndpointBase extends MatterbridgeEndpoint {
     constructor(
         log:                AnsiLogger,
         readonly config:    Config,
-        options:            EndpointOptionsBase,
+        readonly options:   EndpointOptionsBase,
         definition:         DeviceTypeDefinition | AtLeastOne<DeviceTypeDefinition>
     ) {
+        // Use Matterbridge's 'server' mode for robotic vacuums if enabled
+        const definitionArray = Array.isArray(definition) ? definition : [definition];
+        let mode: 'server' | undefined;
+        if (config.enableServerRvc && definitionArray.includes(roboticVacuumCleaner)) {
+            mode = 'server';
+            definition = definitionArray.filter(d => d !== bridgedNode) as AtLeastOne<DeviceTypeDefinition>;
+        }
+
+        // Initialise the base class
         const { uniqueStorageKey } = options;
         const debug = config.debugFeatures.includes('Log Endpoint Debug');
-        super(definition, { uniqueStorageKey }, debug);
+        super(definition, { uniqueStorageKey, mode }, debug);
 
         // Use supplied logger instead of the one created by the base class
         this.log = log;
 
+        // Matterbridge requires a unique name for each endpoint
+        this.deviceName = options.matterbridgeDeviceName;
+
+        // Copy of values (possibly) required by Matterbridge
+        // (Do NOT use the nodeLabel for deviceName; it might not be unique)
+        const info = options.basicInformation;
+        this.hardwareVersion        = parseOptionalUnsigned(info.hardwareVersion);
+        this.hardwareVersionString  = info.hardwareVersion;
+        this.productId              = info.productId;
+        this.productName            = info.productName;
+        this.serialNumber           = info.serialNumber;
+        this.softwareVersion        = parseOptionalUnsigned(info.softwareVersion);
+        this.softwareVersionString  = info.softwareVersion;
+        this.uniqueId               = info.uniqueId;
+        this.vendorId               = info.vendorId;
+        this.vendorName             = info.vendorName;
+
         // Create the basic clusters required on all endpoints
-        this.createDefaultIdentifyClusterServer()
-            .createBridgedDeviceBasicInformationClusterServer(options.deviceBasicInformation);
+        this.createDefaultIdentifyClusterServer();
+        if (!mode) this.createBridgedDeviceBasicInformationClusterServer(info);
+        // (Matterbridge creates the Basic Information cluster in 'server' mode)
 
         // Prepare the decorator support
         this.changed = new Changed(log);
-
-        // Matterbridge requires a unique name for each endpoint
-        this.deviceName = options.matterbridgeDeviceName;
 
         // Identify the device
         this.addCommandHandler('identify', () => {
@@ -87,25 +114,42 @@ export class EndpointBase extends MatterbridgeEndpoint {
         });
     }
 
+    // Perform any post-registration setup
+    async postRegister(): Promise<void> {
+        // Matterbridge incorrectly sets Basic Information cluster attributes
+        if (this.serverNode) {
+            this.log.info('Patching Basic Information cluster attributes');
+            const info = this.options.basicInformation;
+            await this.patchBasicInformationClusterServer(this.serverNode, info);
+        }
+    }
+
+    // Patch the Basic Information cluster attributes with correct values
+    async patchBasicInformationClusterServer(
+        serverNode: ServerNode,
+        info:       BasicInformationOptions
+    ): Promise<void> {
+        await serverNode.setStateOf(BasicInformationServer, {
+            // Mandatory attributes that should already be set correctly:
+            //   productId, productName, vendorId, vendorName
+            // Mandatory attributes incorrectly set by Matterbridge
+            hardwareVersion:        parseOptionalUnsigned(info.hardwareVersion) ?? 0,
+            hardwareVersionString:  info.hardwareVersion     ?.substring(0, 64) ?? '?',
+            nodeLabel:              info.nodeLabel            .substring(0, 32),
+            softwareVersion:        parseOptionalUnsigned(info.softwareVersion) ?? 0,
+            softwareVersionString:  info.softwareVersion     ?.substring(0, 64) ?? '?',
+            // Optional attributes incorrectly set by Matterbridge
+            manufacturingDate:      info.manufacturingDate   ?.substring(0, 16),
+            partNumber:             info.partNumber          ?.substring(0, 32),
+            productAppearance:      info.productAppearance,
+            productLabel:           info.productLabel        ?.substring(0, 64),
+            productUrl:             info.productUrl          ?.substring(0, 256),
+            serialNumber:           info.serialNumber        ?.substring(0, 32)
+        });
+    }
+
     // Create the Bridged Device Basic Information cluster
-    createBridgedDeviceBasicInformationClusterServer(options: DeviceBasicInformationOptions): this {
-        const parseOptionalNumber = (value?: string): number | undefined =>
-            value === undefined ? undefined : parseInt(value, 10);
-
-        // Copy of values (possibly) required by Matterbridge
-        // (Do NOT use the nodeLabel for deviceName; it might not be unique)
-        this.hardwareVersion        = parseOptionalNumber(options.hardwareVersion);
-        this.hardwareVersionString  = options.hardwareVersion;
-        this.productId              = options.productId;
-        this.productName            = options.productName;
-        this.serialNumber           = options.serialNumber;
-        this.softwareVersion        = parseOptionalNumber(options.softwareVersion);
-        this.softwareVersionString  = options.softwareVersion;
-        this.uniqueId               = options.uniqueId;
-        this.vendorId               = options.vendorId;
-        this.vendorName             = options.vendorName;
-
-        // Create the cluster
+    createBridgedDeviceBasicInformationClusterServer(info: BasicInformationOptions): this {
         this.behaviors.require(BridgedDeviceBasicInformationServer.enable({
             events: {
                 leave:              true,
@@ -114,35 +158,33 @@ export class EndpointBase extends MatterbridgeEndpoint {
         }), {
             // Mandatory attributes
             reachable:              true,
-            uniqueId:               options.uniqueId             .substring(0, 32),
+            uniqueId:               info.uniqueId             .substring(0, 32),
             // Optional attributes
-            hardwareVersion:        parseOptionalNumber(options.hardwareVersion),
-            hardwareVersionString:  options.hardwareVersion     ?.substring(0, 64),
-            manufacturingDate:      options.manufacturingDate   ?.substring(0, 16),
-            nodeLabel:              options.nodeLabel           ?.substring(0, 32),
-            partNumber:             options.partNumber          ?.substring(0, 32),
-            productAppearance:      options.productAppearance,
-            productId:              options.productId,
-            productLabel:           options.productLabel        ?.substring(0, 64),
-            productName:            options.productName         ?.substring(0, 32),
-            productUrl:             options.partNumber          ?.substring(0, 256),
-            serialNumber:           options.serialNumber        ?.substring(0, 32),
-            softwareVersion:        parseOptionalNumber(options.softwareVersion),
-            softwareVersionString:  options.softwareVersion     ?.substring(0, 64),
-            vendorId:               options.vendorId,
-            vendorName:             options.vendorName          ?.substring(0, 32)
+            hardwareVersion:        parseOptionalUnsigned(info.hardwareVersion),
+            hardwareVersionString:  info.hardwareVersion     ?.substring(0, 64),
+            manufacturingDate:      info.manufacturingDate   ?.substring(0, 16),
+            nodeLabel:              info.nodeLabel            .substring(0, 32),
+            partNumber:             info.partNumber          ?.substring(0, 32),
+            productAppearance:      info.productAppearance,
+            productId:              info.productId,
+            productLabel:           info.productLabel        ?.substring(0, 64),
+            productName:            info.productName          .substring(0, 32),
+            productUrl:             info.productUrl          ?.substring(0, 256),
+            serialNumber:           info.serialNumber        ?.substring(0, 32),
+            softwareVersion:        parseOptionalUnsigned(info.softwareVersion),
+            softwareVersionString:  info.softwareVersion     ?.substring(0, 64),
+            vendorId:               info.vendorId,
+            vendorName:             info.vendorName           .substring(0, 32)
         });
         return this;
     }
 
-    // Update the Bridged Device Basic Information cluster attributes
+    // Update the (Bridged Device) Basic Information cluster attributes
     @ifValueChanged
     async updateReachable(reachable: boolean): Promise<void> {
-        const clusterId = BridgedDeviceBasicInformation.Cluster.id;
         this.log.info(`${AN}Reachable${RI}: ${AV}${reachable}${RI}`);
-        await this.updateAttribute(clusterId, 'reachable', reachable, this.log);
-        const payload: BridgedDeviceBasicInformation.ReachableChangedEvent = { reachableNewValue: reachable };
-        await this.triggerEvent(clusterId, 'reachableChanged', payload, this.log);
+        if (this.serverNode) await this.serverNode.setStateOf(BasicInformationServer,  { reachable });
+        else           await this.setStateOf(BridgedDeviceBasicInformationServer, { reachable });
     }
 }
 
@@ -153,4 +195,10 @@ export function formatEnumLog<T extends Record<string, number | string>>(
 ): string {
     const label = enumMap[value as keyof T];
     return `${AV}${label}${RI} (${AV}${value}${RI})`;
+}
+
+// Safely parse a string as an optional unsigned integer
+function parseOptionalUnsigned(value?: string): number | undefined {
+    const parsed = parseInt(value ?? '', 10);
+    return isNaN(parsed) || parsed < 0 ? undefined : parsed;
 }

@@ -78,6 +78,7 @@ export interface ConfigBase {
     deviceEntityBlackList:  { [serialNumber: string]: EntityName[] },
     // Plugin configuration
     provisioningMethod:     ProvisioningMethod;
+    enableServerRvc:        boolean;
     wildcardTopic:          boolean;
     debug:                  boolean;
     debugFeatures:          DebugFeatures[];

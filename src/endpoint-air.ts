@@ -316,14 +316,14 @@ export class EndpointsAir {
             if (!this.options.validatedNames.includes(endpointName)) return;
 
             // Construct other unique identifiers for this bridged node
-            const { deviceBasicInformation } = options;
+            const { basicInformation: deviceBasicInformation } = options;
             const matterbridgeDeviceName = `${this.options.matterbridgeDeviceName} (${endpointName})`;
             const suffix = `-${this.bridged.length}`;
             const uniqueId = `${deviceBasicInformation.uniqueId.substring(0, 32 - suffix.length)}${suffix}`;
             const nodeOptions: EndpointOptionsBase = {
                 uniqueStorageKey,
                 matterbridgeDeviceName,
-                deviceBasicInformation: {
+                basicInformation: {
                     ...deviceBasicInformation,
                     uniqueId
                 }
@@ -338,7 +338,7 @@ export class EndpointsAir {
     }
 
     // All bridged device endpoints
-    get bridgedNodeEndpoints(): MatterbridgeEndpoint[] {
+    get bridgedNodeEndpoints(): EndpointBase[] {
         return this.bridged;
     }
 

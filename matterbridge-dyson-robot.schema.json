@@ -42,6 +42,11 @@
             ],
             "default": "Remote Account"
         },
+        "enableServerRvc": {
+            "description": "Expose each robot vacuum as a standalone Matter node using Matterbridge's 'server' mode. When enabled, each robot vacuum has its own Matter fabric that must be manually paired, ensuring compatibility with Matter controllers such as the Apple Home app. When disabled, all devices are bridged within a single Matter node, which may not function correctly with some Matter controllers.",
+            "type": "boolean",
+            "default": true
+        },
         "wildcardTopic": {
             "description": "Subscribe to all MQTT topics. For direct connections via the local network this uses the '#' wildcard, which is useful for discovering new endpoints or checking that the rootTopic and serialNumber have been correctly configured. However, the AWS IoT gateway does not allow wildcard subscriptions. For AWS IoT connections, this option instead adds a subscription to the command topic. When this option is disabled only the expected status topic(s) are subscribed.",
             "type": "boolean",

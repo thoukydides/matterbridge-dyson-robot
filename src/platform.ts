@@ -186,7 +186,10 @@ export class PlatformDyson extends MatterbridgeDynamicPlatform {
                     if (entities.length) description += ` with: ${formatList(entityResults)}`;
                     deviceLog.info(description);
                     this.devices.push(device);
-                    await Promise.all(endpoints.map(e => this.registerDevice(e)));
+                    await Promise.all(endpoints.map(async endpoint => {
+                        await this.registerDevice(endpoint);
+                        await endpoint.postRegister();
+                    }));
                 }
             } catch (err) {
                 logError(this.log, 'Creating device', err);
