@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v1.0.1] - 2025-07-06
+### Fixed
+* Resolved problems with multiple robot vacuums in a single Matterbridge instance, caused by duplicate Matter.js enum values.
+
 ## [v1.0.0] - 2025-07-05
 ### Added
 * Improved Apple Home compatibility for robot vacuum devices by using Matterbridge's `server` mode, which exposes each robot vacuum as a standalone Matter node instead of bridging them. This mode is enabled by default and requires robot vacuum devices to be re-paired with the Matter controller. It can be disabled by setting the `"enableServerRvc": false` configuration option. Requires Matterbridge version 3.1.1 or later.
@@ -89,7 +93,8 @@ All notable changes to this project will be documented in this file.
 
 Copyright © 2025 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.0.0...HEAD
+[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.0.1...HEAD
+[v1.0.1]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.0.0...v1.0.1
 [v1.0.0]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v0.2.10...v1.0.0
 [v0.2.10]:          https://github.com/thoukydides/homebridge-homeconnect/compare/v0.2.9...v0.2.10
 [v0.2.9]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v0.2.8...v0.2.9
