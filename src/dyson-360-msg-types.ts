@@ -145,8 +145,9 @@ export interface Dyson360MsgStart extends DysonMsg {
     msg:                    'START';
     'mode-reason':          DysonModeReason;
     fullCleanType:          Dyson360CleaningType;
-     // Heurist and Vis Nav only
     cleaningMode?:          Dyson360CleaningMode;
+    vacuumPowerMode?:       Dyson360PowerMode;
+    cleanId?:               string; // UUID
 }
 
 export interface Dyson360MsgPause extends DysonMsg {
