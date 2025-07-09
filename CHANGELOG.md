@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v1.0.3] - 2025-07-09
+### Changed
+* Added new MQTT command parameters for Dyson 360 Eye.
+
 ## [v1.0.2] - 2025-07-09
 ### Changed
 * Improved logging of aggregated errors or those indicating another error as their cause.
@@ -98,7 +102,8 @@ All notable changes to this project will be documented in this file.
 
 Copyright © 2025 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.0.2...HEAD
+[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.0.3...HEAD
+[v1.0.3]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.0.2...v1.0.3
 [v1.0.2]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.0.1...v1.0.2
 [v1.0.1]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.0.0...v1.0.1
 [v1.0.0]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v0.2.10...v1.0.0
