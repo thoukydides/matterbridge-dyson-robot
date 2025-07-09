@@ -3,7 +3,6 @@
 
 import assert from 'assert';
 import EventEmitter from 'events';
-import { AnsiLogger } from 'matterbridge/logger';
 import { MaybePromise } from 'matterbridge/matter';
 import { IErrorDetail } from 'ts-interface-checker';
 
@@ -34,16 +33,6 @@ export function assertIsNumber(value: unknown): asserts value is number {
 }
 export function assertIsInstanceOf<Type extends object>(value: unknown, type: Constructor<Type>): asserts value is Type {
     assert(value instanceof type, `Not an instance of ${type.name}`);
-}
-// Log an error
-export function logError(log: AnsiLogger, when: string, err: unknown): void {
-    try {
-        // Log the error message itself
-        log.error(`[${when}] ${String(err)}`);
-
-        // Log any stack backtrace
-        if (err instanceof Error && err.stack) log.debug(err.stack);
-    } catch { /* empty */ }
 }
 
 // Format a milliseconds duration

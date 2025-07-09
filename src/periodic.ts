@@ -4,7 +4,7 @@
 import { AnsiLogger } from 'matterbridge/logger';
 import { MaybePromise } from 'matterbridge/matter';
 import { setTimeout } from 'node:timers/promises';
-import { logError } from './utils.js';
+import { logError } from './log-error.js';
 
 // Status of the operation
 export enum PeriodicStatus { 'Stopped', 'Down', 'Up' };

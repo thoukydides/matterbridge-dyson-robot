@@ -17,7 +17,7 @@ import { RI } from './logger-options.js';
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings.js';
 import { createDysonDevice } from './dyson-device.js';
 import { DysonDevice } from './dyson-device-base.js';
-import { formatList, logError, plural } from './utils.js';
+import { formatList, plural } from './utils.js';
 import { PrefixLogger } from './logger-prefix.js';
 import {
     DysonCloudAuth,
@@ -26,6 +26,7 @@ import {
 } from './dyson-cloud.js';
 import { DeviceConfigMqtt } from './dyson-mqtt-client.js';
 import { getDeviceConfigMqtt } from './dyson-mqtt-config.js';
+import { logError } from './log-error.js';
 
 // A Dyson devices platform
 export class PlatformDyson extends MatterbridgeDynamicPlatform {

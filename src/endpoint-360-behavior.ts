@@ -11,7 +11,8 @@ import {
 } from 'matterbridge/matter/behaviors';
 import { AnsiLogger } from 'matterbridge/logger';
 import { ChangeToModeError, RvcOperationalStateError } from './error-360.js';
-import { assertIsDefined, assertIsInstanceOf, logError } from './utils.js';
+import { assertIsDefined, assertIsInstanceOf } from './utils.js';
+import { logError } from './log-error.js';
 
 // Robot Vacuum Cleaner Run Mode cluster modes
 export enum RvcRunMode360 {

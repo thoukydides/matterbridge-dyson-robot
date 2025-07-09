@@ -27,8 +27,9 @@ import {
 } from './dyson-device-air.js';
 import { Config } from './config-types.js';
 import { AnsiLogger } from 'matterbridge/logger';
-import { logError, UnionToIntersection } from './utils.js';
+import { UnionToIntersection } from './utils.js';
 import { DeviceConfigMqtt } from './dyson-mqtt-client.js';
+import { logError } from './log-error.js';
 
 // List of constructors for Dyson devices
 const DYSON_DEVICE_TYPES = [

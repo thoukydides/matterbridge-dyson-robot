@@ -50,8 +50,7 @@ import { AN, AV, CN, CV, RI } from './logger-options.js';
 import {
     assertIsBoolean,
     assertIsNumber,
-    formatList,
-    logError
+    formatList
 } from './utils.js';
 import {
     createAirQualityClusterServer,
@@ -66,6 +65,7 @@ import {
 } from './endpoint-air-quality.js';
 import { createThermostatClusterServer } from './endpoint-air-thermostat.js';
 import { MaybePromise } from 'matterbridge/matter';
+import { logError } from './log-error.js';
 
 // Device-specific endpoint configuration
 export type EndpointOptionsAirSensors = {

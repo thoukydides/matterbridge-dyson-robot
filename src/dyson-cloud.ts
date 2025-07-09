@@ -19,11 +19,12 @@ import {
 import { checkers } from './ti/dyson-cloud-types.js';
 import NodePersist from 'node-persist';
 import { DysonCloudAPI } from './dyson-cloud-api.js';
-import { columns, formatMilliseconds, logError, MS, plural } from './utils.js';
+import { columns, formatMilliseconds, MS, plural } from './utils.js';
 import { isSupportedModel } from './dyson-device.js';
 import { DeviceConfigRemoteMqtt } from './dyson-mqtt-client.js';
 import { DysonCloudStatusCodeError } from './dyson-cloud-error.js';
 import { setTimeout } from 'node:timers/promises';
+import { logError } from './log-error.js';
 
 // Persistent storage for an account
 interface PersistTokenData {

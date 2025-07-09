@@ -3,9 +3,10 @@
 
 import { AnsiLogger } from 'matterbridge/logger';
 import { Config } from './config-types.js';
-import { formatMilliseconds, logError, MS } from './utils.js';
+import { formatMilliseconds, MS } from './utils.js';
 import { setTimeout } from 'node:timers/promises';
 import { DysonMqttClient } from './dyson-mqtt-client.js';
+import { logError } from './log-error.js';
 
 // Reconnection back-off timings
 const BACKOFF_MIN           =  1 * MS;  // 1 second minimum backoff
