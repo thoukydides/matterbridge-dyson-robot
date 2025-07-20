@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v1.0.4] - 2025-07-20
+### Changed
+* Cope with missing `batteryChargeLevel` in Dyson 360 Eye MQTT messages.
+* Updated dependencies.
+
 ## [v1.0.3] - 2025-07-09
 ### Changed
 * Added new MQTT command parameters for Dyson 360 Eye.
@@ -102,7 +107,8 @@ All notable changes to this project will be documented in this file.
 
 Copyright © 2025 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.0.3...HEAD
+[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.0.4...HEAD
+[v1.0.4]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.0.3...v1.0.4
 [v1.0.3]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.0.2...v1.0.3
 [v1.0.2]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.0.1...v1.0.2
 [v1.0.1]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.0.0...v1.0.1
