@@ -23,7 +23,8 @@ import {
     DysonDeviceAirHumidifyCool,
     DysonDeviceAirHumidifyCoolE,
     DysonDeviceAirHumidifyCoolK,
-    DysonDeviceAirBigQuiet
+    DysonDeviceAirBigQuiet,
+    DysonDeviceCool
 } from './dyson-device-air.js';
 import { Config } from './config-types.js';
 import { AnsiLogger } from 'matterbridge/logger';
@@ -53,7 +54,8 @@ const DYSON_DEVICE_TYPES = [
     DysonDeviceAirHumidifyCool,
     DysonDeviceAirHumidifyCoolE,
     DysonDeviceAirHumidifyCoolK,
-    DysonDeviceAirBigQuiet
+    DysonDeviceAirBigQuiet,
+    DysonDeviceCool
 ] as const;
 
 // Dyson device factory

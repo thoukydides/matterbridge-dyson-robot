@@ -72,6 +72,7 @@ export abstract class DysonDeviceAirBase extends DysonDevice<DysonMqttAir> {
 
     // Supported features
     hasBreeze:          boolean;
+    hasHepaFilter:      boolean;
     hasCarbonFilter:    boolean;
     hasDirection:       boolean;
     hasLeftRight:       boolean;
@@ -87,6 +88,7 @@ export abstract class DysonDeviceAirBase extends DysonDevice<DysonMqttAir> {
         // Identify supported features from the presence of MQTT values
         const { status } = this.mqtt;
         this.hasBreeze          = status.ancp !== undefined;
+        this.hasHepaFilter      = status.hflr !== undefined || status.filf !== undefined;
         this.hasCarbonFilter    = status.cflr !== undefined;
         this.hasDirection       = status.fdir !== undefined;
         this.hasLeftRight       = status.oson !== undefined;
@@ -129,9 +131,9 @@ export abstract class DysonDeviceAirBase extends DysonDevice<DysonMqttAir> {
                 },
                 directionSupport:   this.hasDirection
             },
-            hepaFilter: {
+            hepaFilter:             this.hasHepaFilter ? {
                 filterPartNumbers:  this.classStatic.filters.hepa
-            },
+            } : undefined,
             carbonFilter:           this.hasCarbonFilter ? {
                 filterPartNumbers:  this.classStatic.filters.carbon
             } : undefined,
@@ -473,7 +475,7 @@ export abstract class DysonDeviceAirBase extends DysonDevice<DysonMqttAir> {
 
         // Convert the filter status to Matter attribute representation
         return {
-            hepa:   filterStatus(hepaPercent),
+            hepa:   this.hasHepaFilter   ? filterStatus(hepaPercent) : undefined,
             carbon: this.hasCarbonFilter ? filterStatus(status.cflr) : undefined
         };
     }

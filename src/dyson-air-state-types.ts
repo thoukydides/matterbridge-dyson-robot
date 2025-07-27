@@ -87,16 +87,18 @@ export interface DysonAirProductState {
     // Pure Hot+Cool Link only
     tilt?:  DysonAirTiltSensor;
 
-    // Pure (Hot+)Cool and Humidify+Cool models only
+    // Pure (Hot+)Cool, Humidify+Cool, and Cool models only
     oscs?:  DysonAirOscillationStatus;
 
-    // Pure (Hot+)Cool models only
+    // Pure (Hot+)Cool and Cool models only
     // (angles must be equal or at least 30° apart, 5° steps)
     osal?:  string;                     // Oscillation lower angle: '0005'~'0355' °
     osau?:  string;                     // Oscillation upper angle: '0005'~'0355' °
 
-    // Humidify+Cool models only
+    // Humidify+Cool and Cool models only
     ancp?:  DysonAirAnemometerControlProfile;
+
+    // Humidify+Cool models only
     cdrr?:  string;                     // Time until clean finishes in minutes
     clcr?:  DysonAirDeepCleanCycle;
     cltr?:  string;                     // Time until next clean in hours
@@ -110,6 +112,7 @@ export interface DysonAirProductState {
 
     // Others values that sometimes exist
     bril?:  DysonAirBrightness;         // Display brightness
+    ctll?:  'OFF';                      // Always 'OFF'?
     fqhp?:  string;                     // Variable length number?
 }
 
@@ -169,5 +172,6 @@ export interface DysonAirProductStateChange {
     rect?:  [string,                                            string];
     wath?:  [DysonAirWaterHardness,                             DysonAirWaterHardness];
     bril?:  [DysonAirBrightness,                                DysonAirBrightness];
+    ctll?:  ['OFF',                                             'OFF']
     fqhp?:  [string,                                            string];
 }

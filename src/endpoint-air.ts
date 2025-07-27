@@ -74,7 +74,7 @@ export type EndpointOptionsAirSensors = {
 export interface EndpointOptionsAir extends EndpointOptionsBase {
     validatedNames:             EntityName[];
     fanControl:                 FanControlOptions;
-    hepaFilter:                 FilterMonitoringOptions;
+    hepaFilter?:                FilterMonitoringOptions;
     carbonFilter?:              FilterMonitoringOptions;
     sensors:                    EndpointOptionsAirSensors;
 }
@@ -154,7 +154,7 @@ export interface UpdateAirFilterMonitoringSingle {
     inPlaceIndicator:           boolean;
 }
 export interface UpdateAirFilterMonitoring {
-    hepa:                       UpdateAirFilterMonitoringSingle;
+    hepa?:                      UpdateAirFilterMonitoringSingle;
     carbon?:                    UpdateAirFilterMonitoringSingle;
 }
 
@@ -229,7 +229,7 @@ export class EndpointsAir {
         const { fanControl, hepaFilter, carbonFilter } = this.options;
         createOnOffClusterServer(endpoint);
         createFanControlClusterServer(endpoint, fanControl);
-        createHepaFilterMonitoringClusterServer(endpoint, hepaFilter);
+        if (hepaFilter)   createHepaFilterMonitoringClusterServer(endpoint, hepaFilter);
         if (carbonFilter) createActivatedCarbonFilterMonitoringClusterServer(endpoint, carbonFilter);
         return endpoint;
     }
@@ -537,7 +537,7 @@ export class EndpointsAir {
 
         // Update the status of both filters
         const { hepa, carbon } = filters;
-        await updateCluster(HepaFilterMonitoring.Cluster.id, 'HEPA', hepa);
+        if (hepa)   await updateCluster(HepaFilterMonitoring.Cluster.id, 'HEPA', hepa);
         if (carbon) await updateCluster(ActivatedCarbonFilterMonitoring.Cluster.id, 'Activated Carbon', carbon);
     }
 

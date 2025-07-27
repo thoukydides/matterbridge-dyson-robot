@@ -512,6 +512,10 @@
                 {
                     "const": "664",
                     "title": "664 = Dyson Purifier Big+Quiet Series (BP02, BP03, BP04, or BP06)"
+                },
+                {
+                    "const": "739",
+                    "title": "739 = Dyson Cool (CF1 or AM12)"
                 }
             ]
         }

@@ -231,7 +231,10 @@ export enum DysonAirOscillationStatus {
     Idle                    = 'IDLE'
 }
 export enum DysonAirAnemometerControlProfile {
+    Degrees10               = '0010',
+    Degrees40               = '0040',
     Degrees45               = '0045',
+    Degrees70               = '0070',
     Degrees90               = '0090',
     Degrees180              = '0180',
     Breeze                  = 'BRZE',

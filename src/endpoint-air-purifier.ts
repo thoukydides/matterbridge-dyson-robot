@@ -85,7 +85,7 @@ export function createFanControlClusterServer(
 export function createHepaFilterMonitoringClusterServer(
     { behaviors }: Endpoint, options: FilterMonitoringOptions
 ): void {
-    const { features, replacementProductList }  = makeFeaturesAndReplacements(options);
+    const { features, replacementProductList } = makeFeaturesAndReplacements(options);
     behaviors.require(HepaFilterMonitoringServer.withFeatures(...features), {
         // Constant attributes
         degradationDirection:       ResourceMonitoring.DegradationDirection.Down,
@@ -103,7 +103,7 @@ export function createHepaFilterMonitoringClusterServer(
 export function createActivatedCarbonFilterMonitoringClusterServer(
     { behaviors }: Endpoint, options: FilterMonitoringOptions
 ): void {
-    const { features, replacementProductList }  = makeFeaturesAndReplacements(options);
+    const { features, replacementProductList } = makeFeaturesAndReplacements(options);
     behaviors.require(ActivatedCarbonFilterMonitoringServer.withFeatures(...features), {
         // Constant attributes
         degradationDirection:       ResourceMonitoring.DegradationDirection.Down,

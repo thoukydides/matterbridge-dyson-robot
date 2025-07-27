@@ -39,7 +39,7 @@ export abstract class DysonDevice<MQTT extends DysonMqttLike = DysonMqttLike> {
 
     // Details of the device model
     static readonly model: DysonDeviceModel;
-    static readonly filters: { hepa: string[], carbon?: string[] };
+    static readonly filters: { hepa?: string[], carbon?: string[] };
 
     // MQTT client constructor
     static readonly mqttConstructor: Constructor<DysonMqttLike>;
