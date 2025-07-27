@@ -1,1 +1,5 @@
 blank_issues_enabled: false
+contact_links:
+  - name: 🤖 Ask Dosu
+    url: https://github.dosu.com/thoukydides/matterbridge-dyson-robot
+    about: "Ask an AI agent any questions about this project."
