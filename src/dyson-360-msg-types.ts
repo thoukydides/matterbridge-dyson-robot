@@ -72,7 +72,7 @@ export interface Dyson360MsgCurrentState extends DysonMsg {
 
 export interface Dyson360MsgStateChange extends DysonMsg {
     msg:                    'STATE-CHANGE';
-    batteryChargeLevel:     number; // Percent remaining
+    batteryChargeLevel?:    number; // Percent remaining
     cleanDuration?:         number; // Seconds
     cleanId:                string; // UUID
     currentVacuumPowerMode: Dyson360PowerMode;

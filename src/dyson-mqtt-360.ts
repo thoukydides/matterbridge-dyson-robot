@@ -68,7 +68,8 @@ export class DysonMqtt360 extends DysonMqtt<DysonMsgMap360, DysonMqttStatus360> 
     // Convert a STATE-CHANGE message to CURRENT-STATE format
     convertStateChange(msg: Dyson360MsgStateChange): Dyson360MsgCurrentState {
         const { msg: _, newstate: state, oldstate, endOfClean, ...otherFields } = msg;
-        return { msg: 'CURRENT-STATE', state, ...otherFields };
+        // (batteryChargeLevel may be omitted if robot just powered on)
+        return { msg: 'CURRENT-STATE', state, batteryChargeLevel: 0, ...otherFields };
     }
 
     // Update the robot vacuum state from a received message
