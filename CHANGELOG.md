@@ -3,8 +3,12 @@
 All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
+
+## [v1.1.1] - 2025-07-31
 ### Added
 * TP12 and PC2 as additional models using MQTT topic 438K.
+### Changed
+* Updated dependencies.
 
 ## [v1.1.0] - 2025-07-27
 ### Added
@@ -115,7 +119,8 @@ All notable changes to this project will be documented in this file.
 
 Copyright © 2025 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.1.0...HEAD
+[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.1.1...HEAD
+[v1.1.1]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.1.0...v1.1.1
 [v1.1.0]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.0.4...v1.1.0
 [v1.0.4]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.0.3...v1.0.4
 [v1.0.3]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.0.2...v1.0.3
