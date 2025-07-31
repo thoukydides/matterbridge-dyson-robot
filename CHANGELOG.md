@@ -3,6 +3,8 @@
 All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
+### Added
+* TP12 and PC2 as additional models using MQTT topic 438K.
 
 ## [v1.1.0] - 2025-07-27
 ### Added
