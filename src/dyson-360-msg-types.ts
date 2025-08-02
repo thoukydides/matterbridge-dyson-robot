@@ -143,7 +143,7 @@ export interface Dyson360MsgStateSet extends DysonMsg {
 
 export interface Dyson360MsgStart extends DysonMsg {
     msg:                    'START';
-    'mode-reason':          DysonModeReason;
+    'mode-reason'?:         DysonModeReason;
     fullCleanType:          Dyson360CleaningType;
     cleaningMode?:          Dyson360CleaningMode;
     vacuumPowerMode?:       Dyson360PowerMode;

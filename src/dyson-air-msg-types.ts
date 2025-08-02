@@ -55,8 +55,8 @@ export interface DysonAirMsgGoodbye extends DysonMsg {
 
 export interface DysonAirMsgImBack extends DysonMsg {
     msg:                    'IM-BACK';
-    reason:                 'WIFI-RECONNECT',
-    version:                string; // e.g. '0664PF.00.08.005.0002'
+    reason?:                'WIFI-RECONNECT' | 'BROKER-RECONNECT';
+    version?:               string; // e.g. '0664PF.00.08.005.0002'
 }
 
 // MQTT topic: <type>/<sn>/status/current
