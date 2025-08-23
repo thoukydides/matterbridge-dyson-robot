@@ -87,7 +87,7 @@ export function dysonMqttParse<T>(
 
         // Return the type checker
         const checker = checkers[typeName];
-        checker.setReportedPath(String(typeName));
+        checker.setReportedPath(typeName);
         return checker;
     };
 

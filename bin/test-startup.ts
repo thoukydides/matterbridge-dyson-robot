@@ -81,10 +81,10 @@ async function testPlugin(): Promise<void> {
         stream.setEncoding('utf8');
         for await (const chunk of stream) {
             assert(typeof chunk === 'string');
-            rawOutput += chunk.toString();
+            rawOutput += chunk;
 
             // Check for any of the success or failure log messages
-            const cleanChunk = chunk.toString().replace(ANSI_ESCAPE, '');
+            const cleanChunk = chunk.replace(ANSI_ESCAPE, '');
             failureTest ??= FAILURE_TESTS.find(({ regexp }) => regexp.test(cleanChunk));
             remainingTests = remainingTests.filter(({ regexp }) => !regexp.test(cleanChunk));
             if (remainingTests.length === 0) child.kill('SIGTERM');
