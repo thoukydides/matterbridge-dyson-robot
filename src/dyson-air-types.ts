@@ -11,6 +11,7 @@ export enum DysonAirResetSource {
 export enum DysonAirErrorCodeEnum {
     None                    = 'NONE',
     Unknown02C0             = '02C0',
+    AirQualitySensorFault   = '02C3',
     Unknown02C9             = '02C9',
     OscillationDisabled     = '11E1',
     Unknown51C2             = '51C2',

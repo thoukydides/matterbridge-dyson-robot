@@ -6,7 +6,7 @@ import { spawn, ChildProcessWithoutNullStreams } from 'node:child_process';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { Config } from '../dist/config-types.js';
+import { Config, DeviceConfigMock } from '../dist/config-types.js';
 import { once } from 'node:events';
 
 // Spawn command to run Matterbridge (-homedir is added later)
@@ -16,7 +16,8 @@ const SPAWN_ARGS = ['node_modules/matterbridge/dist/cli.js'];
 // Plugin configuration file for running tests
 const PLUGIN_CONFIG_FILE = '.matterbridge/matterbridge-dyson-robot.config.json';
 const PLUGIN_CONFIG_CONTENT: Partial<Config> = {
-    'debugFeatures': []
+    debug: true,
+    debugFeatures: []
 };
 
 // Log messages indicating success or failure
@@ -25,7 +26,6 @@ interface Test {
     regexp: RegExp
 }
 const SUCCESS_TESTS: Test[] = [
-    { name: 'Discovery',    regexp: /\[Dyson Robot\] \d+ devices in account, [1-9]\d* device[s]? selected/ },
     { name: 'Registered',   regexp: /\[Dyson Robot\] Registered [1-9]\d* Dyson device/ },
     { name: 'Configured',   regexp: /\[Dyson Robot\] Configured [1-9]\d* Dyson device/ }
 ];
@@ -41,6 +41,9 @@ const ANSI_ESCAPE = /\x1B\[[0-9;]*[msuK]/g;
 // Length of time to wait
 const TIMEOUT_MATTERBRIDGE_MS = 45 * 1000; // 45 seconds
 
+// Process command line arguments
+const [ logsDirectory ] = process.argv.slice(2);
+
 // Register the plugin with Matterbridge
 async function configureAndRegisterPlugin(): Promise<void> {
 
@@ -48,10 +51,30 @@ async function configureAndRegisterPlugin(): Promise<void> {
     const matterbridgeDir = await fs.mkdtemp(path.join(os.tmpdir(), 'matterbridge-test-'));
     SPAWN_ARGS.push('-homedir', matterbridgeDir);
 
+    // If a logs directory was specified then use it to mock devices
+    const config = PLUGIN_CONFIG_CONTENT;
+    if (logsDirectory) {
+        const logFiles = await fs.readdir(logsDirectory);
+        const devices: DeviceConfigMock[] = logFiles.map((logFile, index) => {
+            const rootTopic = path.parse(logFile).name;
+            return {
+                name:           `Mock ${rootTopic}`,
+                serialNumber:   String(index + 1),
+                rootTopic,
+                filename:       path.join(logsDirectory, logFile)
+            };
+        });
+        Object.assign(config, { provisioningMethod: 'Mock Devices', devices });
+        SUCCESS_TESTS.push(...devices.map(({ name, rootTopic }) => ({
+            name:   `Mock ${rootTopic}`,
+            regexp: new RegExp(`\\[Dyson Robot - ${name}\\] End of MQTT log file reached`)
+        })));
+    }
+
     // Create a plugin configuration file
     const pluginConfigFile = path.join(matterbridgeDir, PLUGIN_CONFIG_FILE);
     await fs.mkdir(path.dirname(pluginConfigFile), { recursive: true });
-    await fs.writeFile(pluginConfigFile, JSON.stringify(PLUGIN_CONFIG_CONTENT, null, 4));
+    await fs.writeFile(pluginConfigFile, JSON.stringify(config, null, 4));
 
     // Register the plugin with Matterbridge
     const child = spawn(SPAWN_COMMAND, [...SPAWN_ARGS, '-add', '.'], {

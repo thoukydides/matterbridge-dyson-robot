@@ -29,7 +29,7 @@ import {
 import { Config } from './config-types.js';
 import { AnsiLogger } from 'matterbridge/logger';
 import { UnionToIntersection } from './utils.js';
-import { DeviceConfigMqtt } from './dyson-mqtt-client.js';
+import { DeviceConfigMqtt } from './dyson-mqtt-client-live.js';
 import { logError } from './log-error.js';
 
 // List of constructors for Dyson devices

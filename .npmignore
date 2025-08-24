@@ -1,5 +1,6 @@
 /bin
 /eslint.config.mjs
+/mqtt-logs
 /nodemon.json
 /RELEASE_HEAD.md
 /src

@@ -24,7 +24,7 @@ import {
     DysonCloudLocal,
     DysonCloudRemote
 } from './dyson-cloud.js';
-import { DeviceConfigMqtt } from './dyson-mqtt-client.js';
+import { DeviceConfigMqtt } from './dyson-mqtt-client-live.js';
 import { getDeviceConfigMqtt } from './dyson-mqtt-config.js';
 import { logError } from './log-error.js';
 
@@ -144,7 +144,8 @@ export class PlatformDyson extends MatterbridgeDynamicPlatform {
             mappedDevices = this.config.devices.map(getDeviceConfigMqtt);
             break;
         case 'Local MQTT':
-            // Configuration is already in the required format for local MQTT
+        case 'Mock Devices':
+            // Configuration is already in the required format
             mappedDevices = this.config.devices;
             break;
         }

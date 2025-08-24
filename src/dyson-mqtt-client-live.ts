@@ -1,20 +1,17 @@
 // Matterbridge plugin for Dyson robot vacuum and air treatment devices
 // Copyright © 2025 Alexander Thoukydides
 
-import EventEmitter from 'events';
+import { connect, IClientOptions, MqttClient } from 'mqtt';
 import {
-    connect,
-    ErrorWithReasonCode,
-    IClientOptions,
-    IConnackPacket,
-    IPublishPacket,
-    MqttClient
-} from 'mqtt';
-import { Config, DeviceConfigLocalMqtt } from './config-types.js';
+    Config,
+    DeviceConfigLocalMqtt,
+    DeviceConfigMock
+} from './config-types.js';
 import { AnsiLogger } from 'matterbridge/logger';
 import { MaybePromise } from 'matterbridge/matter';
 import { isDeepStrictEqual } from 'util';
 import { DysonIoTCredentialsResponse } from './dyson-cloud-types.js';
+import { DysonMqttClient } from './dyson-mqtt-client-base.js';
 
 // Internally generated device configuration for Remote Account
 export interface DeviceConfigRemoteMqtt {
@@ -23,15 +20,7 @@ export interface DeviceConfigRemoteMqtt {
     rootTopic:      string;
     getCredentials: () => Promise<DysonIoTCredentialsResponse>;
 }
-export type DeviceConfigMqtt = DeviceConfigLocalMqtt | DeviceConfigRemoteMqtt;
-
-// Events that can be forwarded from the MQTT client
-export interface DysonMqttClientEventMap {
-    close:          [];
-    connect:        [packet: IConnackPacket];
-    error:          [error: Error | ErrorWithReasonCode];
-    message:        [topic: string, payload: Buffer, packet: IPublishPacket];
-}
+export type DeviceConfigMqtt = DeviceConfigLocalMqtt | DeviceConfigRemoteMqtt | DeviceConfigMock;
 
 // (Re)connections options for the MQTT client
 export interface DysonMqttClientOptions {
@@ -52,17 +41,12 @@ const DEFAULT_OPTIONS: IClientOptions = {
 };
 
 // A Dyson MQTT client that supports creating a new client for each connection
-export abstract class DysonMqttClient extends EventEmitter<DysonMqttClientEventMap> {
+export abstract class DysonMqttClientLive extends DysonMqttClient {
 
     // The current MQTT client and its options
     private delegate?:      MqttClient;
     private clientOptions?: DysonMqttClientOptions;
     private count = 0;
-
-    // Construct a new MQTT client
-    constructor(readonly log: AnsiLogger, readonly config: Config) {
-        super({ captureRejections: true });
-    }
 
     // Obtain the (re)connection options
     protected abstract getConnectionOptions(): MaybePromise<DysonMqttClientOptions>;
@@ -139,7 +123,7 @@ export abstract class DysonMqttClient extends EventEmitter<DysonMqttClientEventM
 }
 
 // A Dyson MQTT client using a local network connection
-export class DysonMqttClientLocal extends DysonMqttClient {
+export class DysonMqttClientLocal extends DysonMqttClientLive {
 
     // Construct a new MQTT client
     constructor(log: AnsiLogger, config: Config, readonly deviceConfig: DeviceConfigLocalMqtt) {
@@ -156,7 +140,7 @@ export class DysonMqttClientLocal extends DysonMqttClient {
 }
 
 // A Dyson MQTT client using a AWS IoT connection via websockets
-export class DysonMqttClientRemote extends DysonMqttClient {
+export class DysonMqttClientRemote extends DysonMqttClientLive {
 
     // Construct a new MQTT client
     constructor(log: AnsiLogger, config: Config, readonly deviceConfig: DeviceConfigRemoteMqtt) {

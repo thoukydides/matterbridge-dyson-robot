@@ -7,7 +7,7 @@ import { DysonMqttLike } from './dyson-mqtt.js';
 import { Constructor } from './utils.js';
 import { Changed } from './decorator-changed.js';
 import { createHash } from 'crypto';
-import { DeviceConfigMqtt } from './dyson-mqtt-client.js';
+import { DeviceConfigMqtt } from './dyson-mqtt-client-live.js';
 import { EndpointBase } from './endpoint-base.js';
 
 // Dyson model details

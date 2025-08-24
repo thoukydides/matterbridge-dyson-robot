@@ -19,7 +19,7 @@ import {
     Dyson360PowerMode
 } from './dyson-360-types.js';
 import { DysonModeReason } from './dyson-types.js';
-import { DeviceConfigMqtt } from './dyson-mqtt-client.js';
+import { DeviceConfigMqtt } from './dyson-mqtt-client-live.js';
 
 // Configuration of a Dyson MQTT client for robot vacuums
 const DYSON_MQTT_CONFIG_360: DysonMqttConfig<DysonMsgMap360> = {

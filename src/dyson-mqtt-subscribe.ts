@@ -5,7 +5,7 @@ import EventEmitter from 'events';
 import { AnsiLogger } from 'matterbridge/logger';
 import { Config } from './config-types.js';
 import { formatList, plural, tryListener } from './utils.js';
-import { DysonMqttClient } from './dyson-mqtt-client.js';
+import { DysonMqttClient } from './dyson-mqtt-client-base.js';
 
 // Configuration required for managing MQTT topic subscriptions
 export interface DysonMqttSubscribeConfig {

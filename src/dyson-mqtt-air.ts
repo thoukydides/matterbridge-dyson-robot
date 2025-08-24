@@ -34,7 +34,7 @@ import { DysonAirCurrentSensorData } from './dyson-air-sensor-types.js';
 import { DysonAirProductState } from './dyson-air-state-types.js';
 import { DysonMsgAny } from './dyson-mqtt-parse.js';
 import { DysonModeReason } from './dyson-types.js';
-import { DeviceConfigMqtt } from './dyson-mqtt-client.js';
+import { DeviceConfigMqtt } from './dyson-mqtt-client-live.js';
 
 // Configuration of a Dyson MQTT client for robot vacuums
 const DYSON_MQTT_CONFIG_AIR: DysonMqttConfig<DysonMsgMapAir> = {

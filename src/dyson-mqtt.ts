@@ -20,7 +20,13 @@ import { DysonMqttConnection } from './dyson-mqtt-connect.js';
 import { inspect } from 'util';
 import { DysonMQTTFilter, DysonMqttFiltered } from './dyson-mqtt-filter.js';
 import { AsyncEventEmitter } from './async-eventemitter.js';
-import { DeviceConfigMqtt, DysonMqttClient, DysonMqttClientLocal, DysonMqttClientRemote } from './dyson-mqtt-client.js';
+import {
+    DeviceConfigMqtt,
+    DysonMqttClientLocal,
+    DysonMqttClientRemote
+} from './dyson-mqtt-client-live.js';
+import { DysonMqttClientMock } from './dyson-mqtt-client-mock.js';
+import { DysonMqttClient } from './dyson-mqtt-client-base.js';
 
 // Configuration of a Dyson MQTT client
 export interface DysonMqttConfig<T> {
@@ -92,9 +98,13 @@ export abstract class DysonMqtt<T, S>
         super({ captureRejections: true });
 
         // Create the MQTT client
-        this.mqtt = 'password' in deviceConfig
-            ? new DysonMqttClientLocal (log, config, deviceConfig)
-            : new DysonMqttClientRemote(log, config, deviceConfig);
+        if ('password' in deviceConfig) {
+            this.mqtt = new DysonMqttClientLocal(log, config, deviceConfig);
+        } else if ('getCredentials' in deviceConfig) {
+            this.mqtt = new DysonMqttClientRemote(log, config, deviceConfig);
+        } else {
+            this.mqtt = new DysonMqttClientMock(log, config, deviceConfig);
+        }
         this.mqtt.on('close', tryListener(this, () => { this.updateReachable('mqtt', false); }));
 
         // Create an MQTT connection manager

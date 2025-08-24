@@ -21,7 +21,7 @@ import NodePersist from 'node-persist';
 import { DysonCloudAPI } from './dyson-cloud-api.js';
 import { columns, formatMilliseconds, MS, plural } from './utils.js';
 import { isSupportedModel } from './dyson-device.js';
-import { DeviceConfigRemoteMqtt } from './dyson-mqtt-client.js';
+import { DeviceConfigRemoteMqtt } from './dyson-mqtt-client-live.js';
 import { DysonCloudStatusCodeError } from './dyson-cloud-error.js';
 import { setTimeout } from 'node:timers/promises';
 import { logError } from './log-error.js';

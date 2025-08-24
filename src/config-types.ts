@@ -6,7 +6,8 @@ export type ProvisioningMethod =
     'Remote Account'
   | 'Local Account'
   | 'Local Wi-Fi'
-  | 'Local MQTT';
+  | 'Local MQTT'
+  | 'Mock Devices';
 
 // Dyson account configuration
 export interface DysonAccountBase {
@@ -43,6 +44,12 @@ export interface DeviceConfigLocalMqtt extends DeviceConfigNetwork {
     name:                   string;
     serialNumber:           string;
     password:               string;
+    rootTopic:              string;
+}
+export interface DeviceConfigMock {
+    name:                   string;
+    filename:               string;
+    serialNumber:           string;
     rootTopic:              string;
 }
 
@@ -102,4 +109,9 @@ export interface ConfigLocalMqtt extends ConfigBase {
     provisioningMethod:     'Local MQTT';
     devices:                DeviceConfigLocalMqtt[];
 }
-export type Config = ConfigRemoteAccount | ConfigLocalAccount | ConfigLocalWiFi | ConfigLocalMqtt;
+export interface ConfigMock extends ConfigBase {
+    provisioningMethod:     'Mock Devices';
+    devices:                DeviceConfigMock[];
+    dysonAccount?:          DysonAccount; // (ignored if present)
+}
+export type Config = ConfigRemoteAccount | ConfigLocalAccount | ConfigLocalWiFi | ConfigLocalMqtt | ConfigMock;
