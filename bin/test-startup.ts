@@ -31,7 +31,7 @@ const SUCCESS_TESTS: Test[] = [
 ];
 const FAILURE_TESTS: Test[] = [
     { name: 'MQTT Checker', regexp: /MQTT topic '.*':\s*$/ },
-    { name: 'API Checker',  regexp: / (GET|POST) \// }
+    { name: 'API Checker',  regexp: /\[Dyson Robot\] (GET|POST) \// }
 ];
 
 // Match ANSI colour codes so that they can be stripped
