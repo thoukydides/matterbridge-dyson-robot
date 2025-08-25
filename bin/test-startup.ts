@@ -41,7 +41,7 @@ const ANSI_ESCAPE = /\x1B\[[0-9;]*[msuK]/g;
 const ANSI_WARNING = new RegExp([wr, er, ft].join('|').replaceAll('\u001B[', '\\x1B\\['));
 
 // Length of time to wait
-const TIMEOUT_MATTERBRIDGE_MS = 45 * 1000; // 45 seconds
+const TIMEOUT_MATTERBRIDGE_MS = 60 * 1000; // 60 seconds
 
 // Process command line arguments
 const [ logsDirectory ] = process.argv.slice(2);

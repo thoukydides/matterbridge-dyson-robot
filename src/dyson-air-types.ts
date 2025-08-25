@@ -14,6 +14,11 @@ export enum DysonAirErrorCodeEnum {
     AirQualitySensorFault   = '02C3',
     Unknown02C9             = '02C9',
     OscillationDisabled     = '11E1',
+    Unknown12D2             = '12D2',
+    Unknown12E1             = '12E1',
+    Unknown26U1             = '26U1',
+    Unknown31U2             = '31U2',
+    Unknown34U5             = '34U5',
     Unknown51C2             = '51C2',
     Unknown57C2             = '57C2',
 }
@@ -238,6 +243,7 @@ export enum DysonAirAnemometerControlProfile {
     Degrees70               = '0070',
     Degrees90               = '0090',
     Degrees180              = '0180',
+    Degrees350              = '0350',
     Breeze                  = 'BRZE',
     Custom                  = 'CUST'
 }
@@ -346,7 +352,8 @@ export enum DysonAirDaylightSaving {
 // Dyson air treatment HEPA filter
 export enum DysonAirHEPAFilterType {
     Combination             = 'GCOM',
-    OnlyHEPA                = 'GHEP'
+    HEPAG                   = 'GHEP',
+    HEPAP                   = 'PHEP'
 }
 export enum DysonAirResetFilterLife {
     Reset                   = 'RSTF'
@@ -359,7 +366,8 @@ export enum DysonAirResetHEPAFilterLife {
 export enum DysonAirCarbonFilterType {
     None                    = 'NONE',
     Carbon                  = 'CARF',
-    SelectiveCatalytic      = 'SCOG'
+    SelectiveCatalyticF     = 'SCOF',
+    SelectiveCatalyticG     = 'SCOG'
 }
 export enum DysonAirCarbonFilterEnum {
     Invalid                 = 'INV'
@@ -368,7 +376,7 @@ export type DysonAirCarbonFilterLife = DysonAirCarbonFilterEnum | string;
 
 // Dyson air treatment selective catalytic oxidisation filter
 export enum DysonAirSelectiveCatalyticOxidisationFilterType {
-    SelectiveCatalytic      = 'SCOH'
+    SelectiveCatalyticH     = 'SCOH'
 }
 
 // Dyson air treatment display brightness

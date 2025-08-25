@@ -1,0 +1,8 @@
+# Dyson Pure Cool Link Desk DP01
+
+# Source: https://github.com/mecks52/openhab2-dyson475/issues/2#issuecomment-411386566
+{"msg":"ENVIRONMENTAL-CURRENT-SENSOR-DATA","time":"2018-08-08T11:56:28.001Z","data":{"tact":"2988","hact":"0049","pact":"0002","vact":"0000","sltm":"OFF"}}
+{"msg":"CURRENT-STATE","time":"2018-08-08T11:56:58.000Z","mode-reason":"PRC","state-reason":"ENV","dial":"OFF","rssi":"-33","product-state":{"fmod":"AUTO","fnst":"OFF","fnsp":"AUTO","qtar":"0003","oson":"OFF","rhtm":"ON","filf":"4149","ercd":"02C9","nmod":"ON","wacd":"NONE"},"scheduler":{"srsc":"ce9c","dstv":"0001","tzid":"0001"}}
+---
+{"msg":"ENVIRONMENTAL-CURRENT-SENSOR-DATA","time":"2018-08-08T11:56:58.001Z","data":{"tact":"2988","hact":"0049","pact":"0002","vact":"0000","sltm":"OFF"}}
+{"msg":"CURRENT-STATE","time":"2018-08-08T12:05:28.000Z","mode-reason":"PRC","state-reason":"MODE","dial":"OFF","rssi":"-33","product-state":{"fmod":"AUTO","fnst":"OFF","fnsp":"AUTO","qtar":"0003","oson":"OFF","rhtm":"ON","filf":"4149","ercd":"02C9","nmod":"OFF","wacd":"NONE"},"scheduler":{"srsc":"ce9c","dstv":"0001","tzid":"0001"}}

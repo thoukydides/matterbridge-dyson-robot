@@ -91,6 +91,10 @@ export interface DysonAirMsgEnvironmentalAndUsageData extends DysonMsg {
     msg:                    'ENVIRONMENTAL-AND-USAGE-DATA';
     data:                   DysonAirEnvironmentalUsageData;
 }
+export interface DysonAirMsgLocation extends DysonMsg {
+    msg:                    'LOCATION';
+    apos:                   string; // e.g. '0153'
+}
 
 // MQTT topic: <type>/<sn>/status/faults
 
