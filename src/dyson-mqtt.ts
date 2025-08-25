@@ -38,6 +38,7 @@ export interface DysonMqttConfig<T> {
 export interface DysonMqttStatusBase {
     reachable:      boolean;
     initialised:    boolean;
+    stopped:        boolean;
 };
 export type DysonMqttStatus<T> = T & DysonMqttStatusBase;
 
@@ -85,7 +86,8 @@ export abstract class DysonMqtt<T, S>
     // The current status
     readonly status = {
         reachable:      false,
-        initialised:    false
+        initialised:    false,
+        stopped:        false
     } as DysonMqttStatus<S>;
 
     // Construct a new MQTT client
@@ -155,7 +157,7 @@ export abstract class DysonMqtt<T, S>
             }
         } else {
             // Only start down timer if not already running
-            if (!this.downTimerHandle.has(key) && this.status.reachable) {
+            if (!this.downTimerHandle.has(key) && this.status.reachable && !this.status.stopped) {
                 this.log.debug(`Starting down timer for '${key}'`);
                 const handle = setTimeout(() => {
                     // Mark the device as not reachable after a delay
@@ -179,6 +181,7 @@ export abstract class DysonMqtt<T, S>
 
     // Stop the MQTT client
     async stop(): Promise<void> {
+        this.status.stopped = true;
         await this.mqttConnection.stop();
     }
 
