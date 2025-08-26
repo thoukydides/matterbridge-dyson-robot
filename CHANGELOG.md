@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v1.2.0] - 2025-08-26
+### Added
+* Improved test coverage using MQTT payload logs to mock devices.
+### Fixed
+* Cope with absence of temperature and humidity sensors on TP11/PC1.
+* Accept `LOCATION` MQTT messages from TP11/PC1.
+* Accept previously unseen error codes (`02C3`, `12D2`, `12E1`, `26U1`, `31U2`, and `34U5`).
+* Accept 350° oscillation range on TP04 and HP09.
+* Accept new HEPA (`PHEP` on TP04) and carbon (`SCOF` on HP07, TP07, and TP09) filter types.
+
 ## [v1.1.4] - 2025-08-23
 ### Changed
 * Updated dependencies.
@@ -133,7 +143,8 @@ All notable changes to this project will be documented in this file.
 
 Copyright © 2025 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.1.4...HEAD
+[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.2.0...HEAD
+[v1.2.0]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.1.4...v1.2.0
 [v1.1.4]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.1.3...v1.1.4
 [v1.1.3]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.1.2...v1.1.3
 [v1.1.2]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.1.1...v1.1.2
