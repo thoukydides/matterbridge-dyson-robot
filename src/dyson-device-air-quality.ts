@@ -4,7 +4,7 @@
 import { AirQuality, ConcentrationMeasurement } from 'matterbridge/matter/clusters';
 import { DysonMqttStatusAirSensor } from './dyson-mqtt-air.js';
 import { UpdateAirSensors } from './endpoint-air.js';
-import { assertIsDefined, formatList } from './utils.js';
+import { formatList } from './utils.js';
 import { AnsiLogger } from 'matterbridge/logger';
 
 // Thresholds to map different pollutants to Air Quality levels:
@@ -92,8 +92,6 @@ export function numeric(value?: number | string, factor = 1): number | null | un
 // Map the Dyson sensor data to Matter attribute values
 export function mapDysonAirSensorStatus(log: AnsiLogger, status: DysonMqttStatusAirSensor): UpdateAirSensors {
     const { tact, hact, co2r, hcho, pm25, pm10 } = status;
-    assertIsDefined(tact);
-    assertIsDefined(hact);
 
     // Map the available measurements to Air Quality
     const aqiValues = mapToAirQualitySensorEnum(status);

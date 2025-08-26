@@ -161,8 +161,8 @@ export interface UpdateAirFilterMonitoring {
 // Updates to all of the Air Quality and Measurement cluster attributes
 export interface UpdateAirSensors {
     airQuality:                 AirQuality.AirQualityEnum;
-    temperature:                number | null; // centi-°C
-    humidity:                   number | null; // centi-%
+    temperature?:               number | null; // centi-°C
+    humidity?:                  number | null; // centi-%
     voc?:                       ConcentrationMeasurement.LevelValue;
     co2?:                       number | null; // ppm
     nox?:                       ConcentrationMeasurement.LevelValue;
@@ -237,6 +237,7 @@ export class EndpointsAir {
     // Create a Humidity Sensor device
     createHumiditySensorEndpoint(parent?: MatterbridgeEndpoint): MatterbridgeEndpoint | undefined {
         // Create the endpoint
+        if (!this.options.sensors.humidity) return;
         const endpoint = this.createDevice('Humidity Sensor', [humiditySensor], parent);
         if (!endpoint) return;
         this.humidity.push(endpoint);
@@ -249,6 +250,7 @@ export class EndpointsAir {
     // Create a Temperature Sensor device
     createTemperatureSensorEndpoint(parent?: MatterbridgeEndpoint): MatterbridgeEndpoint | undefined {
         // Create the endpoint
+        if (!this.options.sensors.temperature) return;
         const endpoint = this.createDevice('Temperature Sensor', [temperatureSensor], parent);
         if (!endpoint) return;
         this.temperature.push(endpoint);
@@ -277,14 +279,18 @@ export class EndpointsAir {
         const endpoint = this.createDevice('Air Quality Sensor', [airQualitySensor, temperatureSensor, humiditySensor], parent);
         if (!endpoint) return;
         this.airQuality.push(endpoint);
-        this.temperature.push(endpoint);
-        this.humidity.push(endpoint);
 
         // Create the device-specific clusters
         const { sensors } = this.options;
         createAirQualityClusterServer(endpoint);
-        createTemperatureMeasurementClusterServer(endpoint);
-        createRelativeHumidityMeasurementClusterServer(endpoint);
+        if (sensors.temperature) {
+            createTemperatureMeasurementClusterServer(endpoint);
+            this.temperature.push(endpoint);
+        }
+        if (sensors.humidity) {
+            createRelativeHumidityMeasurementClusterServer(endpoint);
+            this.humidity.push(endpoint);
+        }
         if (sensors.voc)  createTotalVolatileOrganicCompoundsConcentrationMeasurementClusterServer(endpoint);
         if (sensors.co2)  createCarbonDioxideConcentrationMeasurementClusterServer(endpoint);
         if (sensors.nox)  createNitrogenDioxideConcentrationMeasurementClusterServer(endpoint);

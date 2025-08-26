@@ -2,7 +2,6 @@
 // Copyright © 2025 Alexander Thoukydides
 
 import { Thermostat } from 'matterbridge/matter/clusters';
-import { EntityName } from './config-types.js';
 import { DysonDeviceAirBase } from './dyson-device-air-base.js';
 import { DysonMqttStatusAir } from './dyson-mqtt-air.js';
 import { DysonMqttStatus } from './dyson-mqtt.js';
@@ -14,6 +13,7 @@ import {
     DysonAirHeatingStatus
 } from './dyson-air-types.js';
 import { numeric } from './dyson-device-air-quality.js';
+import { DysonEntityDescription } from './dyson-device-base.js';
 
 // Mixin to add heating to a Dyson air treatment device
 export function DysonDeviceAirWithHeat<TBase extends AbstractConstructor<DysonDeviceAirBase>>(Base: TBase) {
@@ -58,7 +58,7 @@ export function DysonDeviceAirWithHeat<TBase extends AbstractConstructor<DysonDe
         }
 
         // List of endpoint function names and descriptions to validate
-        override getEntities(): { name: EntityName, description: string }[] {
+        override getEntities(): DysonEntityDescription[] {
             return [...super.getEntities(), {
                 name:           'Thermostat',
                 description:    'Heating control'
@@ -72,14 +72,13 @@ export function DysonDeviceAirWithHeat<TBase extends AbstractConstructor<DysonDe
             await super.updateClusterAttributes(status);
             const { fnst, hmax, hmod, hsta, tact } = status;
             assertIsDefined(hmax);
-            assertIsDefined(tact);
             const heatingMode   = hmod === DysonAirHeatingMode.Heat;
             const heat          = hsta === DysonAirHeatingStatus.Heating;
             const fan           = fnst === DysonAirFanState.Running;
             await this.endpoints?.updateThermostat({
-                localTemperature:           numeric(tact, 100), // centi-°C
-                occupiedHeatingSetpoint:    hmax * 100,         // centi-°C
-                piHeatingDemand:            heat ? 100 : 0,     // %
+                localTemperature:           numeric(tact, 100) ?? null, // centi-°C
+                occupiedHeatingSetpoint:    hmax * 100,                 // centi-°C
+                piHeatingDemand:            heat ? 100 : 0,             // %
                 systemMode: Thermostat.SystemMode[heatingMode ? 'Heat' : 'Off'],
                 thermostatRunningState:     { heat, fan }
             });

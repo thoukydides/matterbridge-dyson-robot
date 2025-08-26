@@ -3,7 +3,8 @@
 
 import {
     DysonDevice,
-    DysonDeviceConstructorParams
+    DysonDeviceConstructorParams,
+    DysonEntityDescription
 } from './dyson-device-base.js';
 import {
     DysonMqttAir,
@@ -178,18 +179,21 @@ export abstract class DysonDeviceAirBase extends DysonDevice<DysonMqttAir> {
     get sensorSupport(): EndpointOptionsAirSensors {
         const sensors = mapDysonAirSensorStatus(this.log, this.mqtt.status);
         return {
-            voc:    sensors.voc  !== undefined,
-            co2:    sensors.co2  !== undefined,
-            nox:    sensors.nox  !== undefined,
-            hcho:   sensors.hcho !== undefined,
-            pm25:   sensors.pm25 !== undefined,
-            pm10:   sensors.pm10 !== undefined
+            temperature:    sensors.temperature !== undefined,
+            humidity:       sensors.humidity    !== undefined,
+            voc:            sensors.voc         !== undefined,
+            co2:            sensors.co2         !== undefined,
+            nox:            sensors.nox         !== undefined,
+            hcho:           sensors.hcho        !== undefined,
+            pm25:           sensors.pm25        !== undefined,
+            pm10:           sensors.pm10        !== undefined
         };
     }
 
     // List of endpoint function names and descriptions to validate
-    override getEntities(): { name: EntityName, description: string }[] {
-        return [{
+    override getEntities(): DysonEntityDescription[] {
+        const sensors = mapDysonAirSensorStatus(this.log, this.mqtt.status);
+        const entities: DysonEntityDescription[] = [{
             name:           'Air Purifier',
             description:    'Fan speed/oscillation control and filter monitoring'
         }, {
@@ -198,13 +202,16 @@ export abstract class DysonDeviceAirBase extends DysonDevice<DysonMqttAir> {
         }, {
             name:           'Composed Air Purifier',
             description:    'Air purifier with integrated thermostat and sensors'
-        }, {
-            name:           'Humidity Sensor',
-            description:    'Relative humidity measurement'
-        }, {
+        }];
+        if (sensors.temperature !== undefined) entities.push({
             name:           'Temperature Sensor',
             description:    'Temperature measurement'
-        }];
+        });
+        if (sensors.humidity !== undefined) entities.push({
+            name:           'Humidity Sensor',
+            description:    'Relative humidity measurement'
+        });
+        return entities;
     }
 
     // Retrieve the root device endpoints after validation

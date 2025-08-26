@@ -3,7 +3,8 @@
 
 import {
     DysonDevice,
-    DysonDeviceConstructorParams
+    DysonDeviceConstructorParams,
+    DysonEntityDescription
 } from './dyson-device-base.js';
 import { DysonMqtt360, DysonMqttStatus360 } from './dyson-mqtt-360.js';
 import { EntityName } from './config-types.js';
@@ -150,7 +151,7 @@ export abstract class DysonDevice360Base extends DysonDevice<DysonMqtt360> {
     }
 
     // List of endpoint function names and descriptions to validate
-    override getEntities(): { name: EntityName, description: string }[] {
+    override getEntities(): DysonEntityDescription[] {
         return []; // Single endpoint, so no entity selection
     }
 

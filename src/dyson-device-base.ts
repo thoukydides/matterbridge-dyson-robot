@@ -17,6 +17,12 @@ export interface DysonDeviceModel {
     name:   string; // Model description
 }
 
+// Details of an endpoint function (entity)
+export interface DysonEntityDescription {
+    name:           EntityName;
+    description:    string;
+}
+
 // Dyson device constructor parameters
 export type DysonDeviceConstructorParams<MQTT extends DysonMqttLike = DysonMqttLike> = [
     log:    AnsiLogger,
@@ -59,7 +65,7 @@ export abstract class DysonDevice<MQTT extends DysonMqttLike = DysonMqttLike> {
     }
 
     // List of endpoint function names and descriptions to validate
-    abstract getEntities(): { name: EntityName, description: string }[];
+    abstract getEntities(): DysonEntityDescription[];
 
     // Retrieve the root device endpoints after validation
     abstract getEndpoints(validatedNames: EntityName[]): EndpointBase[];
