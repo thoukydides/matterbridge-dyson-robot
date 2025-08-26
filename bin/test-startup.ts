@@ -38,7 +38,7 @@ const LINE_SPLIT_REGEX = /\r\n|(?<!\r)\n|\r(?!\n)/;
 const ANSI_ESCAPE = /\x1B\[[0-9;]*[msuK]/g;
 
 // ANSI colour codes used for warnings and errors
-const ANSI_WARNING = new RegExp([wr, er, ft].join('|').replaceAll('\u001B[', '\\x1B\\['));
+const ANSI_WARNING = new RegExp([wr, er, ft].join('|').replaceAll('[', '\\['));
 
 // Length of time to wait
 const TIMEOUT_MATTERBRIDGE_MS = 60 * 1000; // 60 seconds
@@ -57,15 +57,12 @@ async function configureAndRegisterPlugin(): Promise<void> {
     const config = PLUGIN_CONFIG_CONTENT;
     if (logsDirectory) {
         const logFiles = await fs.readdir(logsDirectory);
-        const devices: DeviceConfigMock[] = logFiles.map((logFile, index) => {
-            const rootTopic = path.parse(logFile).name;
-            return {
-                name:           `Mock ${rootTopic}`,
-                serialNumber:   String(index + 1),
-                rootTopic,
-                filename:       path.join(logsDirectory, logFile)
-            };
-        });
+        const devices: DeviceConfigMock[] = logFiles.map((logFile, index) => ({
+            name:           `Mock ${path.parse(logFile).name}`,
+            serialNumber:   String(index + 1),
+            rootTopic:      path.parse(logFile).name.replace(/-.*/, ''),
+            filename:       path.join(logsDirectory, logFile)
+        }));
         Object.assign(config, { provisioningMethod: 'Mock Devices', devices });
         for (const { name, rootTopic } of devices) {
             const pattern = `\\[Dyson Robot - ${name}\\] End of MQTT log file reached`;
