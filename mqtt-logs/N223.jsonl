@@ -1,5 +1,6 @@
-# Dyson 360 Eye RB01 (firmware 11.3.5.10)
+# Dyson 360 Eye RB01
 
+# Source: Own device (firmware 11.3.5.10)
 { "msg": "STATE-CHANGE", "time": "2025-08-24T07:30:17Z", "cleanId": "", "currentVacuumPowerMode": "fullPower", "defaultVacuumPowerMode": "fullPower", "fullCleanType": "", "globalPosition": [ 0, 0 ], "newstate": "INACTIVE_CHARGED", "oldstate": "MACHINE_OFF" }
 { "msg": "HELLO", "time": "2025-08-24T07:30:17Z", "protocol": "1.0.0", "serial": "<SERIAL_NUMBER>", "version": "11.3.5.10" }
 { "msg": "CURRENT-STATE", "time": "2025-08-24T07:33:51Z", "batteryChargeLevel": 100, "cleanId": "", "currentVacuumPowerMode": "fullPower", "defaultVacuumPowerMode": "fullPower", "fullCleanType": "", "globalPosition": [ 0, 0 ], "state": "INACTIVE_CHARGED" }
