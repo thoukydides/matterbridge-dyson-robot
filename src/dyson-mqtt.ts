@@ -200,7 +200,8 @@ export abstract class DysonMqtt<T, S>
 
     // Log received or transmitted message payloads
     logPayload(direction: 'publish' | 'receive', topic: string, payload: DysonMsg, filter?: DysonMqttFiltered): void {
-        if (!this.config.debugFeatures.includes('Log MQTT Payloads')) return;
+        const logFullPayload = this.config.debugFeatures.includes('Log Full MQTT Payloads');
+        if (!this.config.debugFeatures.includes('Log MQTT Payloads') && !logFullPayload) return;
 
         // List the fixed fields first
         const { msg, time, ...other } = payload;
@@ -210,11 +211,13 @@ export abstract class DysonMqtt<T, S>
         ];
 
         // Include the other fields from the message, unless it is a duplicate
-        if (filter === 'duplicate') {
+        if (filter === 'duplicate' && !logFullPayload) {
             properties.push('...');
         } else {
+            const inspectOptions = INSPECT_SINGLE_LINE;
+            if (logFullPayload) inspectOptions.maxStringLength = Infinity;
             properties.push(...Object.entries(other).sort().map(
-                ([key, value]) => `${key}: ${inspect(value, INSPECT_SINGLE_LINE)}`
+                ([key, value]) => `${key}: ${inspect(value, inspectOptions)}`
             ));
         }
 
