@@ -38,6 +38,7 @@ runs:
         MATTERBRIDGE_BRANCH: ${{ inputs.matterbridge-branch }}
 
     - name: Build the project
+      shell: bash
       run: npm run build
 
     - name: Upload workspace artifacts
