@@ -1,4 +1,4 @@
-name: Prepare Environment
+name: Use Prepared Environment
 
 inputs:
   node-version:
@@ -20,9 +20,10 @@ runs:
         registry-url: https://registry.npmjs.org
         cache: npm
 
-    - name: Install project dependencies
-      shell: bash
-      run: npm ci
+    - name: Download workspace artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: workspace-${{ inputs.node-version }}-${{ inputs.matterbridge-branch }}
 
     - name: Install Matterbridge from npm
       if: ${{ inputs.matterbridge-branch == '' }}
@@ -36,15 +37,3 @@ runs:
       env:
         MATTERBRIDGE_DIR: ${{ runner.temp }}/matterbridge
         MATTERBRIDGE_BRANCH: ${{ inputs.matterbridge-branch }}
-
-    - name: Build the project
-      run: npm run build
-
-    - name: Upload workspace artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: workspace-${{ inputs.node-version }}-${{ inputs.matterbridge-branch }}
-        path: |
-          ./node_modules
-          ./dist
-          ./src/ti

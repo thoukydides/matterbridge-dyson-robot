@@ -1,0 +1,83 @@
+name: Build, Lint, and Test
+permissions:
+  contents: read
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: '15 7 * * *'
+
+jobs:
+
+  prepare:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [20.x, 22.x, 24.x]
+        matterbridge-branch: ['', 'dev']
+    outputs:
+      matrix: ${{ toJSON(matrix) }}
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v4
+      - name: Prepare environment
+        uses: ./.github/actions/prepare-environment
+        with:
+          node-version: ${{ matrix.node-version }}
+          matterbridge-branch: ${{ matrix.matterbridge-branch }}
+
+  lint:
+    needs: prepare
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v4
+      - name: Use prepared environment
+        uses: ./.github/actions/use-environment
+        with:
+          node-version: ${{ matrix.node-version }}
+          matterbridge-branch: ${{ matrix.matterbridge-branch }}
+      - name: Lint the project
+        run: npm run lint
+
+  test-live:
+    needs: prepare
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v4
+      - name: Use prepared environment
+        uses: ./.github/actions/use-environment
+        with:
+          node-version: ${{ matrix.node-version }}
+          matterbridge-branch: ${{ matrix.matterbridge-branch }}
+      - name: Run the tests (live API)
+        run: npm run test
+        env:
+          DYSON_TOKEN: ${{ secrets.DYSON_TOKEN }}
+
+  test-mock:
+    needs: prepare
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v4
+      - name: Use prepared environment
+        uses: ./.github/actions/use-environment
+        with:
+          node-version: ${{ matrix.node-version }}
+          matterbridge-branch: ${{ matrix.matterbridge-branch }}
+      - name: Run the tests (mock devices)
+        run: npm run test -- ./mqtt-logs
