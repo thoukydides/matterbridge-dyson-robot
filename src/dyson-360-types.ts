@@ -94,11 +94,7 @@ export type Dyson360Position = [number, number];
 
 // Map data (after base64 and gzip decoding)
 export type Dyson360MapBitmap = number[][];
-export type Dyson360MapPath = [
-    x:                              number,             // Coordinate in map bitmap
-    y:                              number,             // Coordinate in map bitmap
-    t:                              number              // Milliseconds since start of map
-];
+export type Dyson360MapPath = [number, number, number];
 export interface Dyson360MapData {
     cleaned:                        Dyson360MapBitmap;  // 0 = not cleaned, 1 = cleaned
     observed:                       Dyson360MapBitmap;  // 0 = not observed, 1 = observed
