@@ -19,7 +19,6 @@ jobs:
       matrix:
         node-version: [20.x, 22.x, 24.x]
         matterbridge-branch: ['', 'dev']
-        test-mode: [live, mock]
 
     steps:
       - name: Checkout project
@@ -34,12 +33,7 @@ jobs:
       - name: Build the project
         run: npm run build
       
-      - name: Run the tests (live API)
-        if: ${{ matrix.test-mode == 'live' }}
+      - name: Test the project (live API)
         run: npm run test
         env:
           DYSON_TOKEN: ${{ secrets.DYSON_TOKEN }}
-      
-      - name: Run the tests (mock devices)
-        if: ${{ matrix.test-mode == 'mock' }}
-        run: npm run test -- ./mqtt-logs

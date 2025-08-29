@@ -36,16 +36,3 @@ runs:
       env:
         MATTERBRIDGE_DIR: ${{ runner.temp }}/matterbridge
         MATTERBRIDGE_BRANCH: ${{ inputs.matterbridge-branch }}
-
-    - name: Build the project
-      shell: bash
-      run: npm run build
-
-    - name: Upload workspace artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: workspace-${{ inputs.node-version }}-${{ inputs.matterbridge-branch }}
-        path: |
-          ./node_modules
-          ./dist
-          ./src/ti

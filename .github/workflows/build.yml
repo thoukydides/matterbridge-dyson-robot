@@ -34,3 +34,6 @@ jobs:
 
       - name: Lint the project
         run: npm run lint
+      
+      - name: Test the project (mock devices)
+        run: npm run test -- ./mqtt-logs
