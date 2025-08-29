@@ -1,0 +1,74 @@
+name: Build, Lint, and Test (single variant)
+permissions:
+  contents: read
+
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        required: true
+        type: string
+      matterbridge-branch:
+        required: true
+        type: string
+      run-live-tests:
+        required: true
+        type: boolean
+
+jobs:
+
+  prepare:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v4
+      - name: Prepare environment
+        uses: ./.github/actions/prepare-environment
+        with:
+          node-version: ${{ inputs.node-version }}
+          matterbridge-branch: ${{ inputs.matterbridge-branch }}
+
+  lint:
+    needs: prepare
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v4
+      - name: Use prepared environment
+        uses: ./.github/actions/use-environment
+        with:
+          node-version: ${{ inputs.node-version }}
+          matterbridge-branch: ${{ inputs.matterbridge-branch }}
+      - name: Lint the project
+        run: npm run lint
+
+  test-live:
+    if: ${{ inputs.run-live-tests }}
+    needs: prepare
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v4
+      - name: Use prepared environment
+        uses: ./.github/actions/use-environment
+        with:
+          node-version: ${{ inputs.node-version }}
+          matterbridge-branch: ${{ inputs.matterbridge-branch }}
+      - name: Run the tests (live API)
+        run: npm run test
+        env:
+          DYSON_TOKEN: ${{ secrets.DYSON_TOKEN }}
+
+  test-mock:
+    needs: prepare
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v4
+      - name: Use prepared environment
+        uses: ./.github/actions/use-environment
+        with:
+          node-version: ${{ inputs.node-version }}
+          matterbridge-branch: ${{ inputs.matterbridge-branch }}
+      - name: Run the tests (mock devices)
+        run: npm run test -- ./mqtt-logs
