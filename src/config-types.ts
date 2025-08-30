@@ -69,7 +69,7 @@ export type DebugFeatures =
   | 'Log API Bodies'
   | 'Log MQTT Client'
   | 'Log MQTT Payloads'
-  | 'Log Full MQTT Payloads'
+  | 'Log MQTT Payloads as JSON'
   | 'Log Serial Numbers'
   | 'Log Debug as Info';
 

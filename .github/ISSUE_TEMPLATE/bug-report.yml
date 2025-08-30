@@ -95,8 +95,8 @@ body:
           - View the log file directly (e.g. `journalctl -u matterbridge.service -n 1000 -f --output cat`); the Matterbridge frontend normally filters out debug messages.
           
         - **For Dyson MQTT Logging (enable for any Dyson interoperability issues)**:
-          - In Matterbridge frontend: *Home* > *Plugins* > *matterbridge-dyson-robot* > ⚙️ > *Enable advanced debug option* > *Log MQTT Payloads*
-            - Or in the `matterbridge-dyson-robot.config.json` file: `"debugFeatures": ["Log MQTT Payloads"]`
+          - In Matterbridge frontend: *Home* > *Plugins* > *matterbridge-dyson-robot* > ⚙️ > *Enable advanced debug option* > *Log MQTT Payloads as JSON*
+            - Or in the `matterbridge-dyson-robot.config.json` file: `"debugFeatures": ["Log MQTT Payloads as JSON"]`
           
         - **For Matterbridge Logging**:
           - In Matterbridge frontend: *Settings* > *Matterbridge settings* > *Logger level* > *Debug*.

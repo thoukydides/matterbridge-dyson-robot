@@ -200,30 +200,32 @@ export abstract class DysonMqtt<T, S>
 
     // Log received or transmitted message payloads
     logPayload(direction: 'publish' | 'receive', topic: string, payload: DysonMsg, filter?: DysonMqttFiltered): void {
-        const logFullPayload = this.config.debugFeatures.includes('Log Full MQTT Payloads');
-        if (!this.config.debugFeatures.includes('Log MQTT Payloads') && !logFullPayload) return;
+        if (this.config.debugFeatures.includes('Log MQTT Payloads as JSON')) {
+            // Simple unconditional logging when plain JSON required
+            const object = JSON.stringify(payload);
+            this.log.debug(`MQTT ${direction}: ${object} topic '${topic}'${filter ? ` (${filter})` : ''}`);
+        } else if (this.config.debugFeatures.includes('Log MQTT Payloads')) {
+            // List the fixed fields first
+            const { msg, time, ...other } = payload;
+            const properties = [
+                `msg: ${direction === 'publish' ? MP : MR}'${msg}'${MM}`,
+                `time: ${RD}'${time}'${MM}`
+            ];
 
-        // List the fixed fields first
-        const { msg, time, ...other } = payload;
-        const properties = [
-            `msg: ${direction === 'publish' ? MP : MR}'${msg}'${MM}`,
-            `time: ${RD}'${time}'${MM}`
-        ];
+            // Include the other fields from the message, unless it is a duplicate
+            if (filter === 'duplicate') {
+                properties.push('...');
+            } else {
+                const inspectOptions = INSPECT_SINGLE_LINE;
+                properties.push(...Object.entries(other).sort().map(
+                    ([key, value]) => `${key}: ${inspect(value, inspectOptions)}`
+                ));
+            }
 
-        // Include the other fields from the message, unless it is a duplicate
-        if (filter === 'duplicate' && !logFullPayload) {
-            properties.push('...');
-        } else {
-            const inspectOptions = INSPECT_SINGLE_LINE;
-            if (logFullPayload) inspectOptions.maxStringLength = Infinity;
-            properties.push(...Object.entries(other).sort().map(
-                ([key, value]) => `${key}: ${inspect(value, inspectOptions)}`
-            ));
+            // Log the message (formatting with strikethrough if dropped by filter)
+            const object = `${MM}{ ${properties.join(', ')} }${RD}`;
+            this.log.debug(filter ? `MQTT ${direction}: ${ST}${object}${SR} (${filter})`
+                                  : `MQTT ${direction}: ${object} topic '${topic}'`);
         }
-
-        // Log the message (formatting with strikethrough if dropped by filter)
-        const object = `${MM}{ ${properties.join(', ')} }${RD}`;
-        this.log.debug(filter ? `MQTT ${direction}: ${ST}${object}${SR} (${filter})`
-                              : `MQTT ${direction}: ${object} topic '${topic}'`);
     }
 }

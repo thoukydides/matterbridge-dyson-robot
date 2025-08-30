@@ -112,17 +112,17 @@ The black and white lists control which robot vacuum and air treatment devices a
 
 The supported `debugFeatures` are:
 
-| Debug Feature            | Description
-| ------------------------ | ---
-| `Log Endpoint Debug`     | Sets the `debug` flag to the Matterbridge/Matter.js endpoint implementation.
-| `Log API Headers`        | Logs HTTP headers for MyDyson API requests. Rarely useful. (Requires *Debug* level logging.)
-| `Log API Bodies`         | Logs message bodies for MyDyson API requests. Useful for diagnosing interoperability issues. (Requires *Debug* level logging.)
-| `Log MQTT Client`        | Enables (extremely) verbose debug logging from the low-level MQTT client. Rarely useful, unless the plugin is unable to establish or maintain a connection to the Dyson device. (Requires *Debug* level logging.)
-| `Log MQTT Payloads`      | Logs every MQTT payload that is sent or received. Useful for diagnosing interoperability issues or identifying how to control new features. (Requires *Debug* level logging.)
-| `Log Full MQTT Payloads` | Similar to `Log MQTT Payloads` except that long or duplicate payloads are logged in full instead of being truncated. (Requires *Debug* level logging.)
+| Debug Feature               | Description
+| --------------------------- | ---
+| `Log Endpoint Debug`        | Sets the `debug` flag to the Matterbridge/Matter.js endpoint implementation.
+| `Log API Headers`           | Logs HTTP headers for MyDyson API requests. Rarely useful. (Requires *Debug* level logging.)
+| `Log API Bodies`            | Logs message bodies for MyDyson API requests. Useful for diagnosing interoperability issues. (Requires *Debug* level logging.)
+| `Log MQTT Client`           | Enables (extremely) verbose debug logging from the low-level MQTT client. Rarely useful, unless the plugin is unable to establish or maintain a connection to the Dyson device. (Requires *Debug* level logging.)
+| `Log MQTT Payloads`         | Logs every MQTT payload that is sent or received. Useful for diagnosing interoperability issues or identifying how to control new features. (Requires *Debug* level logging.)
+| `Log MQTT Payloads as JSON` | Similar to `Log MQTT Payloads` except that payloads are logged in raw JSON format, without any truncation or special formatting. (Requires *Debug* level logging.)
 Logs every MQTT payload that is sent or received. Useful for diagnosing interoperability issues or identifying how to control new features. (Requires *Debug* level logging.)
-| `Log Serial Numbers`     | By default product serial numbers (a.k.a. MQTT usernames) and passwords are automatically redacted in the log. This setting logs serial numbers verbatim.
-| `Log Debug as Info`      | Redirect *Debug* level logging to *Info* level. This makes it visible in the Matterbridge frontend.
+| `Log Serial Numbers`        | By default product serial numbers (a.k.a. MQTT usernames) and passwords are automatically redacted in the log. This setting logs serial numbers verbatim.
+| `Log Debug as Info`         | Redirect *Debug* level logging to *Info* level. This makes it visible in the Matterbridge frontend.
 
 </details>
 <a name="provisioning-methods"></a>

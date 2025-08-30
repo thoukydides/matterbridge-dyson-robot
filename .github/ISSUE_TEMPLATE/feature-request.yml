@@ -50,11 +50,11 @@ body:
         **To capture Dyson MQTT logs:**
         - In the Matterbridge frontend: *Home* > *Plugins* > *matterbridge-dyson-robot* > ⚙️
           - *debug* > ✅
-          - *Enable advanced debug option* > *Log MQTT Payloads*
+          - *Enable advanced debug option* > *Log MQTT Payloads as JSON*
         - Or in `matterbridge-dyson-robot.config.json`:
           ```json
           "debug": true,
-          "debugFeatures": ["Log MQTT Payloads"]
+          "debugFeatures": ["Log MQTT Payloads as JSON"]
           ```
         - View logs with: `journalctl -u matterbridge.service -n 1000 -f --output cat`
       
