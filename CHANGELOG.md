@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v1.2.1] - 2025-08-30
+### Added
+* MyDyson account API requests are now retried to cope with transient internal server errors.
+* `Log MQTT Payloads as JSON` debug option captures full MQTT payloads in JSON format without truncation or duplicate suppression.
+
 ## [v1.2.0] - 2025-08-26
 ### Added
 * Improved test coverage using MQTT payload logs to mock devices.
@@ -143,7 +148,8 @@ All notable changes to this project will be documented in this file.
 
 Copyright © 2025 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.2.0...HEAD
+[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.2.1...HEAD
+[v1.2.1]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.2.0...v1.2.1
 [v1.2.0]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.1.4...v1.2.0
 [v1.1.4]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.1.3...v1.1.4
 [v1.1.3]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.1.2...v1.1.3
