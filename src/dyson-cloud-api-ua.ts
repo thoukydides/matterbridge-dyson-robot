@@ -12,6 +12,7 @@ import { inspect } from 'util';
 import { STATUS_CODES } from 'http';
 import { PLUGIN_NAME, PLUGIN_VERSION } from './settings.js';
 import { DysonCloudStatusCodeError } from './dyson-cloud-error.js';
+import { setTimeout } from 'node:timers/promises';
 
 // Request types
 export type Method      = Dispatcher.HttpMethod;
@@ -27,7 +28,12 @@ const DYSON_API_URL_CHINA   = 'https://appapi.cp.dyson.cn';
 const USER_AGENT            = `${PLUGIN_NAME}/${PLUGIN_VERSION}`;
 
 // Timeout for all requests
-const TIMEOUT               = 10 * MS; // 10 seconds
+const TIMEOUT               = 10 * MS;      // 10 seconds
+
+// Delays between retries
+const RETRY_DELAY_MIN       = 1 * MS;       // 1 second
+const RETRY_DELAY_MAX       = 5 * 60 * MS;  // 5 minutes
+const RETRY_DELAY_FACTOR    = 2;
 
 // Dyson cloud API user agent
 export class DysonCloudAPIUserAgent {
@@ -74,7 +80,7 @@ export class DysonCloudAPIUserAgent {
         const { headers } = this;
         const request: Request = { method, path, headers };
         if (body) request.body = JSON.stringify(body);
-        const text = await this.requestCore(request);
+        const text = await this.requestWithRetries(request);
 
         // Parse the response as JSON
         let json: unknown;
@@ -103,9 +109,50 @@ export class DysonCloudAPIUserAgent {
         return json as Type;
     }
 
+    // Perform the request, retrying if required, returning the response body
+    async requestWithRetries(request: Request): Promise<string> {
+        // Request counters
+        let requestCount: number | undefined;
+        let retryCount = 0;
+        let retryDelay = RETRY_DELAY_MIN;
+
+        for (;;) {
+            try {
+                // Attempt the request
+                requestCount ??= ++this.requestCount;
+                const counter = `${requestCount}` + (retryCount ? `.${retryCount}` : '');
+                return await this.requestCore(`Dyson cloud API #${counter}:`, request);
+
+            } catch (err) {
+                // Request failed, so check whether it can be retried
+                if (!this.canRetry(err)) throw err;
+                ++retryCount;
+
+                // Delay before trying again
+                await setTimeout(retryDelay);
+                retryDelay = Math.min(retryDelay * RETRY_DELAY_FACTOR, RETRY_DELAY_MAX);
+            }
+        }
+    }
+
+    // Decide whether a request can be retried following an error
+    canRetry(err: unknown): boolean {
+        // Do not retry the request unless the failure was an API error
+        if (!(err instanceof DysonCloudStatusCodeError)) return false;
+
+        // Some status codes never retried
+        const noRetryStatusCodes = [401, 404, 429];
+        if (noRetryStatusCodes.includes(err.statusCode)) {
+            this.log.warn(`Request will not be retried (status code ${err.statusCode})`);
+            return false;
+        }
+
+        // The request can be retried
+        return true;
+    }
+
     // Perform the request and return the response body
-    async requestCore(request: Request): Promise<string> {
-        const logPrefix = `Dyson cloud API #${this.requestCount++}:`;
+    async requestCore(logPrefix: string, request: Request): Promise<string> {
         const startTime = Date.now();
         let status = 'OK';
         try {
