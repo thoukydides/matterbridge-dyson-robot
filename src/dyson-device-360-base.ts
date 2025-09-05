@@ -30,6 +30,7 @@ import {
 import { assert } from 'console';
 import { attachDevice360CommandHandlers } from './dyson-device-360-commands.js';
 import { EndpointBase } from './endpoint-base.js';
+import { DysonDevice360Map } from './dyson-device-360-map.js';
 
 // Mapping of robot vacuum state to Matter equivalents
 type StateMapColumns = [
@@ -111,6 +112,9 @@ export abstract class DysonDevice360Base extends DysonDevice<DysonMqtt360> {
         // Prepare a listener for MQTT updates
         this.mqttListener = tryListener(this.mqtt, () =>
             this.updateClusterAttributes(this.mqtt.status));
+
+        // Start processing map-related MQTT messages
+        void new DysonDevice360Map(this.log, this.config, this.mqtt);
     }
 
     // Create the endpoint for this device

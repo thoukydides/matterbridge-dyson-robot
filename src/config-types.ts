@@ -62,6 +62,12 @@ export type EntityName =
   | 'Temperature Sensor'
   | 'Thermostat';
 
+// Robot vacuum map logging style
+export type LogMapStyle =
+    'Off'
+  | 'Monospaced'
+  | 'Matterbridge';
+
 // Debugging features
 export type DebugFeatures =
     'Log Endpoint Debug'
@@ -88,6 +94,7 @@ export interface ConfigBase {
     provisioningMethod:     ProvisioningMethod;
     enableServerRvc:        boolean;
     wildcardTopic:          boolean;
+    logMapStyle:            LogMapStyle;
     debug:                  boolean;
     debugFeatures:          DebugFeatures[];
     unregisterOnShutdown:   boolean;

@@ -92,9 +92,9 @@ export interface Dyson360MsgMapData extends DysonMsg {
     gridID:                 string; // e.g. '3'
     cleanId:                string; // UUID
     data: {
-        content:            string; // base64 encoded
-        contentType:        string; // e.g. 'application/json'
-        contentEncoding:    string; // e.g. 'gzip'
+        content:            string; // base64 encoded, zlib deflate compressed
+        contentType:        'application/json';
+        contentEncoding:    'gzip';
     }
 }
 

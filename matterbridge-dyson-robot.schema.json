@@ -47,6 +47,25 @@
             "type": "boolean",
             "default": true
         },
+        "logMapStyle": {
+            "description": "Select how robot vacuum cleaner maps should be displayed in the log at the end of cleans.",
+            "type": "string",
+            "oneOf": [
+                {
+                    "const": "Off",
+                    "title": "No map logging"
+                },
+                {
+                    "const": "Monospaced",
+                    "title": "Highest quality (requires monospaced font)"
+                },
+                {
+                    "const": "Matterbridge",
+                    "title": "Optimised for Matterbridge frontend"
+                }
+            ],
+            "default": "Matterbridge"
+        },
         "wildcardTopic": {
             "description": "Subscribe to all MQTT topics. For direct connections via the local network this uses the '#' wildcard, which is useful for discovering new endpoints or checking that the rootTopic and serialNumber have been correctly configured. However, the AWS IoT gateway does not allow wildcard subscriptions. For AWS IoT connections, this option instead adds a subscription to the command topic. When this option is disabled only the expected status topic(s) are subscribed.",
             "type": "boolean",
