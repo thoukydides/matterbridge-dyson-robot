@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v1.3.1] - 2025-09-06
+### Added
+* PH05 as additional model using MQTT topic 358K.
+### Changed
+* Improved logging of MQTT connection errors.
+* Updated dependencies.
+
 ## [v1.3.0] - 2025-09-05
 ### Added
 * Robot vacuum cleaned area maps are displayed in the log at the end of each clean. This is controlled by the new `logMapStyle` configuration option.
@@ -152,7 +159,8 @@ All notable changes to this project will be documented in this file.
 
 Copyright © 2025 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.3.0...HEAD
+[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.3.1...HEAD
+[v1.3.1]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.3.0...v1.3.1
 [v1.3.0]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.2.1...v1.3.0
 [v1.2.1]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.2.0...v1.2.1
 [v1.2.0]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.1.4...v1.2.0
