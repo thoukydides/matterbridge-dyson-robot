@@ -73,7 +73,7 @@ export class DysonDeviceAirHumidifyCoolE extends DysonDeviceAirHumidifyCool {
     static readonly model = { type: '358E', number: 'PH03', name: 'Pure Humidify+Cool' };
 }
 export class DysonDeviceAirHumidifyCoolK extends DysonDeviceAirHumidifyCool {
-    static readonly model = { type: '358K', number: 'PH04', name: 'Pure Humidify+Cool Formaldehyde' };
+    static readonly model = { type: '358K', number: 'PH04/PH05', name: 'Pure Humidify+Cool Formaldehyde' };
 }
 
 // -----------------------------------------------------------------------------
