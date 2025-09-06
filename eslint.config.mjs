@@ -2,10 +2,11 @@
 /* eslint-disable max-len */
 import globals from 'globals';
 import eslint from '@eslint/js';
+import { defineConfig } from 'eslint/config';
 import tseslint from 'typescript-eslint';
 
 // ESLint options
-export default tseslint.config(
+export default defineConfig(
     // ESLint recommended rules
     eslint.configs.recommended,
     // typescript-eslint strict and stylistic rules
