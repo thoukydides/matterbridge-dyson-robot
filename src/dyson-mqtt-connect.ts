@@ -38,7 +38,7 @@ export class DysonMqttConnection {
             this.uptimeStart = Date.now();
         }).on('error', err => {
             // Connection attempt failed
-            log.error(`MQTT client connection error: ${err.message}`);
+            logError(log, 'MQTT client connection', err);
             // (Will be followed by 'close' event to trigger reconnection)
         }).on('close', () => {
             // Connection closed, so adjust backoff and retry
