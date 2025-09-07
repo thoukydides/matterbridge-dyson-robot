@@ -1,6 +1,7 @@
 // Matterbridge plugin for Dyson robot vacuum and air treatment devices
 // Copyright © 2025 Alexander Thoukydides
 
+import { AnsiLogger } from 'matterbridge/logger';
 import {
     DysonMapBitmap,
     DysonMapBitmapBase,
@@ -13,7 +14,7 @@ import {
 } from './dyson-map-bitmap.js';
 import { DysonMapCoordinate } from './dyson-map-coordinate.js';
 import { DysonMapGrid, DysonMapLayers } from './dyson-map-grid.js';
-import { assertIsDefined } from './utils.js';
+import { assertIsDefined, formatList, plural } from './utils.js';
 
 // Maximum map width and padding
 const MAX_MAP_WIDTH_CHAR    = 80;   // (characters)
@@ -77,6 +78,7 @@ export const DYSON_MAP_CONFIG_MATTERBRIDGE: DysonMapTextConfig = {
 
 // Convert a collection of Dyson robot vacuum device map tiles to text
 export function dysonMapText(
+    log:        AnsiLogger,
     grids:      DysonMapGrid[],
     robotCoord: DysonMapCoordinate,
     config:     DysonMapTextConfig = DYSON_MAP_CONFIG_MONOSPACED
@@ -91,7 +93,8 @@ export function dysonMapText(
     };
 
     // Combine all the tiles and fit to double the text width
-    const compositeBitmap = makeCompositeBitmap(grids, robotCoord);
+    const validGrids = checkGridTiles(log, grids);
+    const compositeBitmap = makeCompositeBitmap(validGrids, robotCoord);
     const scaledBitmap = cropAndScaleBitmap(compositeBitmap);
 
     // Convert groups of 2×2 pixels to characters
@@ -134,18 +137,27 @@ export function dysonMapText(
     return lines.reverse();
 }
 
+// Check that all grid tiles are valid
+function checkGridTiles(log: AnsiLogger, grids: DysonMapGrid[]): DysonMapGrid[] {
+    // Ignore any tiles without position or resolution data
+    const validGrids = grids.filter(grid => grid.globalPosition && grid.resolution);
+    if (validGrids.length !== grids.length) {
+        log.warn(`Ignoring ${plural(grids.length - validGrids.length, 'incomplete map tile')}`);
+    }
+
+    // Verify that all tiles have the same resolution
+    const resolutions = new Set(validGrids.map(grid => String(grid.resolution)));
+    if (1 < resolutions.size) {
+        throw new Error(`Multiple map tile resolutions (${formatList([...resolutions])}) are unsupported`);
+    }
+    return validGrids;
+}
+
 // Create a composite bitmap from the individual grid tiles
 function makeCompositeBitmap(
     grids: DysonMapGrid[],
     robotCoord: DysonMapCoordinate
 ): DysonMapBitmapBase<DysonMapTextLayers> {
-    // Verify that all tiles have the same resolution
-    const resolution = grids[0]?.resolution;
-    if (!resolution) throw new Error('Map tile has no resolution');
-    if (grids.some(grid => grid.resolution !== resolution)) {
-        throw new Error('All map tiles must have the same resolution');
-    }
-
     // Construct a composite bitmap with all of the tiles
     const compositeBitmap = new DysonMapBitmapComposite<DysonMapTextLayers>();
     for (const grid of grids) compositeBitmap.addBitmap(grid.bitmap, grid.origin);
@@ -153,6 +165,7 @@ function makeCompositeBitmap(
     // Add a bitmap for the robot's location
     const robotBitmap = new DysonMapBitmap<'robot'>();
     robotBitmap.setLayer('robot', [[1]]);
+    const resolution = grids[0]?.resolution ?? 1;
     compositeBitmap.addBitmap(robotBitmap, robotCoord.scale(1 / resolution));
     return compositeBitmap;
 }

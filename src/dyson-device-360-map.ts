@@ -96,7 +96,7 @@ export class DysonDevice360Map {
             const style = logMapStyle === 'Matterbridge'
                 ? DYSON_MAP_CONFIG_MATTERBRIDGE : DYSON_MAP_CONFIG_MONOSPACED;
             const robotCoord = new DysonMapCoordinate(this.mqtt.status.globalPosition);
-            const mapText = dysonMapText([...this.grids.values()], robotCoord, style);
+            const mapText = dysonMapText(this.log, [...this.grids.values()], robotCoord, style);
             this.log.info(msg?.cleanDuration
                 ? `Cleaned for ${formatSeconds(msg.cleanDuration)}:`
                 : `Unexpected end of clean ${this.cleanId}:`);
