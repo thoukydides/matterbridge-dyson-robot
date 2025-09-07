@@ -53,12 +53,12 @@ export const DYSON_MAP_CONFIG_MONOSPACED: DysonMapTextConfig = {
         fg: {
             robot:      '\u001B[38;5;46m',  // (green)
             cleaned:    '\u001B[38;5;255m', // (white)
-            occupied:   '\u001B[38;5;201m', // (magenta)
+            occupied:   '\u001B[38;5;196m', // (red)
             observed:   '\u001B[38;5;30m',  // (dim cyan)
             empty:      '\u001B[38;5;17m'   // (dark blue)
         },
-        // Gradient from dark blue (empty) to light blue (obstacle)
-        bg: [17, 18, 19, 20, 21].map(bg => `\u001B[48;5;${bg}m`),
+        // Gradient from dark blue (empty) to light blue, then red (obstacle)
+        bg: [17, 18, 19, 20, 21, 196].map(bg => `\u001B[48;5;${bg}m`),
         reset:          '\u001B[0m'
     }
 };
