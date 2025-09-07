@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v1.3.2] - 2025-09-07
+### Fixed
+* Accept `HELLO` MQTT messages from BP03.
+
 ## [v1.3.1] - 2025-09-06
 ### Added
 * PH05 as additional model using MQTT topic 358K.
@@ -159,7 +163,8 @@ All notable changes to this project will be documented in this file.
 
 Copyright © 2025 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.3.1...HEAD
+[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.3.2...HEAD
+[v1.3.2]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.3.1...v1.3.2
 [v1.3.1]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.3.0...v1.3.1
 [v1.3.0]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.2.1...v1.3.0
 [v1.2.1]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.2.0...v1.2.1
