@@ -28,13 +28,13 @@ import {
 
 export interface DysonAirMsgHello extends DysonMsg {
     msg:                    'HELLO';
-    model:                  string; // e.g. 'X455' or 'X475'
+    model?:                 string; // e.g. 'X455' or 'X475'
     version:                string; // e.g. '21.04.03'
     protocol:               string; // e.g. '1.0.0'
     serialNumber:           string; // e.g. 'AB1-CD-EFG2345H'
     macAddress:             string; // e.g. "C8:FF:77:XX:XX:XX"
-    moduleHardware:         string; // e.g. '140762-01-07'
-    moduleBootloader:       string; // e.g. '-.-.-.-'
+    moduleHardware?:        string; // e.g. '140762-01-07'
+    moduleBootloader?:      string; // e.g. '-.-.-.-'
     moduleSoftware:         string; // e.g. '5227'
     moduleNwp:              string; // e.g. '2.11.0.1'
     productHardware:        string; // e.g. '306614-01-03'
