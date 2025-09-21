@@ -103,11 +103,6 @@ export class DysonCloud<T extends Config = Config> {
         return api;
     }
 
-    // Retrieve the AWS IoT credentials for a single device
-    getIoT(_serialNumber: string): Promise<DysonIoTCredentialsResponse> {
-        throw new Error('Incorrect use of getIoT in local configuration');
-    }
-
     // Construct a persistent storage key from account details
     getPersistentStorageKey(account: DysonAccountLogin, type: PersistKey): string {
         const { email } = account;
@@ -233,7 +228,7 @@ export class DysonCloudRemote extends DysonCloud<ConfigRemoteAccount> {
             if (isSupportedModel(type)) {
                 status = 'SUPPORTED';
                 const { mqttRootTopicLevel: rootTopic } = device.connectedConfiguration.mqtt;
-                const getCredentials = async () => this.getIoT(serialNumber);
+                const getCredentials = async (log: AnsiLogger) => this.getIoT(log, serialNumber);
                 deviceConfigs.push({ name, serialNumber, rootTopic, getCredentials });
             } else status = '(unsupported)';
             rows.push([serialNumber, `"${name}"`, type, model, productName, status]);
@@ -247,13 +242,13 @@ export class DysonCloudRemote extends DysonCloud<ConfigRemoteAccount> {
     }
 
     // Retrieve the AWS IoT credentials for a single device
-    override async getIoT(serialNumber: string): Promise<DysonIoTCredentialsResponse> {
+    async getIoT(log: AnsiLogger, serialNumber: string): Promise<DysonIoTCredentialsResponse> {
         const api = await this.api;
         let backoff = BACKOFF_MIN;
         for (let count = 1;; ++count) {
             try {
                 // Try to retrieve the credentials, caching the result
-                this.log.info(`Retrieving AWS IoT credentials (attempt #${count})`);
+                log.info(`Retrieving AWS IoT credentials (attempt #${count})`);
                 const credentials = await api.getIoTCredentials(serialNumber);
                 this.cache.set(serialNumber, { credentials, created: Date.now() });
                 return credentials;
@@ -263,7 +258,7 @@ export class DysonCloudRemote extends DysonCloud<ConfigRemoteAccount> {
                     switch (err.statusCode) {
                     case 401:
                         // Unauthorised
-                        this.log.error('MyDyson account token expired: giving up');
+                        log.error('MyDyson account token expired: giving up');
                         throw err;
                     case 429: {
                         // Too many requests, so use a cached result
@@ -271,17 +266,17 @@ export class DysonCloudRemote extends DysonCloud<ConfigRemoteAccount> {
                         if (cached) {
                             const { credentials, created } = cached;
                             const age = formatMilliseconds(Date.now() - created);
-                            this.log.warn(`Too many requests; trying credentials issued ${age} ago`);
+                            log.warn(`Too many requests; trying credentials issued ${age} ago`);
                             return credentials;
                         }
                         break;
                     }
                     }
                 }
-                logError(this.log, 'Get IoT Credentials', err);
+                logError(log, 'Get IoT Credentials', err);
 
                 // Delay before the next attempt
-                this.log.info(`Retrying AWS IoT credential fetch in ${formatMilliseconds(backoff)}...`);
+                log.info(`Retrying AWS IoT credential fetch in ${formatMilliseconds(backoff)}...`);
                 await setTimeout(backoff);
                 backoff = Math.min(backoff * BACKOFF_FACTOR, BACKOFF_MAX);
             }

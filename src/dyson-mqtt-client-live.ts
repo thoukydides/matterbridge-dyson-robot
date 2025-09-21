@@ -18,7 +18,7 @@ export interface DeviceConfigRemoteMqtt {
     name:           string;
     serialNumber:   string;
     rootTopic:      string;
-    getCredentials: () => Promise<DysonIoTCredentialsResponse>;
+    getCredentials: (log: AnsiLogger) => Promise<DysonIoTCredentialsResponse>;
 }
 export type DeviceConfigMqtt = DeviceConfigLocalMqtt | DeviceConfigRemoteMqtt | DeviceConfigMock;
 
@@ -149,7 +149,7 @@ export class DysonMqttClientRemote extends DysonMqttClientLive {
 
     // Obtain the (re)connection options
     protected async getConnectionOptions(): Promise<DysonMqttClientOptions> {
-        const credentials = await this.deviceConfig.getCredentials();
+        const credentials = await this.deviceConfig.getCredentials(this.log);
         const { Endpoint } = credentials;
         const { ClientId, CustomAuthorizerName, TokenKey, TokenSignature, TokenValue } = credentials.IoTCredentials;
 
