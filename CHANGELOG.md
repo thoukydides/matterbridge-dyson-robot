@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v1.4.0] - 2025-09-29
+### Fixed
+* Accept additional firmware capabilities for Dyson 360 Heurist. (#11, #13)
+### Changed
+* Updated dependencies.
+
 ## [v1.3.3] - 2025-09-07
 ### Changed
 * More robust robot vacuum map rendering.
@@ -167,7 +173,8 @@ All notable changes to this project will be documented in this file.
 
 Copyright © 2025 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.3.3...HEAD
+[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.4.0...HEAD
+[v1.4.0]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.3.3...v1.4.0
 [v1.3.3]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.3.2...v1.3.3
 [v1.3.2]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.3.1...v1.3.2
 [v1.3.1]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.3.0...v1.3.1
