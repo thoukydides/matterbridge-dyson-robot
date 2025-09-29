@@ -58,7 +58,7 @@
     "type": "module",
     "main": "dist/index.js",
     "engines": {
-        "node": "^24.9.0 || ^22.20.0 || ^20.19.5",
+        "node": "^24.9.0 || ^22.19.0 || ^20.19.5",
         "matterbridge": "^3.2.9"
     },
     "dependencies": {
