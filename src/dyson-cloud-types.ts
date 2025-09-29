@@ -90,10 +90,10 @@ export enum DysonManifestConnectionCategory {
 }
 export interface DysonManifestDevice {
     category:               DysonManifestCategory;
-    connectedConfiguration: DysonManifestConnectedConfiguration;
+    connectedConfiguration: DysonManifestConnectedConfiguration | null;
     connectionCategory:     DysonManifestConnectionCategory;
     model:                  string; // e.g. 'RB01' or 'TP02'
-    name:                   string; // User assigned name
+    name:                   string | null; // User assigned name
     productName:            string; // e.g. 'Dyson 360 Eye' or 'Dyson Pure Cool™ Link'
     serialNumber:           string; // e.g. 'AB1-CD-EFG2345H'
     type:                   string; // e.g. 'N223' or '475'

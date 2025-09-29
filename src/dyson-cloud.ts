@@ -19,7 +19,7 @@ import {
 import { checkers } from './ti/dyson-cloud-types.js';
 import NodePersist from 'node-persist';
 import { DysonCloudAPI } from './dyson-cloud-api.js';
-import { columns, formatMilliseconds, MS, plural } from './utils.js';
+import { assertIsDefined, columns, formatMilliseconds, MS, plural } from './utils.js';
 import { isSupportedModel } from './dyson-device.js';
 import { DeviceConfigRemoteMqtt } from './dyson-mqtt-client-live.js';
 import { DysonCloudStatusCodeError } from './dyson-cloud-error.js';
@@ -223,9 +223,11 @@ export class DysonCloudRemote extends DysonCloud<ConfigRemoteAccount> {
         const rows: string[][] = [];
         const deviceConfigs: DeviceConfigRemoteMqtt[] = [];
         for (const device of manifest) {
-            const { serialNumber, name, model, type, productName } = device;
+            const { serialNumber, model, type, productName } = device;
+            const name = device.name ?? productName;
             let status: string;
             if (isSupportedModel(type)) {
+                assertIsDefined(device.connectedConfiguration);
                 status = 'SUPPORTED';
                 const { mqttRootTopicLevel: rootTopic } = device.connectedConfiguration.mqtt;
                 const getCredentials = async (log: AnsiLogger) => this.getIoT(log, serialNumber);
@@ -308,10 +310,11 @@ export class DysonCloudLocal extends DysonCloud<ConfigLocalAccount> {
             const { serialNumber } = deviceConfig;
             const device = manifest.find(d => d.serialNumber === serialNumber);
             if (device) {
+                assertIsDefined(device.connectedConfiguration);
                 const { localBrokerCredentials, mqttRootTopicLevel } = device.connectedConfiguration.mqtt;
                 deviceConfigs.push({
                     ...deviceConfig,
-                    name:       device.name,
+                    name:       device.name ?? device.productName,
                     password:   decodeLocalBrokerCredentials(localBrokerCredentials).apPasswordHash,
                     rootTopic:  mqttRootTopicLevel
                 });
