@@ -121,7 +121,6 @@ The supported `debugFeatures` are:
 | `Log MQTT Client`           | Enables (extremely) verbose debug logging from the low-level MQTT client. Rarely useful, unless the plugin is unable to establish or maintain a connection to the Dyson device. (Requires *Debug* level logging.)
 | `Log MQTT Payloads`         | Logs every MQTT payload that is sent or received. Useful for diagnosing interoperability issues or identifying how to control new features. (Requires *Debug* level logging.)
 | `Log MQTT Payloads as JSON` | Similar to `Log MQTT Payloads` except that payloads are logged in raw JSON format, without any truncation or special formatting. (Requires *Debug* level logging.)
-Logs every MQTT payload that is sent or received. Useful for diagnosing interoperability issues or identifying how to control new features. (Requires *Debug* level logging.)
 | `Log Serial Numbers`        | By default product serial numbers (a.k.a. MQTT usernames) and passwords are automatically redacted in the log. This setting logs serial numbers verbatim.
 | `Log Debug as Info`         | Redirect *Debug* level logging to *Info* level. This makes it visible in the Matterbridge frontend.
 
