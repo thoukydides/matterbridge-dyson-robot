@@ -58,10 +58,13 @@ export enum DysonManifestCategory {
 export enum DysonManifestCapability {
     AdvanceOscillation      = 'AdvanceOscillationDay1',
     ChangeWiFi              = 'ChangeWifi',
+    DirectedCleaning        = 'DirectedCleaning',
     EnvironmentalData       = 'EnvironmentalData',
     ExtendedAQ              = 'ExtendedAQ',
-    Scheduling              = 'Scheduling',
-    MidCleanConfiguration   = 'MidCleanConfiguration'
+    Mapping                 = 'Mapping',
+    MidCleanConfiguration   = 'MidCleanConfiguration',
+    Restrictions            = 'Restrictions',
+    Scheduling              = 'Scheduling'
 };
 export interface DysonManifestFirmware {
     autoUpdateEnabled:      boolean;
