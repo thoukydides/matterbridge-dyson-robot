@@ -80,7 +80,7 @@ export const DYSON_MAP_CONFIG_MATTERBRIDGE: DysonMapTextConfig = {
 export function dysonMapText(
     log:        AnsiLogger,
     grids:      DysonMapGrid[],
-    robotCoord: DysonMapCoordinate,
+    robotCoord: DysonMapCoordinate | undefined,
     config:     DysonMapTextConfig = DYSON_MAP_CONFIG_MONOSPACED
 ): string[] {
 
@@ -155,18 +155,20 @@ function checkGridTiles(log: AnsiLogger, grids: DysonMapGrid[]): DysonMapGrid[] 
 
 // Create a composite bitmap from the individual grid tiles
 function makeCompositeBitmap(
-    grids: DysonMapGrid[],
-    robotCoord: DysonMapCoordinate
+    grids:          DysonMapGrid[],
+    robotCoord?:    DysonMapCoordinate
 ): DysonMapBitmapBase<DysonMapTextLayers> {
     // Construct a composite bitmap with all of the tiles
     const compositeBitmap = new DysonMapBitmapComposite<DysonMapTextLayers>();
     for (const grid of grids) compositeBitmap.addBitmap(grid.bitmap, grid.origin);
 
     // Add a bitmap for the robot's location
-    const robotBitmap = new DysonMapBitmap<'robot'>();
-    robotBitmap.setLayer('robot', [[1]]);
-    const resolution = grids[0]?.resolution ?? 1;
-    compositeBitmap.addBitmap(robotBitmap, robotCoord.scale(1 / resolution));
+    if (robotCoord) {
+        const robotBitmap = new DysonMapBitmap<'robot'>();
+        robotBitmap.setLayer('robot', [[1]]);
+        const resolution = grids[0]?.resolution ?? 1;
+        compositeBitmap.addBitmap(robotBitmap, robotCoord.scale(1 / resolution));
+    }
     return compositeBitmap;
 }
 

@@ -89,6 +89,11 @@ export enum Dyson360CleaningMode {
     ZoneConfigured                  = 'zoneConfigured'
 }
 
+// Dyson robot vacuum cleaning strategy
+export enum Dyson360CleaningStrategy {
+    Mixed                           = 'mixed'
+}
+
 // Dyson robot vacuum position
 export type Dyson360Position = [number, number];
 

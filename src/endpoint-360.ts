@@ -53,7 +53,7 @@ export interface UpdatePowerSource360 {
     activeBatFaults:        PowerSource.BatFault[];
     batChargeLevel:         PowerSource.BatChargeLevel;
     batChargeState:         PowerSource.BatChargeState;
-    batPercentRemaining:    number; // ×2, e.g. 200 for 100%
+    batPercentRemaining:    number | null; // ×2, e.g. 200 for 100%
     status:                 PowerSource.PowerSourceStatus;
 }
 
@@ -110,11 +110,11 @@ export class Endpoint360 extends EndpointBase {
             activeBatChargeFaults, activeBatFaults } = attributes;
         const clusterId = PowerSource.Cluster.id;
         const logBattery = [
-            `${AV}${batPercentRemaining / 2}${RI}%`,
             formatEnumLog(PowerSource.BatChargeLevel,      batChargeLevel),
             formatEnumLog(PowerSource.PowerSourceStatus,   status),
             formatEnumLog(PowerSource.BatChargeState,      batChargeState)
         ];
+        if (batPercentRemaining !== null) logBattery.unshift(`${AV}${batPercentRemaining / 2}${RI}%`);
         if (activeBatFaults.length) {
             const faults = activeBatFaults.map(v => formatEnumLog(PowerSource.BatFault, v));
             logBattery.push(`${AN}${plural(faults.length, 'battery fault', false)}${RI} [${formatList(faults)}${RI}]`);

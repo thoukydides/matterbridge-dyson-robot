@@ -225,9 +225,19 @@ export abstract class DysonDevice360Base extends DysonDevice<DysonMqtt360> {
         const { operationalState, isDocked } = mapState(status.state);
         const { batteryChargeLevel } = status;
         const { activeBatFaults, activeBatChargeFaults } = faults;
-        return {
+        if (!isDocked) activeBatChargeFaults.length = 0;
+        return batteryChargeLevel === undefined ? {
             activeBatFaults,
-            activeBatChargeFaults:  isDocked ? activeBatChargeFaults : [],
+            activeBatChargeFaults,
+            batPercentRemaining:    null,
+            batChargeLevel:         PowerSource.BatChargeLevel.Ok,
+            batChargeState:         PowerSource.BatChargeState[
+                (operationalState === RvcOperationalState.OperationalState.Charging) ? 'IsCharging' : 'IsNotCharging'],
+            status:                 PowerSource.PowerSourceStatus.Unspecified
+
+        } :{
+            activeBatFaults,
+            activeBatChargeFaults,
             batPercentRemaining:    batteryChargeLevel * 2, // ×2, e.g. 200 for 100%
             batChargeLevel:         PowerSource.BatChargeLevel[
                 batteryChargeLevel < BATTERY_THRESHOLD_CRITICAL ? 'Critical'

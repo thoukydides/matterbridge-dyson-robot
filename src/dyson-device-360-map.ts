@@ -95,7 +95,8 @@ export class DysonDevice360Map {
         if (logMapStyle !== 'Off') {
             const style = logMapStyle === 'Matterbridge'
                 ? DYSON_MAP_CONFIG_MATTERBRIDGE : DYSON_MAP_CONFIG_MONOSPACED;
-            const robotCoord = new DysonMapCoordinate(this.mqtt.status.globalPosition);
+            const robotCoord = this.mqtt.status.globalPosition
+                && new DysonMapCoordinate(this.mqtt.status.globalPosition);
             const mapText = dysonMapText(this.log, [...this.grids.values()], robotCoord, style);
             this.log.info(msg?.cleanDuration
                 ? `Cleaned for ${formatSeconds(msg.cleanDuration)}:`
