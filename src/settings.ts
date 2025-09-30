@@ -48,4 +48,4 @@ export const DEFAULT_CONFIG: Readonly<Partial<Config>> = {
 
 // Vendor name
 export const VENDOR_NAME = 'Dyson';
-export const VENDOR_ID   = 0xFFF1; // Test Vendor #1
+export const VENDOR_ID   = 0x139E; // Dyson's official Matter Vendor ID
