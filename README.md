@@ -420,6 +420,7 @@ This plugin has been tested with the following devices:
 | Dyson Pure Hot+Cool                     | HP04/HP06 | `527`           |                         | MQTT logs
 | Dyson Purifier Hot+Cool                 | HP07      | `527E`          |                         | MQTT logs
 | Dyson Purifier Hot+Cool Formaldehyde    | HP09      | `527K`          |                         | MQTT logs
+| Dyson Purifier Hot+Cool                 | HP1/HP11  | `527M`          |                         | [FireHelmet](https://github.com/FireHelmet) ([#14](https://github.com/thoukydides/matterbridge-dyson-robot/issues/14))
 | Dyson Purifier Big + Quiet Formaldehyde | BP03      | `664`           | `0664PF.00.08.005.0002` | Developer
 
 It should also work with other Dyson robot vacuums and air treatment devices, although some modifications may be required for full compatibility.
