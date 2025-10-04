@@ -2,9 +2,9 @@
 // Copyright © 2025 Alexander Thoukydides
 
 import {
-    Matterbridge,
     MatterbridgeDynamicPlatform,
-    PlatformConfig
+    PlatformConfig,
+    PlatformMatterbridge
 } from 'matterbridge';
 import { AnsiLogger, GREEN, LogLevel, RED } from 'matterbridge/logger';
 import NodePersist from 'node-persist';
@@ -42,7 +42,7 @@ export class PlatformDyson extends MatterbridgeDynamicPlatform {
     devices:        DysonDevice[] = [];
 
     // Constructor
-    constructor(matterbridge: Matterbridge, log: AnsiLogger, config: PlatformConfig) {
+    constructor(matterbridge: PlatformMatterbridge, log: AnsiLogger, config: PlatformConfig) {
         log.logName = PLATFORM_NAME;
         const filterLog = new FilterLogger(log);
         filterLog.info(`Initialising platform ${PLUGIN_NAME}`);
