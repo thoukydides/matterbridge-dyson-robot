@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v1.6.0] - 2025-10-08
+### Changed
+* Cope with devices that are unreachable during start-up by using cached device details (if available).
+* No MQTT connection is attempted for devices disabled via `blackList` or `whiteList`.
+
 ## [v1.5.0] - 2025-10-04
 ### Changed
 * Compatibility with Matterbridge version 3.4.0.
@@ -188,7 +193,8 @@ All notable changes to this project will be documented in this file.
 
 Copyright © 2025 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.5.0...HEAD
+[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.6.0...HEAD
+[v1.6.0]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.5.0...v1.6.0
 [v1.5.0]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.4.2...v1.5.0
 [v1.4.2]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.4.1...v1.4.2
 [v1.4.1]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.4.0...v1.4.1
