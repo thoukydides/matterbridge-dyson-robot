@@ -18,7 +18,7 @@ import {
 } from './dyson-mqtt-subscribe.js';
 import { DysonMqttConnection } from './dyson-mqtt-connect.js';
 import { inspect } from 'util';
-import { DysonMQTTFilter, DysonMqttFiltered } from './dyson-mqtt-filter.js';
+import { DysonMqttFilter, DysonMqttFiltered } from './dyson-mqtt-filter.js';
 import { AsyncEventEmitter } from './async-eventemitter.js';
 import {
     DeviceConfigMqtt,
@@ -27,6 +27,8 @@ import {
 } from './dyson-mqtt-client-live.js';
 import { DysonMqttClientMock } from './dyson-mqtt-client-mock.js';
 import { DysonMqttClient } from './dyson-mqtt-client-base.js';
+import NodePersist from 'node-persist';
+import { DysonMqttCache } from './dyson-mqtt-cache.js';
 
 // Configuration of a Dyson MQTT client
 export interface DysonMqttConfig<T> {
@@ -35,10 +37,11 @@ export interface DysonMqttConfig<T> {
 }
 
 // Status data, with device reachability
+export type DysonMqttState =
+    'starting' | 'startingWithCache' | 'initialised' | 'stopped';
 export interface DysonMqttStatusBase {
     reachable:      boolean;
-    initialised:    boolean;
-    stopped:        boolean;
+    mqttState:      DysonMqttState;
 };
 export type DysonMqttStatus<T> = T & DysonMqttStatusBase;
 
@@ -81,19 +84,20 @@ export abstract class DysonMqtt<T, S>
     private mqtt:           DysonMqttClient;
     private mqttConnection: DysonMqttConnection;
     private mqttSubscribe:  DysonMqttSubscribe;
-    private mqttFilter:     DysonMQTTFilter;
+    private mqttFilter:     DysonMqttFilter;
+    private mqttCache:      DysonMqttCache<DysonMqttStatus<S>>;
 
     // The current status
     readonly status = {
-        reachable:      false,
-        initialised:    false,
-        stopped:        false
+        reachable:  false,
+        mqttState:  'starting'
     } as DysonMqttStatus<S>;
 
     // Construct a new MQTT client
     constructor(
         readonly log:           AnsiLogger,
         readonly config:        Config,
+        readonly persist:       NodePersist.LocalStorage,
         readonly deviceConfig:  DeviceConfigMqtt,
         readonly mqttConfig:    DysonMqttConfig<T>
     ) {
@@ -123,7 +127,7 @@ export abstract class DysonMqtt<T, S>
         });
 
         // Handle received MQTT messages
-        this.mqttFilter = new DysonMQTTFilter(log);
+        this.mqttFilter = new DysonMqttFilter(log);
         this.mqtt.on('message', tryListener(this, (topic, payload) => {
             // Check the received topic and message
             const topicStatus = this.mqttSubscribe.checkTopic(topic);
@@ -139,10 +143,21 @@ export abstract class DysonMqtt<T, S>
                 this.emit('status');
             }
         }));
+
+        // Attempt to restore cached status
+        this.mqttCache = new DysonMqttCache<DysonMqttStatus<S>>(log, persist, serialNumber);
+        this.mqttCache.on('error', err => this.emit('error', err));
+        this.mqttCache.on('restored', cachedStatus => {
+            if (this.status.mqttState !== 'starting') return;
+            const newStatus: DysonMqttStatus<S> = { ...cachedStatus, ...this.status, mqttState: 'startingWithCache' };
+            Object.assign(this.status, newStatus);
+            this.log.info('MQTT status restored from cache');
+            this.emit('status');
+        });
     }
 
     // Update the device reachability, with hysteresis on unreachable indications
-    downTimerHandle = new Map<string, NodeJS.Timeout>();
+    downTimerHandle = new Map<string, NodeJS.Timeout | undefined>([['msg', undefined]]);
     updateReachable(key: 'mqtt' | 'msg', reachable: boolean): void {
         if (reachable) {
             // Cancel any pending down timer for this reason
@@ -157,7 +172,8 @@ export abstract class DysonMqtt<T, S>
             }
         } else {
             // Only start down timer if not already running
-            if (!this.downTimerHandle.has(key) && this.status.reachable && !this.status.stopped) {
+            if (!this.downTimerHandle.has(key) && this.status.reachable
+                && this.status.mqttState !== 'stopped') {
                 this.log.debug(`Starting down timer for '${key}'`);
                 const handle = setTimeout(() => {
                     // Mark the device as not reachable after a delay
@@ -172,16 +188,49 @@ export abstract class DysonMqtt<T, S>
         }
     }
 
+    // Update the initialisation status
+    updateInitialised(initialised = true): void {
+        if (!initialised) return;
+        if (this.status.mqttState === 'initialised' || this.status.mqttState === 'stopped') return;
+        this.status.mqttState = 'initialised';
+        this.log.info('MQTT client initialisation complete');
+    }
+
     // Wait until the device is reachable and all initial state has been received
-    async waitUntilInitialised(): Promise<void> {
-        while (!this.status.reachable || !this.status.initialised) {
-            await this.onceAsync('status');
+    async waitUntilInitialised(cacheFallbackDelay?: number): Promise<void> {
+        let timeoutSignal: AbortSignal | undefined;
+        if (cacheFallbackDelay !== undefined) timeoutSignal = AbortSignal.timeout(cacheFallbackDelay);
+
+        // Normal case is to wait for MQTT initialisation
+        while (!this.status.reachable || this.status.mqttState !== 'initialised') {
+            try {
+                await this.onceAsync('status', timeoutSignal);
+            } catch (err) {
+                if (!(err instanceof Error && err.name === 'AbortError')) throw err;
+
+                // Timeout occurred, so fallback to cached status (if any)
+                if (this.status.mqttState === 'startingWithCache' || this.status.mqttState === 'initialised') break;
+                timeoutSignal = undefined;
+            }
         }
+
+        // Warn if continuing with degraded status
+        if (this.status.mqttState === 'startingWithCache')  this.log.warn('Continuing using cached MQTT device status');
+        if (!this.status.reachable)                         this.log.warn('Continuing without MQTT connection to device');
     }
 
     // Stop the MQTT client
     async stop(): Promise<void> {
-        this.status.stopped = true;
+        if (this.status.mqttState === 'stopped') return;
+
+        // Save the current status in the cache if fully initialised
+        if (this.status.mqttState === 'initialised') {
+            await this.mqttCache.store(this.status);
+            this.log.info('MQTT status saved to cache');
+        }
+
+        // Disconnect the MQTT client
+        this.status.mqttState = 'stopped';
         await this.mqttConnection.stop();
     }
 

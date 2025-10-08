@@ -29,9 +29,10 @@ import {
 } from './dyson-device-air.js';
 import { Config } from './config-types.js';
 import { AnsiLogger } from 'matterbridge/logger';
-import { UnionToIntersection } from './utils.js';
+import { MS, UnionToIntersection } from './utils.js';
 import { DeviceConfigMqtt } from './dyson-mqtt-client-live.js';
 import { logError } from './log-error.js';
+import NodePersist from 'node-persist';
 
 // List of constructors for Dyson devices
 const DYSON_DEVICE_TYPES = [
@@ -60,10 +61,15 @@ const DYSON_DEVICE_TYPES = [
     DysonDeviceCool
 ] as const;
 
+// Delay before falling back to using cached status (if any)
+// (must be less than Matterbridge's 120 second platform initialisation timeout)
+export const MQTT_CACHE_FALLBACK_DELAY = 60 * MS;
+
 // Dyson device factory
 export async function createDysonDevice(
     log:        AnsiLogger,
     config:     Config,
+    persist:    NodePersist.LocalStorage,
     device:     DeviceConfigMqtt
 ): Promise<DysonDevice> {
     // Select the appropriate class for this device
@@ -72,9 +78,9 @@ export async function createDysonDevice(
     if (!deviceClass) throw new Error(`Unknown Dyson device type: ${rootTopic}`);
 
     // Create the MQTT client and wait for it to finish initialising
-    const mqtt = new deviceClass.mqttConstructor(log, config, device);
+    const mqtt = new deviceClass.mqttConstructor(log, config, persist, device);
     mqtt.on('error', err => { logError(log, 'MQTT Event', err); });
-    await mqtt.waitUntilInitialised();
+    await mqtt.waitUntilInitialised(MQTT_CACHE_FALLBACK_DELAY);
 
     // Create the Dyson device itself
     return new deviceClass(log, config, device, mqtt as UnionToIntersection<typeof mqtt>);

@@ -9,7 +9,7 @@ import { AnsiLogger } from 'matterbridge/logger';
 export type DysonMqttFiltered = 'duplicate' | 'reordered';
 
 // Filter received Dyson MQTT messages for reordering and duplication
-export class DysonMQTTFilter {
+export class DysonMqttFilter {
 
     // The most recent message of each type (indexed by msg)
     readonly lastMsg = new Map<string, DysonMsg>;

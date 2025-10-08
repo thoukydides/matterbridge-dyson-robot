@@ -35,6 +35,7 @@ import { DysonAirProductState } from './dyson-air-state-types.js';
 import { DysonMsgAny } from './dyson-mqtt-parse.js';
 import { DysonModeReason } from './dyson-types.js';
 import { DeviceConfigMqtt } from './dyson-mqtt-client-live.js';
+import NodePersist from 'node-persist';
 
 // Configuration of a Dyson MQTT client for robot vacuums
 const DYSON_MQTT_CONFIG_AIR: DysonMqttConfig<DysonMsgMapAir> = {
@@ -93,8 +94,8 @@ export class DysonMqttAir extends DysonMqtt<DysonMsgMapAir, DysonMqttStatusAir> 
     ]);
 
     // Construct a new MQTT client
-    constructor(log: AnsiLogger, config: Config, device: DeviceConfigMqtt) {
-        super(log, config, device, DYSON_MQTT_CONFIG_AIR);
+    constructor(log: AnsiLogger, config: Config, persist: NodePersist.LocalStorage, device: DeviceConfigMqtt) {
+        super(log, config, persist, device, DYSON_MQTT_CONFIG_AIR);
 
         // Handle MQTT events
         this.on('subscribed', tryListener(this, async () => {
@@ -136,10 +137,7 @@ export class DysonMqttAir extends DysonMqtt<DysonMsgMapAir, DysonMqttStatusAir> 
     // Check whether all required messages have been received
     checkIfInitialised(msg: DysonMsgAny<DysonMsgMapAir>): void {
         this.initialiseMsgs.delete(msg.msg);
-        if (!this.status.initialised && this.initialiseMsgs.size === 0) {
-            this.status.initialised = true;
-            this.log.info('MQTT client initialisation complete');
-        }
+        this.updateInitialised(this.initialiseMsgs.size === 0);
     }
 
     // Update hardware and software state from a received message

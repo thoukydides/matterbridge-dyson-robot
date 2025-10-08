@@ -20,6 +20,7 @@ import {
 } from './dyson-360-types.js';
 import { DysonModeReason } from './dyson-types.js';
 import { DeviceConfigMqtt } from './dyson-mqtt-client-live.js';
+import NodePersist from 'node-persist';
 
 // Configuration of a Dyson MQTT client for robot vacuums
 const DYSON_MQTT_CONFIG_360: DysonMqttConfig<DysonMsgMap360> = {
@@ -45,8 +46,8 @@ export type DysonMqtt360Action = 'START' | 'PAUSE' | 'RESUME' | 'ABORT';
 export class DysonMqtt360 extends DysonMqtt<DysonMsgMap360, DysonMqttStatus360> {
 
     // Construct a new MQTT client
-    constructor(log: AnsiLogger, config: Config, device: DeviceConfigMqtt) {
-        super(log, config, device, DYSON_MQTT_CONFIG_360);
+    constructor(log: AnsiLogger, config: Config, persist: NodePersist.LocalStorage, device: DeviceConfigMqtt) {
+        super(log, config, persist, device, DYSON_MQTT_CONFIG_360);
 
         // Handle MQTT events
         this.on('subscribed', tryListener(this, async () =>
@@ -80,10 +81,7 @@ export class DysonMqtt360 extends DysonMqtt<DysonMsgMap360, DysonMqttStatus360> 
         Object.assign(this.status, status);
 
         // State is fully initialised after the first message has been received
-        if (!this.status.initialised) {
-            this.status.initialised = true;
-            this.log.info('MQTT client initialisation complete');
-        }
+        this.updateInitialised();
     }
 
     // Publish a robot vacuum command to perform an action
