@@ -155,49 +155,64 @@ export class PlatformDyson extends MatterbridgeDynamicPlatform {
 
         // Create and register Matter devices for each Dyson device
         await this.clearSelect();
-        await Promise.all(mappedDevices.map(async deviceConfig => {
-            try {
-                // Check whether the device should be created
-                const { serialNumber, name: deviceName} = deviceConfig;
-                const deviceLog = new PrefixLogger(this.log, deviceName);
-                const device = await createDysonDevice(deviceLog, this.config, deviceConfig);
-
-                // Validate the device as a whole
-                this.setSelectDevice(serialNumber, deviceName, undefined, 'hub');
-                const validatedDevice = this.validateDevice(serialNumber);
-
-                // Validate the device's main functions
-                const entities = device.getEntities();
-                const entityResults: string[] = [];
-                const validatedEntities = entities.filter(({ name, description }) => {
-                    this.setSelectDeviceEntity(serialNumber, name, description, 'component');
-                    const result = this.validateEntity(serialNumber, name);
-                    entityResults.push(result ? `${GREEN}${name} ✔${RI}` : `${RED}${name} ✘${RI}`);
-                    return result;
-                }).map(({ name }) => name);
-
-                // Create and register the device's endpoints
-                const endpoints = validatedDevice ? device.getEndpoints(validatedEntities) : [];
-                if (!endpoints.length) {
-                    const lists = !validatedDevice ? ['blackList', 'whiteList'] as const
-                        : ['entityBlackList', 'entityWhiteList', 'deviceEntityBlackList'] as const;
-                    const filtered = lists.filter(list => this.config[list].length);
-                    deviceLog.info(`Device disabled via ${formatList(filtered)}`);
-                } else {
-                    let description = `Registering ${plural(endpoints.length, 'device')}`;
-                    if (entities.length) description += ` with: ${formatList(entityResults)}`;
-                    deviceLog.info(description);
-                    this.devices.push(device);
-                    await Promise.all(endpoints.map(async endpoint => {
-                        await this.registerDevice(endpoint);
-                        await endpoint.postRegister();
-                    }));
-                }
-            } catch (err) {
-                logError(this.log, 'Creating device', err);
-            }
-        }));
+        await Promise.all(mappedDevices.map(async deviceConfig => this.createDevice(deviceConfig)));
         this.log.info(`Registered ${this.devicesDescription}`);
+    }
+
+    // Create a single device, but do not register it with Matterbridge
+    async createDevice(deviceConfig: DeviceConfigMqtt): Promise<void> {
+        const { serialNumber, name: deviceName} = deviceConfig;
+        const deviceLog = new PrefixLogger(this.log, deviceName);
+
+        const logFiltered = (lists: (keyof Config)[]) => {
+            const hasEntries = (configItem: Config[keyof Config]) =>
+                Array.isArray(configItem) ? configItem.length
+                : typeof configItem === 'object' && Object.keys(configItem).length;
+            const filtered = lists.filter(list => hasEntries(this.config[list]));
+            deviceLog.info(`Device disabled via ${formatList(filtered)}`);
+        };
+
+        try {
+            // Validate the device as a whole
+            this.setSelectDevice(serialNumber, deviceName, undefined, 'hub');
+            if (!this.validateDevice(serialNumber)) {
+                logFiltered(['blackList', 'whiteList']);
+                return;
+            }
+
+            // Create the device instance
+            const device = await createDysonDevice(deviceLog, this.config, deviceConfig);
+
+            // Validate the device's main functions
+            const entities = device.getEntities();
+            const entityResults: string[] = [];
+            const validatedEntities = entities.filter(({ name, description }) => {
+                this.setSelectDeviceEntity(serialNumber, name, description, 'component');
+                const result = this.validateEntity(serialNumber, name);
+                entityResults.push(result ? `${GREEN}${name} ✔${RI}` : `${RED}${name} ✘${RI}`);
+                return result;
+            }).map(({ name }) => name);
+
+            // Determine which endpoints to create
+            const endpoints = device.getEndpoints(validatedEntities);
+            if (!endpoints.length) {
+                logFiltered(['entityBlackList', 'entityWhiteList', 'deviceEntityBlackList']);
+                await device.stop();
+                return;
+            }
+
+            // Register the device and its endpoints with Matterbridge
+            let description = `Registering ${plural(endpoints.length, 'device')}`;
+            if (entities.length) description += ` with: ${formatList(entityResults)}`;
+            deviceLog.info(description);
+            this.devices.push(device);
+            await Promise.all(endpoints.map(async endpoint => {
+                await this.registerDevice(endpoint);
+                await endpoint.postRegister();
+            }));
+        } catch (err) {
+            logError(deviceLog, 'Creating device', err);
+        }
     }
 
     // Configure and initialise the devices when the platform is commissioned
