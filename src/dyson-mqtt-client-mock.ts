@@ -56,8 +56,6 @@ export class DysonMqttClientMock extends DysonMqttClient {
 
     // Emit the next message from the log file, if any
     async emitNextMessage(): Promise<void> {
-        // HERE - Delay most messages until after Matterbridge has properly started
-
         // Delay between messages
         await setTimeout(MESSAGE_INTERVAL);
 
