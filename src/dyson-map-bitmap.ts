@@ -148,7 +148,7 @@ export class DysonMapBitmapResampled<Layer extends string> extends DysonMapBitma
                 pixels.push(this.bitmap.getPixel(scaledCoord));
             }
         }
-        return DysonMapMergePixels(pixels);
+        return dysonMapMergePixels(pixels);
     }
 }
 
@@ -229,12 +229,12 @@ export class DysonMapBitmapComposite<Layer extends string> extends DysonMapBitma
         const pixels = this.bitmaps
             .filter(({ boundingBox }) => coord.inBounds(...boundingBox))
             .map(({ bitmap, boundingBox }) => bitmap.getPixel(coord.sub(boundingBox[0]).floor()));
-        return DysonMapMergePixels(pixels);
+        return dysonMapMergePixels(pixels);
     }
 }
 
 // Merge pixels (for each layer picking highest value from all contributions)
-export function DysonMapMergePixels<Layer extends string>(
+export function dysonMapMergePixels<Layer extends string>(
     pixels: DysonMapPixel<Layer>[]
 ): DysonMapPixel<Layer> {
     return pixels.reduce<DysonMapPixel<Layer>>((acc, pixel) => {
@@ -246,7 +246,7 @@ export function DysonMapMergePixels<Layer extends string>(
 }
 
 // Determine the bounding box of the occupied region of a bitmap
-export function DysonMapBitmapBoundingBox<Layer extends string>(
+export function dysonMapBitmapBoundingBox<Layer extends string>(
     bitmap:     DysonMapBitmapBase<Layer>,
     predicate:  (pixel: DysonMapPixel<Layer>) => boolean
 ): [DysonMapCoordinate, DysonMapCoordinate] | undefined {

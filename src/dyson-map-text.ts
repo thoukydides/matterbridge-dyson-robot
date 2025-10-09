@@ -5,11 +5,11 @@ import { AnsiLogger } from 'matterbridge/logger';
 import {
     DysonMapBitmap,
     DysonMapBitmapBase,
-    DysonMapBitmapBoundingBox,
+    dysonMapBitmapBoundingBox,
     DysonMapBitmapComposite,
     DysonMapBitmapCropped,
     DysonMapBitmapResampled,
-    DysonMapMergePixels,
+    dysonMapMergePixels,
     DysonMapPixel
 } from './dyson-map-bitmap.js';
 import { DysonMapCoordinate } from './dyson-map-coordinate.js';
@@ -110,7 +110,7 @@ export function dysonMapText(
                 scaledBitmap.getPixel(new DysonMapCoordinate([x,     y])),
                 scaledBitmap.getPixel(new DysonMapCoordinate([x + 1, y]))
             ];
-            const merged = DysonMapMergePixels(pixels);
+            const merged = dysonMapMergePixels(pixels);
 
             // Priority encode the bitmap layers
             const priority: DysonMapFgLayers =
@@ -176,7 +176,7 @@ function makeCompositeBitmap(
 function cropAndScaleBitmap(bitmap: DysonMapBitmapBase<DysonMapTextLayers>): DysonMapBitmapBase<DysonMapTextLayers> {
     // Determine the bounding box of the observed region
     const observed = (pixel: DysonMapPixel<DysonMapTextLayers>): boolean => Boolean(pixel.observed);
-    const [coreMin, coreMax] = DysonMapBitmapBoundingBox(bitmap, observed)
+    const [coreMin, coreMax] = dysonMapBitmapBoundingBox(bitmap, observed)
         ?? [DysonMapCoordinate.ZERO, bitmap.size];
 
     // Calculate the required scale factors, allowing for edge padding
