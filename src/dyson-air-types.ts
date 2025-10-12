@@ -381,7 +381,8 @@ export enum DysonAirCarbonFilterType {
     None                    = 'NONE',
     Carbon                  = 'CARF',
     SelectiveCatalyticF     = 'SCOF',
-    SelectiveCatalyticG     = 'SCOG'
+    SelectiveCatalyticG     = 'SCOG',
+    SelectiveCatalyticH     = 'SCOH'
 }
 export enum DysonAirCarbonFilterEnum {
     Invalid                 = 'INV'
