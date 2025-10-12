@@ -56,13 +56,17 @@ export enum DysonManifestCategory {
     Wearable                = 'wearable'
 }
 export enum DysonManifestCapability {
+    ActiveFaults            = 'ActiveFaults',
     AdvanceOscillation      = 'AdvanceOscillationDay1',
     ChangeWiFi              = 'ChangeWifi',
+    CleaningStrategies      = 'CleaningStrategies',
     DirectedCleaning        = 'DirectedCleaning',
+    DustDetection           = 'DustDetection',
     EnvironmentalData       = 'EnvironmentalData',
     ExtendedAQ              = 'ExtendedAQ',
     Mapping                 = 'Mapping',
     MidCleanConfiguration   = 'MidCleanConfiguration',
+    OutOfBoxState           = 'OutOfBoxState',
     Restrictions            = 'Restrictions',
     Scheduling              = 'Scheduling'
 };
