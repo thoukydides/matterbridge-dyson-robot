@@ -65,12 +65,12 @@ export class DysonDeviceAirCoolDesk extends DysonDeviceAirCool {
 
 // Dyson Pure Humidify+Cool
 export class DysonDeviceAirHumidifyCool extends DysonDeviceAirCoolBase {
-    static readonly model = { type: '358', number: 'PH01', name: 'Pure Humidify+Cool' };
+    static readonly model = { type: '358', number: 'PH01/PH02', name: 'Pure Humidify+Cool' };
 }
 
 // Dyson Pure Humidify+Cool aliases without significant functional differences
 export class DysonDeviceAirHumidifyCoolE extends DysonDeviceAirHumidifyCool {
-    static readonly model = { type: '358E', number: 'PH03', name: 'Pure Humidify+Cool' };
+    static readonly model = { type: '358E', number: 'PH03/PH04', name: 'Pure Humidify+Cool' };
 }
 export class DysonDeviceAirHumidifyCoolK extends DysonDeviceAirHumidifyCool {
     static readonly model = { type: '358K', number: 'PH04/PH05', name: 'Pure Humidify+Cool Formaldehyde' };
