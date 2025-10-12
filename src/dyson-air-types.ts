@@ -21,6 +21,7 @@ export enum DysonAirErrorCodeEnum {
     Unknown34U5             = '34U5',
     Unknown51C2             = '51C2',
     Unknown57C2             = '57C2',
+    Unknown62R6             = '62R6'
 }
 export type DysonAirErrorCode = DysonAirErrorCodeEnum | string;
 export enum DysonAirWarningCodeEnum {
