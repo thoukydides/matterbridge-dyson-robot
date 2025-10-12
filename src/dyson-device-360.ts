@@ -55,6 +55,7 @@ export class DysonDevice360VisNav extends DysonDevice360Heurist {
         [Dyson360VisNavPowerMode.Auto,      RvcCleanMode360.Auto,       'Auto'],
         [Dyson360VisNavPowerMode.Quick,     RvcCleanMode360.Quick,      'Quick'],
         [Dyson360VisNavPowerMode.Quiet,     RvcCleanMode360.Quiet,      'Quiet'],
-        [Dyson360VisNavPowerMode.Boost,     RvcCleanMode360.MaxBoost,   'Boost']
+        [Dyson360VisNavPowerMode.Boost,     RvcCleanMode360.MaxBoost,   'Boost'],
+        [Dyson360VisNavPowerMode.Unknown,   RvcCleanMode360.Auto,       'Auto']
     ];
 }

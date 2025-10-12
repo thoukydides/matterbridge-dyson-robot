@@ -65,6 +65,7 @@ export enum Dyson360HeuristPowerMode {
     Max                             = '3'
 }
 export enum Dyson360VisNavPowerMode {
+    Unknown                         = '0',
     Auto                            = '1',
     Quick                           = '2',
     Quiet                           = '3',
@@ -91,6 +92,7 @@ export enum Dyson360CleaningMode {
 
 // Dyson robot vacuum cleaning strategy
 export enum Dyson360CleaningStrategy {
+    Auto                            = 'auto',
     Mixed                           = 'mixed'
 }
 
