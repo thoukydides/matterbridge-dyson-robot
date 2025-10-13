@@ -68,7 +68,7 @@ export interface Dyson360MsgCurrentState extends DysonMsg {
     currentVacuumPowerMode:     Dyson360PowerMode;
     defaultCleaningMode?:       Dyson360CleaningMode;
     defaultCleaningStrategy?:   Dyson360CleaningStrategy,
-    defaultVacuumPowerMode:     Dyson360PowerMode;
+    defaultVacuumPowerMode?:    Dyson360PowerMode;
     faults?:                    Dyson360Faults;
     fullCleanType:              Dyson360CleaningType;
     globalPosition?:            Dyson360Position;
