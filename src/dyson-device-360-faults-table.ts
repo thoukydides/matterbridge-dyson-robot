@@ -47,6 +47,7 @@ export const DYSON_360_FAULT_CATEGORIES: Record<Dyson360FaultCategory, Dyson360F
     BRUSH_BAR_AND_TRACTION:     { msg: 'Robot stuck',               /* Lights: 2 red */             opError: 'Stuck'                                            },
     CHARGE_STATION:             { msg: 'Unable to return to dock',  /* Lights: 3 red */             opError: 'FailedToFindChargingDock'                         },
     OPTICS:                     { msg: 'Optical sensors fault'      /* Lights: 4 red */                                                                         },
+    LIFT:                       { msg: 'Robot lifted',                                              opError: 'Stuck'                                            },
     LOST:                       { msg: 'Navigation fault',          /* Lights: Red battery */       opError: 'UnableToCompleteOperation'                        },
     BATTERY:                    { msg: 'Battery fault',                                             batFault: 'Unspecified', chargeFault: 'Unspecified'         }
 };
@@ -59,7 +60,7 @@ export const DYSON_360_FAULT_CODES: [Dyson360FaultPatternOrRange, Dyson360FaultD
     ['7.0.-1',                  { msg: 'Bin missing or not detected',                               opError: 'DustBinMissing'                                   }],
     ['9.0.-1',                  { msg: 'Unable to return to dock',                                  opError: 'FailedToFindChargingDock'                         }],
 
-    // Dyson 360 Vis Nav fault,
+    // Dyson 360 Vis Nav fault
     // https://support.dyson.com.au/supportHome/Vacuums/Robots/360visnav/304640-01/using-your-robot/fault-codes
     ['1.0.#',                   { msg: 'Airways blocked',                                           opError: 'DustBinFull'                                      }],
     ['1.2.#',                   { msg: 'Check bin level',                                           opError: 'DustBinFull'                                      }],

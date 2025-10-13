@@ -43,15 +43,35 @@ export type Dyson360FaultStatus = {
     active:                         false;
 } | {
     active:                         true;
-    description:                    string;
+    description:                    string; // e.g. '23.0.3',
 }
 export interface Dyson360Faults {
     AIRWAYS:                        Dyson360FaultStatus;
     BATTERY:                        Dyson360FaultStatus;
     BRUSH_BAR_AND_TRACTION:         Dyson360FaultStatus;
     CHARGE_STATION:                 Dyson360FaultStatus;
+    LIFT?:                          Dyson360FaultStatus;
     LOST:                           Dyson360FaultStatus;
     OPTICS:                         Dyson360FaultStatus;
+}
+
+// Details of an active fault (Dyson 360 Vis Nav only?)
+export enum Dyson360FaultNextAction {
+    WaitToClean                     = 'WAIT_TO_CLEAR',
+    LocalUserContinue               = 'LOCAL_USER_CONTINUE'
+}
+export enum Dyson360FaultPresent {
+    Present                         = 'PRESENT',
+    NotPresent                      = 'NOT_PRESENT'
+}
+export enum Dyson360FaultUserAction {
+    UserRecoverable                 = 'USER_RECOVERABLE'
+}
+export interface Dyson360ActiveFault {
+    faultCode:                      string; // e.g. '23.0.3',
+    nextActionRequired:             Dyson360FaultNextAction;
+    present:                        Dyson360FaultPresent;
+    requiredUserAction:             Dyson360FaultUserAction;
 }
 
 // Dyson robot vacuum power mode
@@ -108,4 +128,9 @@ export interface Dyson360MapData {
     occupied:                       Dyson360MapBitmap;  // 0 = free, 1 = occupied
     unnavigable:                    Dyson360MapBitmap;  // 0 = free, 1-101 = dilated obstacle mask
     path:                           Dyson360MapPath[];
+}
+
+// Dyson robot vacuum initial setup state
+export enum Dyson360OutOfBoxState {
+    Complete                        = 'OUT_OF_BOX_COMPLETE'
 }

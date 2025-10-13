@@ -2,10 +2,12 @@
 // Copyright © 2025 Alexander Thoukydides
 
 import {
+    Dyson360ActiveFault,
     Dyson360CleaningMode,
     Dyson360CleaningStrategy,
     Dyson360CleaningType,
     Dyson360Faults,
+    Dyson360OutOfBoxState,
     Dyson360Position,
     Dyson360PowerMode,
     Dyson360State
@@ -58,7 +60,7 @@ export interface Dyson360MsgImBack extends DysonMsg {
 
 export interface Dyson360MsgCurrentState extends DysonMsg {
     msg:                        'CURRENT-STATE';
-    activeFaults?:              [],
+    activeFaults?:              Dyson360ActiveFault[],
     batteryChargeLevel?:        number; // Percent remaining
     channel?:                   string; // Wi-Fi channel number
     cleanDuration?:             number; // Seconds
@@ -72,6 +74,7 @@ export interface Dyson360MsgCurrentState extends DysonMsg {
     faults?:                    Dyson360Faults;
     fullCleanType:              Dyson360CleaningType;
     globalPosition?:            Dyson360Position;
+    outOfBoxState?:             Dyson360OutOfBoxState;
     rssi?:                      string; // Wi-Fi RSSI dBm
     sessionId?:                 string; // UUID
     state:                      Dyson360State;
@@ -79,7 +82,7 @@ export interface Dyson360MsgCurrentState extends DysonMsg {
 
 export interface Dyson360MsgStateChange extends DysonMsg {
     msg:                        'STATE-CHANGE';
-    activeFaults?:              [],
+    activeFaults?:              Dyson360ActiveFault[],
     batteryChargeLevel?:        number; // Percent remaining
     channel?:                   string; // Wi-Fi channel number
     cleanDuration?:             number; // Seconds
@@ -89,15 +92,24 @@ export interface Dyson360MsgStateChange extends DysonMsg {
     currentVacuumPowerMode:     Dyson360PowerMode;
     defaultCleaningMode?:       Dyson360CleaningMode;
     defaultCleaningStrategy?:   Dyson360CleaningStrategy,
-    defaultVacuumPowerMode:     Dyson360PowerMode;
+    defaultVacuumPowerMode?:    Dyson360PowerMode;
     endOfClean?:                boolean;
     faults?:                    Dyson360Faults;
     fullCleanType:              Dyson360CleaningType;
     globalPosition?:            Dyson360Position;
+    newActiveFaults?:           Dyson360ActiveFault[],
+    newOutOfBoxState?:          Dyson360OutOfBoxState;
     newstate:                   Dyson360State;
+    newZoneId?:                 string; // e.g. '1'
+    oldActiveFaults?:           Dyson360ActiveFault[],
+    oldOutOfBoxState?:          Dyson360OutOfBoxState;
     oldstate:                   Dyson360State;
+    oldZoneId?:                 string; // e.g. '1'
+    persistentMapId?:           string; // UUID
     rssi?:                      string; // Wi-Fi RSSI dBm
     sessionId?:                 string; // UUID
+    traverseTargetId?:          string; // e.g. '1'
+    zonesDefinitionVersion?:    string; // e.g. '2024-09-17T23:08:23.9939605Z'
 }
 
 export interface Dyson360MsgMapData extends DysonMsg {
