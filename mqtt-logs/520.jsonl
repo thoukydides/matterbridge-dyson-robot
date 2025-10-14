@@ -44,7 +44,5 @@
 
 # Source: https://github.com/libdyson-wg/ha-dyson/issues/19#issue-1698655062
 {"data": {"hact": "0055", "noxl": "0001", "p10r": "0000", "p25r": "0000", "pm10": "0000", "pm25": "0000", "sltm": "OFF", "tact": "2971", "va10": "0004"}, "msg": "ENVIRONMENTAL-CURRENT-SENSOR-DATA", "time": "2023-05-06T13:55:30.000Z"}
-{"data": {"hact": "0055", "noxl": "0001", "p10r": "0000", "p25r": "0000", "pm10": "0000", "pm25": "0000", "sltm": "OFF", "tact": "2971", "va10": "0004"}, "msg": "ENVIRONMENTAL-CURRENT-SENSOR-DATA", "time": "2023-05-06T13:55:30.000Z"}
 {"dial": "OFF", "mode-reason": "PRC", "msg": "CURRENT-STATE", "product-state": {"auto": "OFF", "ercd": "NONE", "fdir": "OFF", "filf": "0000", "fnsp": "0002", "fnst": "FAN", "fpwr": "ON", "nmod": "OFF", "oson": "OFF", "qtar": "0001", "rhtm": "ON", "sltm": "OFF", "wacd": "NONE"}, "rssi": "36", "scheduler": {"dstv": "0000", "srsc": "0000", "tzid": "0000"}, "state-reason": "NONE", "time": "2023-05-06T13:55:30.000Z"}
-{"data": {"hact": "0055", "noxl": "0001", "p10r": "0000", "p25r": "0000", "pm10": "0000", "pm25": "0000", "sltm": "OFF", "tact": "2971", "va10": "0004"}, "msg": "ENVIRONMENTAL-CURRENT-SENSOR-DATA", "time": "2023-05-06T13:55:31.000Z"}
 {"data": {"hact": "0055", "noxl": "0001", "p10r": "0000", "p25r": "0000", "pm10": "0000", "pm25": "0000", "sltm": "OFF", "tact": "2971", "va10": "0004"}, "msg": "ENVIRONMENTAL-CURRENT-SENSOR-DATA", "time": "2023-05-06T13:55:31.000Z"}
