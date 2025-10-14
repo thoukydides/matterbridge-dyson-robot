@@ -16,6 +16,7 @@ export enum DysonAirErrorCodeEnum {
     OscillationDisabled     = '11E1',
     Unknown12D2             = '12D2',
     Unknown12E1             = '12E1',
+    Unknown14II             = '14II',
     Unknown26U1             = '26U1',
     Unknown31U2             = '31U2',
     Unknown34U5             = '34U5',
@@ -25,7 +26,8 @@ export enum DysonAirErrorCodeEnum {
 }
 export type DysonAirErrorCode = DysonAirErrorCodeEnum | string;
 export enum DysonAirWarningCodeEnum {
-    None                    = 'NONE'
+    None                    = 'NONE',
+    UnknownFLTR             = 'FLTR'
 }
 export type DysonAirWarningCode = DysonAirWarningCodeEnum | string;
 
