@@ -84,7 +84,7 @@
         "ts-interface-builder": "^0.3.3",
         "tsx": "^4.20.6",
         "typescript": "^5.9.3",
-        "typescript-eslint": "^8.46.0"
+        "typescript-eslint": "^8.46.1"
     },
     "scripts": {
         "presetup-matterbridge-github-clone": "rimraf $MATTERBRIDGE_DIR",
