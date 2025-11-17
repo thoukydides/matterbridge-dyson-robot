@@ -124,7 +124,7 @@ export abstract class DysonDevice360Base extends DysonDevice<DysonMqtt360> {
 
         // Static configuration of the RVC clusters
         const endpointOptions: EndpointOptions360 = {
-            uniqueStorageKey:       this.uniqueId,
+            id:                     this.uniqueId,
             matterbridgeDeviceName: this.deviceName,
             basicInformation: {
                 nodeLabel:          this.deviceName,

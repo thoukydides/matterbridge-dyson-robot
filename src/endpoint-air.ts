@@ -310,11 +310,11 @@ export class EndpointsAir {
         const debug = config.debugFeatures.includes('Log Endpoint Debug');
 
         // Construct a unique Matter.js endpoint identifier
-        const uniqueStorageKey = `${options.uniqueStorageKey}-${endpointName.toLowerCase()}`;
+        const id = `${options.id}-${endpointName.toLowerCase()}`;
 
         if (parent) {
             // Create a child endpoint with an Identify cluster
-            const endpoint = parent.addChildDeviceType(endpointName, definition, { uniqueStorageKey }, debug);
+            const endpoint = parent.addChildDeviceType(endpointName, definition, { id }, debug);
             endpoint.createDefaultIdentifyClusterServer();
             return endpoint;
         } else {
@@ -327,7 +327,7 @@ export class EndpointsAir {
             const suffix = `-${this.bridged.length}`;
             const uniqueId = `${deviceBasicInformation.uniqueId.substring(0, 32 - suffix.length)}${suffix}`;
             const nodeOptions: EndpointOptionsBase = {
-                uniqueStorageKey,
+                id,
                 matterbridgeDeviceName,
                 basicInformation: {
                     ...deviceBasicInformation,

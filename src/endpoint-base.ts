@@ -42,7 +42,7 @@ export interface BasicInformationOptions {
 }
 export interface EndpointOptionsBase {
     // Matter.js endpoint identifier
-    uniqueStorageKey:       string;
+    id:                     string;
     // Matterbridge's unique endpoint name
     matterbridgeDeviceName: string;
     // Static configuration of cluster attributes
@@ -76,9 +76,9 @@ export class EndpointBase extends MatterbridgeEndpoint {
         }
 
         // Initialise the base class
-        const { uniqueStorageKey } = options;
+        const { id } = options;
         const debug = config.debugFeatures.includes('Log Endpoint Debug');
-        super(definition, { uniqueStorageKey, mode }, debug);
+        super(definition, { id, mode }, debug);
 
         // Use supplied logger instead of the one created by the base class
         this.log = log;

@@ -104,7 +104,7 @@ export abstract class DysonDeviceAirBase extends DysonDevice<DysonMqttAir> {
     makeEndpoints(validatedNames: EntityName[]): EndpointsAir {
         // Static configuration of the air purifier clusters
         const endpointOptions: EndpointOptionsAir = {
-            uniqueStorageKey:       this.uniqueId,
+            id:                     this.uniqueId,
             matterbridgeDeviceName: this.deviceName,
             validatedNames,
             basicInformation: {
