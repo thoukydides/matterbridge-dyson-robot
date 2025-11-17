@@ -72,7 +72,7 @@ export class PlatformDyson extends MatterbridgeDynamicPlatform {
 
     // Handle action button presses in the Matterbridge frontend
     async onAction(action: string, value?: string, id?: string, config?: PlatformConfig): Promise<void> {
-        const { frontend } = this.matterbridge;
+        //const { frontend } = this.matterbridge;
         this.log.debug(`Action ${PLUGIN_NAME}: ${action}${value ? ` with ${value}` : ''}${id ? ` for schema ${id}` : ''}`);
 
         // Select the Dyson account configuration to authorise
@@ -95,9 +95,9 @@ export class PlatformDyson extends MatterbridgeDynamicPlatform {
             this.log.warn('Check your email (and spam filters) for a MyDyson message containing an OTP code');
             this.log.warn('Enter the OTP code and click SUBMIT CODE to complete authorisation');
             if (success) {
-                frontend.wssSendSnackbarMessage('MyDyson account authorisation started - enter OTP code from email', 5);
+                //frontend.wssSendSnackbarMessage('MyDyson account authorisation started - enter OTP code from email', 5);
             } else {
-                frontend.wssSendSnackbarMessage('Continuing previous MyDyson account authorisation', 5, 'warning');
+                //frontend.wssSendSnackbarMessage('Continuing previous MyDyson account authorisation', 5, 'warning');
             }
             break;
         }
@@ -105,8 +105,8 @@ export class PlatformDyson extends MatterbridgeDynamicPlatform {
             // Use the provided OTP code to finish authorisation
             await api.finishAuth(value ?? '');
             this.log.warn('MyDyson account access authorised; Restart Matterbridge');
-            frontend.wssSendSnackbarMessage('MyDyson account authorised; restart required', 10, 'success');
-            frontend.wssSendRestartRequired();
+            //frontend.wssSendSnackbarMessage('MyDyson account authorised; restart required', 10, 'success');
+            this.wssSendRestartRequired();
             break;
         default:
             this.log.error(`Unexpected action: ${action}`);
