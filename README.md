@@ -5,9 +5,9 @@
 
 # matterbridge-dyson-robot
 
-[![npm](https://badgen.net/npm/v/matterbridge-dyson-robot)](https://www.npmjs.com/package/matterbridge-dyson-robot)
-[![npm](https://badgen.net/npm/dt/matterbridge-dyson-robot)](https://www.npmjs.com/package/matterbridge-dyson-robot)
-[![npm](https://badgen.net/npm/dw/matterbridge-dyson-robot)](https://www.npmjs.com/package/matterbridge-dyson-robot)
+[![npm](https://img.shields.io/npm/v/matterbridge-dyson-robot?label=Latest)](https://www.npmjs.com/package/matterbridge-dyson-robot)
+[![npm](https://img.shields.io/npm/dt/matterbridge-dyson-robot?logo=npm&label=Downloads)](https://www.npmjs.com/package/matterbridge-dyson-robot)
+[![npm](https://img.shields.io/npm/dw/matterbridge-dyson-robot?label=)](https://www.npmjs.com/package/matterbridge-dyson-robot)
 [![Build and Lint](https://github.com/thoukydides/matterbridge-dyson-robot/actions/workflows/build.yml/badge.svg)](https://github.com/thoukydides/matterbridge-dyson-robot/actions/workflows/build.yml)
 [![Test](https://github.com/thoukydides/matterbridge-dyson-robot/actions/workflows/test.yml/badge.svg)](https://github.com/thoukydides/matterbridge-dyson-robot/actions/workflows/test.yml)
 
