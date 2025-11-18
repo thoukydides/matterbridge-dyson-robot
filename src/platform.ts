@@ -261,14 +261,10 @@ export class PlatformDyson extends MatterbridgeDynamicPlatform {
 
 // Matterbridge snackbar compatibility across versions
 type WssSendSnackbarMessage = (message: string, timeout?: number, severity?: 'error' | 'success' | 'info' | 'warning') => void;
-interface PlatformWithSnackbar { wssSendSnackbarMessage: WssSendSnackbarMessage; }
-interface FrontendWithSnackbar { frontend: PlatformWithSnackbar }
+interface PlatformWithSnackbar { wssSendSnackbarMessage?: WssSendSnackbarMessage; }
+interface FrontendWithSnackbar { frontend?: { wssSendSnackbarMessage: WssSendSnackbarMessage; } }
 function getWssSendSnackbarMessage(platform: MatterbridgeDynamicPlatform): WssSendSnackbarMessage | undefined {
-    if ('wssSendSnackbarMessage' in platform) {
-        return (platform as PlatformWithSnackbar).wssSendSnackbarMessage.bind(platform);
-    }
-    if ('frontend' in platform.matterbridge) {
-        const { frontend } = platform.matterbridge as FrontendWithSnackbar;
-        return frontend.wssSendSnackbarMessage.bind(frontend);
-    }
+    const { frontend } = platform.matterbridge as FrontendWithSnackbar;
+    return (platform as PlatformWithSnackbar).wssSendSnackbarMessage?.bind(platform)
+        ?? frontend?.wssSendSnackbarMessage.bind(frontend);
 }
