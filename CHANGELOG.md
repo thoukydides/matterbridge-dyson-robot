@@ -4,9 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v1.6.7] - 2025-11-18
+### Changed
+* Restored "snackbar" messages for authentication progress.
+
 ## [v1.6.6] - 2025-11-17
 ### Changed
-* Compatibility with Matterbridge version 3.3.9.
+* Compatibility with Matterbridge version 3.4.0.
 * Updated dependencies.
 
 ## [v1.6.5] - 2025-10-15
@@ -222,7 +226,8 @@ All notable changes to this project will be documented in this file.
 
 Copyright © 2025 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.6.6...HEAD
+[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.6.7...HEAD
+[v1.6.7]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.6.6...v1.6.7
 [v1.6.6]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.6.5...v1.6.6
 [v1.6.5]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.6.4...v1.6.5
 [v1.6.4]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.6.3...v1.6.4
