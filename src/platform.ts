@@ -72,7 +72,7 @@ export class PlatformDyson extends MatterbridgeDynamicPlatform {
 
     // Handle action button presses in the Matterbridge frontend
     async onAction(action: string, value?: string, id?: string, config?: PlatformConfig): Promise<void> {
-        //const { frontend } = this.matterbridge;
+        const wssSendSnackbarMessage = getWssSendSnackbarMessage(this);
         this.log.debug(`Action ${PLUGIN_NAME}: ${action}${value ? ` with ${value}` : ''}${id ? ` for schema ${id}` : ''}`);
 
         // Select the Dyson account configuration to authorise
@@ -95,9 +95,9 @@ export class PlatformDyson extends MatterbridgeDynamicPlatform {
             this.log.warn('Check your email (and spam filters) for a MyDyson message containing an OTP code');
             this.log.warn('Enter the OTP code and click SUBMIT CODE to complete authorisation');
             if (success) {
-                //frontend.wssSendSnackbarMessage('MyDyson account authorisation started - enter OTP code from email', 5);
+                wssSendSnackbarMessage?.('MyDyson account authorisation started - enter OTP code from email', 5);
             } else {
-                //frontend.wssSendSnackbarMessage('Continuing previous MyDyson account authorisation', 5, 'warning');
+                wssSendSnackbarMessage?.('Continuing previous MyDyson account authorisation', 5, 'warning');
             }
             break;
         }
@@ -105,7 +105,7 @@ export class PlatformDyson extends MatterbridgeDynamicPlatform {
             // Use the provided OTP code to finish authorisation
             await api.finishAuth(value ?? '');
             this.log.warn('MyDyson account access authorised; Restart Matterbridge');
-            //frontend.wssSendSnackbarMessage('MyDyson account authorised; restart required', 10, 'success');
+            wssSendSnackbarMessage?.('MyDyson account authorised; restart required', 10, 'success');
             this.wssSendRestartRequired();
             break;
         default:
@@ -256,5 +256,19 @@ export class PlatformDyson extends MatterbridgeDynamicPlatform {
     // Description of the registered device(s)
     get devicesDescription(): string {
         return plural(this.devices.length, 'Dyson device');
+    }
+}
+
+// Matterbridge snackbar compatibility across versions
+type WssSendSnackbarMessage = (message: string, timeout?: number, severity?: 'error' | 'success' | 'info' | 'warning') => void;
+interface PlatformWithSnackbar { wssSendSnackbarMessage: WssSendSnackbarMessage; }
+interface FrontendWithSnackbar { frontend: PlatformWithSnackbar }
+function getWssSendSnackbarMessage(platform: MatterbridgeDynamicPlatform): WssSendSnackbarMessage | undefined {
+    if ('wssSendSnackbarMessage' in platform) {
+        return (platform as PlatformWithSnackbar).wssSendSnackbarMessage.bind(platform);
+    }
+    if ('frontend' in platform.matterbridge) {
+        const { frontend } = platform.matterbridge as FrontendWithSnackbar;
+        return frontend.wssSendSnackbarMessage.bind(frontend);
     }
 }
