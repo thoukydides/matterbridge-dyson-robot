@@ -35,11 +35,11 @@ export interface DysonAirMsgHello extends DysonMsg {
     macAddress:             string; // e.g. "C8:FF:77:XX:XX:XX"
     moduleHardware?:        string; // e.g. '140762-01-07'
     moduleBootloader?:      string; // e.g. '-.-.-.-'
-    moduleSoftware:         string; // e.g. '5227'
-    moduleNwp:              string; // e.g. '2.11.0.1'
-    productHardware:        string; // e.g. '306614-01-03'
-    productBootloader:      string; // e.g. '000000.00.00'
-    productSoftware:        string; // e.g. '000027.19.59'
+    moduleSoftware?:        string; // e.g. '5227'
+    moduleNwp?:             string; // e.g. '2.11.0.1'
+    productHardware?:       string; // e.g. '306614-01-03'
+    productBootloader?:     string; // e.g. '000000.00.00'
+    productSoftware?:       string; // e.g. '000027.19.59'
     resetSource:            DysonAirResetSource;
 }
 
