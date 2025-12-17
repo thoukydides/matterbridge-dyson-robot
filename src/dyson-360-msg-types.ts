@@ -4,13 +4,15 @@
 import {
     Dyson360ActiveFault,
     Dyson360CleaningMode,
+    Dyson360CleaningProgramme,
     Dyson360CleaningStrategy,
     Dyson360CleaningType,
     Dyson360Faults,
     Dyson360OutOfBoxState,
     Dyson360Position,
     Dyson360PowerMode,
-    Dyson360State
+    Dyson360State,
+    Dyson360ZoneStatus
 } from './dyson-360-types.js';
 import { DysonModeReason, DysonMsg } from './dyson-types.js';
 
@@ -65,6 +67,7 @@ export interface Dyson360MsgCurrentState extends DysonMsg {
     channel?:                   string; // Wi-Fi channel number
     cleanDuration?:             number; // Seconds
     cleanId?:                   string; // UUID
+    cleaningProgramme?:         Dyson360CleaningProgramme;
     currentCleaningMode?:       Dyson360CleaningMode;
     currentCleaningStrategy?:   Dyson360CleaningStrategy,
     currentVacuumPowerMode:     Dyson360PowerMode;
@@ -75,9 +78,14 @@ export interface Dyson360MsgCurrentState extends DysonMsg {
     fullCleanType:              Dyson360CleaningType;
     globalPosition?:            Dyson360Position;
     outOfBoxState?:             Dyson360OutOfBoxState;
+    persistentMapId?:           string; // UUID
     rssi?:                      string; // Wi-Fi RSSI dBm
     sessionId?:                 string; // UUID
     state:                      Dyson360State;
+    traverseTargetId?:          string; // e.g. '1'
+    zoneId?:                    string; // e.g. '1'
+    zonesDefinitionVersion?:    string; // e.g. '2024-09-17T23:08:23.9939605Z'
+    zoneStatus?:                Dyson360ZoneStatus[];
 }
 
 export interface Dyson360MsgStateChange extends DysonMsg {
@@ -87,6 +95,7 @@ export interface Dyson360MsgStateChange extends DysonMsg {
     channel?:                   string; // Wi-Fi channel number
     cleanDuration?:             number; // Seconds
     cleanId?:                   string; // UUID
+    cleaningProgramme?:         Dyson360CleaningProgramme;
     currentCleaningMode?:       Dyson360CleaningMode;
     currentCleaningStrategy?:   Dyson360CleaningStrategy,
     currentVacuumPowerMode:     Dyson360PowerMode;
@@ -110,6 +119,7 @@ export interface Dyson360MsgStateChange extends DysonMsg {
     sessionId?:                 string; // UUID
     traverseTargetId?:          string; // e.g. '1'
     zonesDefinitionVersion?:    string; // e.g. '2024-09-17T23:08:23.9939605Z'
+    zoneStatus?:                Dyson360ZoneStatus[];
 }
 
 export interface Dyson360MsgMapData extends DysonMsg {
@@ -161,8 +171,11 @@ export interface Dyson360MsgRequestCurrentState extends DysonMsg {
 export interface Dyson360MsgStateSet extends DysonMsg {
     msg:                        'STATE-SET';
     'mode-reason':              DysonModeReason;
-    data: {
+    data?: {
         defaultVacuumPowerMode: Dyson360PowerMode;
+    }
+    defaults?: {
+        defaultCleaningStrategy: Dyson360CleaningStrategy
     }
 }
 
@@ -171,6 +184,7 @@ export interface Dyson360MsgStart extends DysonMsg {
     'mode-reason'?:             DysonModeReason;
     fullCleanType:              Dyson360CleaningType;
     cleaningMode?:              Dyson360CleaningMode;
+    cleaningProgramme?:         Dyson360CleaningProgramme;
     vacuumPowerMode?:           Dyson360PowerMode;
     cleanId?:                   string; // UUID
 }
@@ -188,4 +202,8 @@ export interface Dyson360MsgResume extends DysonMsg {
 export interface Dyson360MsgAbort extends DysonMsg {
     msg:                        'ABORT'; // GoHome
     'mode-reason':              DysonModeReason;
+}
+
+export interface Dyson360MsgPersistentMapManifestUpdated extends DysonMsg {
+    msg:                        'PERSISTENT-MAP-MANIFEST-UPDATED'
 }

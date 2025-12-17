@@ -101,7 +101,8 @@ export enum Dyson360CleaningType {
     Unknown                         = '',
     Immediate                       = 'immediate',
     Manual                          = 'manual',
-    Scheduled                       = 'scheduled'
+    Scheduled                       = 'scheduled',
+    Mapping                         = 'mapping'
 }
 
 // Dyson robot vacuum cleaning mode (Heurist and Vis Nav only)
@@ -110,9 +111,33 @@ export enum Dyson360CleaningMode {
     ZoneConfigured                  = 'zoneConfigured'
 }
 
+// Dyson robot vacuum cleaning programme (Heurist and Vis Nav only)
+export interface Dyson360CleaningProgramme {
+    orderedZones:                   [];
+    persistentMapId:                string;     // UUID
+    unorderedZones:                 string[];   // e.g. ['4','1','2','3']
+    zonesDefinitionLastUpdatedDate: string;     // e.g. '2025-12-17T10:53:21.8147587Z'
+}
+
+// Dyson robot vacuum zone status (Heurist and Vis Nav only)
+export enum Dyson360ZoneCleanStatus {
+    NotRequested                    = 'CLEAN_NOT_REQUESTED',
+    Unable                          = 'CANT_CLEAN',
+    Pending                         = 'CLEAN_PENDING',
+    InProgress                      = 'CLEAN_IN_PROGRESS',
+    Complete                        = 'CLEAN_COMPLETE'
+}
+export interface Dyson360ZoneStatus {
+    cleanStatus:                    Dyson360ZoneCleanStatus;
+    zoneId:                         string; // e.g. '1'
+}
+
 // Dyson robot vacuum cleaning strategy
 export enum Dyson360CleaningStrategy {
     Auto                            = 'auto',
+    Quick                           = 'quick',
+    Quiet                           = 'quiet',
+    Boost                           = 'boost',
     Mixed                           = 'mixed'
 }
 
@@ -132,5 +157,8 @@ export interface Dyson360MapData {
 
 // Dyson robot vacuum initial setup state
 export enum Dyson360OutOfBoxState {
+    AwaitingMapping                 = 'AWAITING_SUCCESSFUL_MAPPING',
+    AwaitingMapUploadingCompletion  = 'AWAITING_MAP_UPLOADING_COMPLETION',
+    AwaitingZoningCompletion        = 'AWAITING_ZONING_COMPLETION',
     Complete                        = 'OUT_OF_BOX_COMPLETE'
 }
