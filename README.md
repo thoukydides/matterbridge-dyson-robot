@@ -18,7 +18,7 @@ to the [Matter](https://csa-iot.org/all-solutions/matter/) smart home ecosystem 
 
 ## Installation
 
-This plugin supports multiple methods for configuring and connecting to Dyson robot vacuum and air treatment devices. The following instructions are for cloud-based connection via a MyDyson account and the Dyson AWS IoT MQTT gateway, which is the recommended approach (and the only one compatible with Dyson 360 Vis Nav robot vacuums). See [Alternative Provisioning Methods](#provisioning-methods) (below) for options to connect to supported devices locally.
+This plugin supports multiple methods for configuring and connecting to Dyson robot vacuum and air treatment devices. The following instructions are for cloud-based connection via a MyDyson account and the Dyson AWS IoT MQTT gateway, which is the recommended approach (and the only one compatible with some recent products such as Dyson 360 Vis Nav robot vacuums). See [Alternative Provisioning Methods](#provisioning-methods) (below) for options to connect to supported devices locally.
 
 ### Step 1 - Create Account and Connect Devices
 1. Use the MyDyson [iPhone](https://apps.apple.com/gb/app/mydyson/id993135524) or [Android](https://play.google.com/store/apps/details?id=com.dyson.mobile.android) app to create an account.
@@ -282,7 +282,7 @@ The following sections describe the functionality exposed to Matter. Different e
 
 Each robot vacuum appears as a standalone Matter device with a single endpoint. This supports basic start/stop/pause/resume control and changing power mode. Detailed status information is provided for the robot vacuum's activity, battery, and any faults.
 
-Zone cleaning and mapping control are not currently supported, as Dyson's MQTT API does not appear to expose these functions.
+Zone cleaning is not currently supported; access to the maps and zone configuration needs to be implemented via the MyDyson account instead of the MQTT API used for everything else.
 
 #### Robotic Vacuum Cleaner Device
 
@@ -292,13 +292,13 @@ Zone cleaning and mapping control are not currently supported, as Dyson's MQTT A
   - `Mapping`: Status only; no information is available about how to initiate mapping via MQTT.
 
 - **RVC Clean Mode** cluster:
-  | Mode       | Dyson 360 Eye | Dyson Heurist | Dyson Vis Nav |
-  | ---------- | :-----------: | :-----------: | :-----------: |
-  | `Quiet`    | Quiet         | Quiet         | Quiet         |
-  | `Quick`    |               |               | Quick         |
-  | `High`     |               | High          |               |
-  | `MaxBoost` | Max           | Max           | Boost         |
-  | `Auto`     |               |               | Auto          |
+  | Mode       | Dyson 360 Eye | Dyson 360 Heurist | Dyson 360 Vis Nav | Dyson Spot+Clean |
+  | ---------- | :-----------: | :---------------: | :---------------: | :--------------: |
+  | `Quiet`    | Quiet         | Quiet             | Quiet             | Quiet            |
+  | `Quick`    |               |                   | Quick             | Quick            |
+  | `High`     |               | High              |                   |                  |
+  | `MaxBoost` | Max           | Max               | Boost             | Boost            |
+  | `Auto`     |               |                   | Auto              | Auto             |
 
 **RVC Operational State** cluster:
   - `Pause`: Pause cleaning or mapping activity.
@@ -311,7 +311,7 @@ Zone cleaning and mapping control are not currently supported, as Dyson's MQTT A
   - Battery charge level and charging status.
   - Any active fault.
 
-No **Service Area** cluster is implemented; zone cleaning does not appear to be controllable via MQTT commands.
+No **Service Area** cluster is currently implemented.
 
 </details>
 
@@ -409,6 +409,7 @@ This plugin has been tested with the following devices:
 | Description                               | Model     | MQTT Root Topic | Firmware                | Tested By
 | ----------------------------------------- | :-------: | :-------------: | :---------------------: | ---
 | Dyson 360 Eye robot vacuum                | RB01      | `N223`          | `11.3.5.10`             | Developer
+| Dyson 360 Vis Nav robot vacuum            | RB03      | `277`           | `RB03PR.01.08.006.5079` | Developer
 | Dyson Pure Humidify+Cool                  | PH01      | `358`           |                         | MQTT logs
 | Dyson Pure Humidify+Cool Cryptomic        | PH02      | `358`           | `ECG2PF.46.00.007.0003` | MQTT logs
 | Dyson Purifier Humidify+Cool Formaldehyde | PH04      | `358E`          | `ECG2PF.47.01.000.0005` | MQTT logs
@@ -499,7 +500,7 @@ This plugin enables essential status monitoring and control interoperability bet
 
 However, Dyson may change their APIs or terms of service at any time, potentially rendering this plugin non-functional or causing unexpected behaviour. By using this plugin, you acknowledge and accept the inherent risks associated with interacting with unofficial APIs. Your use of this plugin is entirely at your own risk. If Dyson chooses to offer an official API or integration mechanism, this project will aim to migrate to that instead.
 
-Dyson, Dyson Cool, Dyson Hot, Dyson Hot+Cool, Dyson Pure, Dyson Pure Cool, Dyson Pure Cool Link, Dyson Pure Hot+Cool Link, Dyson Pure Humidify+Cool, Dyson 360 Eye, Dyson 360 Heurist, and Dyson 360 Vis Nav, are trademarks of Dyson Technology Limited.
+Dyson, Dyson Cool, Dyson Hot, Dyson Hot+Cool, Dyson Pure, Dyson Pure Cool, Dyson Pure Cool Link, Dyson Pure Hot+Cool Link, Dyson Pure Humidify+Cool, Dyson 360 Eye, Dyson 360 Heurist, Dyson 360 Vis Nav, and Dyson Spot+Clean, are trademarks of Dyson Technology Limited.
 
 ### ISC License (ISC)
 
