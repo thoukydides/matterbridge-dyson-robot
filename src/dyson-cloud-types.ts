@@ -126,3 +126,31 @@ export interface DysonIoTCredentialsResponse {
     Endpoint:               string; // e.g. 'a1u2wvl3e2lrc4-ats.iot.eu-west-1.amazonaws.com'
     IoTCredentials:         DysonIoTCredentials;
 }
+
+// GET /v1/machine/{serial}/timezone
+export interface DysonTimezoneResponse {
+    timezone:               string; // e.g. 'Europe/London'
+}
+
+// GET /v1/userregistration/ownership?country={countrycode}&serial={serial}
+export enum DysonOwnershipStatus {
+    Registered              = 'REGISTERED_TO_THIS_ACCOUNT'
+}
+export interface DysonOwnershipResponse {
+    deviceStatus:           DysonOwnershipStatus;
+}
+
+// GET /v1/unifiedscheduler/{serial}/events?productType={mqttroottopic}
+export interface DysonUnifiedschedulerEvent {
+    days:                   number[];
+    enabled:                boolean;
+    groupId:                number;
+    settings:               unknown;
+    startTime:              string; // e.g. '09:00' or '20:00:00'
+    weeklyRepeat:           boolean;
+}
+export interface DysonUnifiedschedulerEventsResponse {
+    enabled:                boolean;
+    events:                 DysonUnifiedschedulerEvent[];
+    serial:                 string;
+}

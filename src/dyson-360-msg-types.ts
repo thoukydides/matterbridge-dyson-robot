@@ -185,6 +185,7 @@ export interface Dyson360MsgStart extends DysonMsg {
     fullCleanType:              Dyson360CleaningType;
     cleaningMode?:              Dyson360CleaningMode;
     cleaningProgramme?:         Dyson360CleaningProgramme;
+    cleaningStrategy?:          Dyson360CleaningStrategy;
     vacuumPowerMode?:           Dyson360PowerMode;
     cleanId?:                   string; // UUID
 }
