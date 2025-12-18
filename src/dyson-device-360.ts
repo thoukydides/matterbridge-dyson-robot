@@ -45,11 +45,36 @@ export class DysonDevice360Heurist extends DysonDevice360Base {
     ];
 }
 
-// Alias without any functional differences
-export class DysonDevice360VisNav extends DysonDevice360Heurist {
+// A Dyson 360 Vis Nav device
+export class DysonDevice360VisNav extends DysonDevice360Base {
     static readonly model = { type: '277', number: 'RB03', name: '360 Vis Nav' };
 
     override getBatteryPartNumber = () => '967864-02';
+
+    override getProductAppearance = () => ({
+        finish:         BasicInformation.ProductFinish.Satin,
+        primaryColor:   BasicInformation.Color.Blue
+    });
+
+    override getPowerModeMaps = (): PowerModeMap[] => [
+        [Dyson360VisNavPowerMode.Auto,      RvcCleanMode360.Auto,       'Auto'],
+        [Dyson360VisNavPowerMode.Quick,     RvcCleanMode360.Quick,      'Quick'],
+        [Dyson360VisNavPowerMode.Quiet,     RvcCleanMode360.Quiet,      'Quiet'],
+        [Dyson360VisNavPowerMode.Boost,     RvcCleanMode360.MaxBoost,   'Boost'],
+        [Dyson360VisNavPowerMode.Unknown,   RvcCleanMode360.Auto,       'Auto']
+    ];
+}
+
+// A Dyson 360 Spot+Scrub device
+export class DysonDevice360SpotScrub extends DysonDevice360Base {
+    static readonly model = { type: '804', number: 'RB05', name: 'Spot+Scrub' };
+
+    override getBatteryPartNumber = () => '975571-01';
+
+    override getProductAppearance = () => ({
+        finish:         BasicInformation.ProductFinish.Matte,
+        primaryColor:   BasicInformation.Color.Black
+    });
 
     override getPowerModeMaps = (): PowerModeMap[] => [
         [Dyson360VisNavPowerMode.Auto,      RvcCleanMode360.Auto,       'Auto'],
