@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v1.6.9] - 2025-12-18
+### Fixed
+* Accept additional changes to MQTT messages for Dyson 360 Vis Nav.
+### Changed
+* Updated dependencies.
+
 ## [v1.6.8] - 2025-12-14
 ### Fixed
 * Accept `HELLO` MQTT messages from BP03.
@@ -232,7 +238,8 @@ All notable changes to this project will be documented in this file.
 
 Copyright © 2025 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.6.8...HEAD
+[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.6.9...HEAD
+[v1.6.9]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.6.8...v1.6.9
 [v1.6.8]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.6.7...v1.6.8
 [v1.6.7]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.6.6...v1.6.7
 [v1.6.6]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.6.5...v1.6.6
