@@ -144,7 +144,7 @@ export abstract class DysonDevice360Base extends DysonDevice<DysonMqtt360> {
             },
             rvcCleanMode: {
                 labels:             rvcCleanModeLabels,
-                simpleModeTags:     true // HERE - ...
+                simpleModeTags:     this.config.simpleModeTagsRvc
             }
         };
 
