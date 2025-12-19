@@ -2,31 +2,8 @@
 // Copyright © 2025 Alexander Thoukydides
 
 import { DysonDevice } from './dyson-device-base.js';
-import {
-    DysonDevice360Eye,
-    DysonDevice360Heurist,
-    DysonDevice360VisNav
-} from './dyson-device-360.js';
-import {
-    DysonDeviceAirCool,
-    DysonDeviceAirCoolDesk,
-    DysonDeviceAirCoolE,
-    DysonDeviceAirCoolK,
-    DysonDeviceAirCoolM,
-    DysonDeviceAirCoolLink,
-    DysonDeviceAirCoolLinkDesk,
-    DysonDeviceAirHotCool,
-    DysonDeviceAirHotCoolE,
-    DysonDeviceAirHotCoolK,
-    DysonDeviceAirHotCoolM,
-    DysonDeviceAirHotCoolLink,
-    DysonDeviceAirHotCoolLinkA,
-    DysonDeviceAirHumidifyCool,
-    DysonDeviceAirHumidifyCoolE,
-    DysonDeviceAirHumidifyCoolK,
-    DysonDeviceAirBigQuiet,
-    DysonDeviceCool
-} from './dyson-device-air.js';
+import { DYSON_DEVICE_TYPES_360 } from './dyson-device-360.js';
+import { DYSON_DEVICE_TYPES_AIR } from './dyson-device-air.js';
 import { Config } from './config-types.js';
 import { AnsiLogger } from 'matterbridge/logger';
 import { MS, UnionToIntersection } from './utils.js';
@@ -36,29 +13,8 @@ import NodePersist from 'node-persist';
 
 // List of constructors for Dyson devices
 const DYSON_DEVICE_TYPES = [
-    // Dyson robot vacuum device types
-    DysonDevice360Eye,
-    DysonDevice360Heurist,
-    DysonDevice360VisNav,
-    // Dyson air treatment device types
-    DysonDeviceAirCool,
-    DysonDeviceAirCoolDesk,
-    DysonDeviceAirCoolE,
-    DysonDeviceAirCoolK,
-    DysonDeviceAirCoolM,
-    DysonDeviceAirCoolLink,
-    DysonDeviceAirCoolLinkDesk,
-    DysonDeviceAirHotCool,
-    DysonDeviceAirHotCoolE,
-    DysonDeviceAirHotCoolK,
-    DysonDeviceAirHotCoolM,
-    DysonDeviceAirHotCoolLink,
-    DysonDeviceAirHotCoolLinkA,
-    DysonDeviceAirHumidifyCool,
-    DysonDeviceAirHumidifyCoolE,
-    DysonDeviceAirHumidifyCoolK,
-    DysonDeviceAirBigQuiet,
-    DysonDeviceCool
+    ...DYSON_DEVICE_TYPES_360,
+    ...DYSON_DEVICE_TYPES_AIR
 ] as const;
 
 // Delay before falling back to using cached status (if any)

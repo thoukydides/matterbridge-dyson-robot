@@ -84,3 +84,11 @@ export class DysonDevice360SpotScrub extends DysonDevice360Base {
         [Dyson360VisNavPowerMode.Unknown,   RvcCleanMode360.Auto,       'Auto']
     ];
 }
+
+// List of constructors for Dyson robot vacuum devices
+export const DYSON_DEVICE_TYPES_360 = [
+    DysonDevice360Eye,
+    DysonDevice360Heurist,
+    DysonDevice360VisNav,
+    DysonDevice360SpotScrub
+] as const;

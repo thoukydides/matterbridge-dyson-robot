@@ -113,3 +113,25 @@ export class DysonDeviceCool extends DysonDeviceAirBase {
 }
 
 // =============================================================================
+
+// List of constructors for Dyson air treatment devices
+export const DYSON_DEVICE_TYPES_AIR = [
+    DysonDeviceAirCool,
+    DysonDeviceAirCoolDesk,
+    DysonDeviceAirCoolE,
+    DysonDeviceAirCoolK,
+    DysonDeviceAirCoolM,
+    DysonDeviceAirCoolLink,
+    DysonDeviceAirCoolLinkDesk,
+    DysonDeviceAirHotCool,
+    DysonDeviceAirHotCoolE,
+    DysonDeviceAirHotCoolK,
+    DysonDeviceAirHotCoolM,
+    DysonDeviceAirHotCoolLink,
+    DysonDeviceAirHotCoolLinkA,
+    DysonDeviceAirHumidifyCool,
+    DysonDeviceAirHumidifyCoolE,
+    DysonDeviceAirHumidifyCoolK,
+    DysonDeviceAirBigQuiet,
+    DysonDeviceCool
+] as const;
