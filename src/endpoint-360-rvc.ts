@@ -17,6 +17,7 @@ import {
 } from './endpoint-360-behavior.js';
 import { RvcOperationalStateError } from './error-360.js';
 import { Endpoint } from 'matterbridge/matter';
+import { assertIsDefined } from './utils.js';
 
 // Device-specific endpoint configuration
 export interface BatteryPowerSourceOptions {
@@ -25,6 +26,7 @@ export interface BatteryPowerSourceOptions {
 export type RvcCleanModeLabels = [RvcCleanMode360, string][];
 export interface RvcCleanModeOptions {
     labels:                 RvcCleanModeLabels;
+    simpleModeTags:         boolean;
 }
 
 // Create the Power Source cluster for the rechargeable battery
@@ -100,39 +102,44 @@ export function createRvcRunModeClusterServer({ behaviors }: Endpoint): void {
 
 // Create the RVC Clean Mode cluster
 export function createRvcCleanModeClusterServer(
-    { behaviors }:  Endpoint,
-    { labels }:     RvcCleanModeOptions
+    { behaviors }:              Endpoint,
+    { labels, simpleModeTags }: RvcCleanModeOptions
 ): void {
-    // Mode tags to use for each mode
+    // Mode tags to use for each mode (only first tag used in simple mode)
     const CLEAN_MODE_TAGS: Record<RvcCleanMode360, { value: RvcCleanMode.ModeTag }[]> = {
         [RvcCleanMode360.Quiet]: [
+            { value: RvcCleanMode.ModeTag.Quiet },
             { value: RvcCleanMode.ModeTag.Vacuum },
             { value: RvcCleanMode.ModeTag.LowEnergy },
             { value: RvcCleanMode.ModeTag.LowNoise },
             { value: RvcCleanMode.ModeTag.Min },
-            { value: RvcCleanMode.ModeTag.Night },
-            { value: RvcCleanMode.ModeTag.Quiet }
+            { value: RvcCleanMode.ModeTag.Night }
         ],
         [RvcCleanMode360.Quick]: [
+            { value: RvcCleanMode.ModeTag.Quick },
             { value: RvcCleanMode.ModeTag.Vacuum },
-            { value: RvcCleanMode.ModeTag.Day },
-            { value: RvcCleanMode.ModeTag.Quick }
+            { value: RvcCleanMode.ModeTag.Day }
         ],
         [RvcCleanMode360.High]: [
+            { value: RvcCleanMode.ModeTag.DeepClean },
             { value: RvcCleanMode.ModeTag.Vacuum },
             { value: RvcCleanMode.ModeTag.Day }
         ],
         [RvcCleanMode360.MaxBoost]: [
+            { value: RvcCleanMode.ModeTag.Max },
             { value: RvcCleanMode.ModeTag.Vacuum },
-            { value: RvcCleanMode.ModeTag.Day },
-            { value: RvcCleanMode.ModeTag.DeepClean },
-            { value: RvcCleanMode.ModeTag.Max }
+            { value: RvcCleanMode.ModeTag.Day }
         ],
         [RvcCleanMode360.Auto]: [
-            { value: RvcCleanMode.ModeTag.Vacuum },
             { value: RvcCleanMode.ModeTag.Auto },
+            { value: RvcCleanMode.ModeTag.Vacuum },
             { value: RvcCleanMode.ModeTag.Day }
         ]
+    };
+    const modeTags = (mode: RvcCleanMode360): { value: RvcCleanMode.ModeTag }[] => {
+        const tags = CLEAN_MODE_TAGS[mode];
+        assertIsDefined(tags[0]);
+        return simpleModeTags ? [tags[0]] : tags;
     };
 
     // Create the cluster
@@ -145,7 +152,7 @@ export function createRvcCleanModeClusterServer(
         supportedModes: labels.map(([mode, label]) => ({
             label,
             mode,
-            modeTags:   CLEAN_MODE_TAGS[mode]
+            modeTags:   modeTags(mode)
         })),
         // Variable attributes (with dummy defaults)
         currentMode:    RvcCleanMode360.Quiet

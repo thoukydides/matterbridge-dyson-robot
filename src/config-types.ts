@@ -93,6 +93,7 @@ export interface ConfigBase {
     // Plugin configuration
     provisioningMethod:     ProvisioningMethod;
     enableServerRvc:        boolean;
+    simpleModeTagsRvc:      boolean;
     wildcardTopic:          boolean;
     logMapStyle:            LogMapStyle;
     debug:                  boolean;

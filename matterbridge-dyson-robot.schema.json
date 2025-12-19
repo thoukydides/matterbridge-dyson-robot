@@ -47,6 +47,11 @@
             "type": "boolean",
             "default": true
         },
+        "simpleModeTagsRvc": {
+            "description": "Use simplified ModeTag values for robot vacuum cleaners. When enabled, only the single most descriptive ModeTag is used for each cleaning (power) mode, which may improve compatibility with Matter controllers that have limited support for multiple tags, such as the Apple Home app.",
+            "type": "boolean",
+            "default": true
+        },
         "logMapStyle": {
             "description": "Select how robot vacuum cleaner maps should be displayed in the log at the end of cleans.",
             "type": "string",

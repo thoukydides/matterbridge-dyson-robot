@@ -40,6 +40,7 @@ export const DEFAULT_CONFIG: Readonly<Partial<Config>> = {
     }),
     wildcardTopic:          false,
     enableServerRvc:        true,
+    simpleModeTagsRvc:      true,
     logMapStyle:            'Matterbridge',
     debug:                  false,
     debugFeatures:          [],

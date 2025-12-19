@@ -143,7 +143,8 @@ export abstract class DysonDevice360Base extends DysonDevice<DysonMqtt360> {
                 batteryPartNumber:  this.getBatteryPartNumber()
             },
             rvcCleanMode: {
-                labels:             rvcCleanModeLabels
+                labels:             rvcCleanModeLabels,
+                simpleModeTags:     true // HERE - ...
             }
         };
 
