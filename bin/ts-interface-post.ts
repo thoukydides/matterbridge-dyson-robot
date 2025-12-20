@@ -15,19 +15,30 @@ if (!tiDirectory) {
     process.exit(1);
 }
 
-// Process all of the *-ti.ts files in the specified directory
+// Result of preprocessing a single *-ti.ts file
+interface TiDetails {
+    tiBase:             string;     // Base name of the type suite
+    safePath:           string;     // Path to the output file
+    typeSuiteMembers:   string[];   // List of type names in this type suite
+    importPaths:        string[];   // List of imported type suite variable names
+    modified:           boolean;    // Has the source file been modified
+}
+
+// Preprocess all of the *-ti.ts files in the specified directory
 const tiFiles = await readdir(tiDirectory);
+const tiDetails = new Map<string, TiDetails>();
 for (const tiFile of tiFiles) {
     if (!tiFile.endsWith(TI_SUFFIX)) continue;
     const tiBase = tiFile.slice(0, -TI_SUFFIX.length);
     const tiPath   = path.join(tiDirectory, tiFile);
     const srcPath  = path.join(tiDirectory, '..', `${tiBase}.ts`);
     const safePath = path.join(tiDirectory, `${tiBase}.ts`);
+    const destPath = path.join('./', `${tiBase}.js`);
 
     // Compare the file modification times
     const tiStat = await stat(tiPath);
     const safeStat = await stat(safePath).catch(() => null);
-    if (safeStat && tiStat.mtimeMs <= safeStat.mtimeMs) continue;
+    const modified = !safeStat || safeStat.mtimeMs < tiStat.mtimeMs;
 
     // Extract the members of the exportedTypeSuite
     const tiText = await readFile(tiPath, 'utf8');
@@ -37,19 +48,46 @@ for (const tiFile of tiFiles) {
         continue;
     }
     const typeSuiteMembers = typeSuite[1].split(',').map(l => l.trim());
-    console.log(`${tiFile}: Found ${typeSuiteMembers.length} types`);
 
     // Check whether any external type suites are referenced
     const srcText = await readFile(srcPath, 'utf8');
     const importMatches = srcText.matchAll(/^import.*?from '(.*?)'/mgs);
-    const importStatements: string[] = [], importedTypeSuites: string[] = [];
+    const importPaths: string[] = [];
     for (const importMatch of importMatches) {
         const importPath = importMatch[1];
         if (!importPath.endsWith('.js')) continue;
-        const importTypeSuite = `importedTypeSuite${importedTypeSuites.length}`;
-        importStatements.push(`import { typeSuite as ${importTypeSuite} } from '${importPath}';`);
-        importedTypeSuites.push(importTypeSuite);
+        importPaths.push(importPath);
     }
+
+    // Store the details for this type suite
+    tiDetails.set(destPath, { tiBase, safePath, typeSuiteMembers, importPaths, modified });
+}
+
+// Generate the type-safe interface for each file
+for (const [destPath, { tiBase, safePath, typeSuiteMembers }] of tiDetails.entries()) {
+    // Prepare import statements (recursively)
+    const importStatements: string[] = [], importedTypeSuites: string[] = [];
+    let modified = false;
+    const addImports = (destPath: string): void => {
+        const tiDetail = tiDetails.get(destPath);
+        if (!tiDetail) {
+            console.error(`Could not find imported type suite "${destPath}"`);
+            return;
+        }
+        for (const importPath of tiDetail.importPaths) {
+            const importTypeSuite = `importedTypeSuite${importedTypeSuites.length}`;
+            importStatements.push(`import { typeSuite as ${importTypeSuite} } from '${importPath}';`);
+            importedTypeSuites.push(importTypeSuite);
+            addImports(path.join(importPath));
+        }
+        modified ||= tiDetail.modified;
+    };
+    addImports(destPath);
+
+    // Skip if not modified
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+    if (!modified) continue;
+    console.log(`${tiBase}: Found ${typeSuiteMembers.length} types`);
 
     // Generate a type-safe interface
     const safeText =
