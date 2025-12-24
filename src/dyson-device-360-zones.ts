@@ -221,7 +221,7 @@ export function DysonDevice360ZonesMixin<TBase extends AbstractConstructor<Dyson
         // Retrieve the latest persistent maps
         async updateMaps(): Promise<boolean> {
             // Retrieve the latest persistent map metadata
-            assertIsDefined(this.api);
+            if (!this.api) return false;
             const metadata = await this.api.getPersistentMapMetadata360();
 
             // Check for any changes
