@@ -4,7 +4,12 @@
 import {
     Dyson360CleaningMode,
     Dyson360CleaningProgramme,
-    Dyson360CleaningStrategy
+    Dyson360CleaningStrategy,
+    Dyson360DustName,
+    Dyson360EyeEventPowerMode,
+    Dyson360TimelineEvent,
+    Dyson360ZoneIcon,
+    Dyson360ZoneStatus
 } from './dyson-360-types.js';
 import {
     DysonUnifiedschedulerEvent,
@@ -12,10 +17,6 @@ import {
 } from './dyson-cloud-types.js';
 
 // GET /v1/unifiedscheduler/{serial}/events?productType={mqttroottopic}
-export enum Dyson360EyeEventPowerMode {
-    Quiet                               = 1,
-    Max                                 = 0
-}
 export interface Dyson360UnifiedschedulerEvent extends DysonUnifiedschedulerEvent {
     settings: {
         cleaningProgramme:              Dyson360CleaningProgramme   | null;
@@ -46,13 +47,10 @@ export interface Dyson360CleanHistoryResponse {
     TriviaMessage:                      string; // e.g. ''
 }
 
-// GET /v1/mapvisualizer/devices/{serial}/map/{uuid} (Eye only)
-// Accept: image/png
-
 // GET /v1/app/{serial}/persistent-map-metadata (Vis Nav only)
 export interface Dyson360PersistentMapMetadataZone {
     area:                               number;
-    icon:                               string; // e.g. 'kitchen'
+    icon:                               Dyson360ZoneIcon;
     id:                                 string; // e.g. '1'
     name:                               string; // e.g. 'Kitchen'
 }
@@ -127,7 +125,7 @@ export interface Dyson360PersistentMapRestrictionsDefinition {
     persistentMapVersion:               number; // e.g. 3
     restrictions:                       Dyson360PersistentMapRestriction[];
 }
-export interface Dyson360PersistentMap {
+export interface Dyson360PersistentMapResponse {
     dockLocations:                      Dyson360PersistentMapLocation[],
     highSensitivityAdditionalObjects:   Dyson360PersistentMapBitmap;
     id:                                 string; // UUID
@@ -143,9 +141,51 @@ export interface Dyson360PersistentMap {
     zonesDefinition:                    Dyson360PersistentMapZonesDefinition;
 }
 
+// GET /v1/{serial}/clean-maps?dustMap=total
+export interface Dyson360CleanTimelineEntry {
+    eventName:                          Dyson360TimelineEvent;
+    time:                               string;         // e.g. '2025-12-23T09:00:25Z'
+    zone:                               string | null;  // e.g. '1'
+    targetZone:                         string | null;  // e.g. '1'
+    persistentMapId:                    string | null;  // UUID
+    reason:                             null;
+    faultCode:                          string | null;  // e.g. '23.1.-1'
+    faultType:                          string | null;  // e.g. 'BRUSH_BAR_AND_TRACTION'
+    faultLocation:                      Dyson360PersistentMapVertex | null;
+}
+export interface DysonCleanMapDustData {
+    name:                               Dyson360DustName; // (only 'total')
+    scaleFactor:                        number;
+    data:                               string; // base64 encoded, zlib deflate compressed, width×height octets
+}
+export interface DysonCleanMapDustMap {
+    width:                              number;
+    height:                             number;
+    resolution:                         number;
+    dustData:                           DysonCleanMapDustData[];
+}
+export interface Dyson360CleanMap {
+    cleanedFootprint:                   Dyson360PersistentMapBitmap;
+    cleanId:                            string; // UUID
+    cleanTimeline:                      Dyson360CleanTimelineEntry[];
+    dustMap:                            DysonCleanMapDustMap;
+    highSensitivityAdditionalObjects:   Dyson360PersistentMapBitmap;
+    lowSensitivityObjects:              Dyson360PersistentMapBitmap;
+    occupancyProbability:               Dyson360PersistentMapBitmap;
+    persistentMap: {
+        id:                             string; // UUID
+        cleanMapPosition:               Dyson360PersistentMapLocation;
+    };
+    robotPath:                          [];
+    sequenceNumber:                     number;
+    zones:                              Dyson360PersistentMapBitmap;
+    zoneStatus:                         Dyson360ZoneStatus | null;
+}
+export type Dyson360CleanMapsResponse = Dyson360CleanMap[];
+
 // GET /v1/app/{serial}/recommended-cleans (Vis Nav only)
 export interface Dyson360ZonePredictionDustMilligrams {
-    name:                               string; // e.g. 'extraFine', 'fine', 'medium', 'large', 'other', 'total'
+    name:                               Dyson360DustName;
     weight:                             number;
 }
 export interface Dyson360ZonePrediction {

@@ -21,10 +21,16 @@ import NodePersist from 'node-persist';
 import { DysonCloudAPI } from './dyson-cloud-api.js';
 import { assertIsDefined, columns, formatMilliseconds, MS, plural } from './utils.js';
 import { isSupportedModel } from './dyson-device.js';
-import { DeviceConfigRemoteMqtt } from './dyson-mqtt-client-live.js';
+import { DeviceConfigMqtt, DeviceConfigRemoteMqtt } from './dyson-mqtt-client-live.js';
 import { DysonCloudStatusCodeError } from './dyson-cloud-error.js';
 import { setTimeout } from 'node:timers/promises';
 import { logError } from './log-error.js';
+import { PrefixLogger } from './logger-prefix.js';
+import { DysonCloudAPIDevice } from './dyson-cloud-api-device.js';
+
+// Devices accessed via IoT MQTT can also use the Dyson cloud API
+type WithAPI<T> = T & { api?: DysonCloudAPIDevice; };
+export type DeviceConfigMqttWithApi = WithAPI<DeviceConfigMqtt>;
 
 // Persistent storage for an account
 interface PersistTokenData {
@@ -214,24 +220,26 @@ export class DysonCloudRemote extends DysonCloud<ConfigRemoteAccount> {
     }
 
     // Retrieve the list of devices in the account
-    async getDevices(): Promise<DeviceConfigRemoteMqtt[]> {
+    async getDevices(): Promise<WithAPI<DeviceConfigRemoteMqtt>[]> {
         // Retrieve a list of devices associated with the account
         const api = await this.api;
         const manifest = await api.getManifest();
 
         // Extract details of the devices supported by this plugin
         const rows: string[][] = [];
-        const deviceConfigs: DeviceConfigRemoteMqtt[] = [];
+        const deviceConfigs: WithAPI<DeviceConfigRemoteMqtt>[] = [];
         for (const device of manifest) {
             const { serialNumber, model, type, productName } = device;
             const name = device.name ?? productName;
+            const deviceLog = new PrefixLogger(this.log, name);
             let status: string;
             if (isSupportedModel(type)) {
                 assertIsDefined(device.connectedConfiguration);
                 status = 'SUPPORTED';
                 const { mqttRootTopicLevel: rootTopic } = device.connectedConfiguration.mqtt;
-                const getCredentials = async (log: AnsiLogger) => this.getIoT(log, serialNumber);
-                deviceConfigs.push({ name, serialNumber, rootTopic, getCredentials });
+                const deviceApi = api.createDeviceClient(deviceLog, serialNumber, rootTopic);
+                const getCredentials = async () => this.getIoT(deviceApi);
+                deviceConfigs.push({ name, serialNumber, rootTopic, getCredentials, api: deviceApi });
             } else status = '(unsupported)';
             rows.push([serialNumber, `"${name}"`, type, model, productName, status]);
         }
@@ -244,14 +252,14 @@ export class DysonCloudRemote extends DysonCloud<ConfigRemoteAccount> {
     }
 
     // Retrieve the AWS IoT credentials for a single device
-    async getIoT(log: AnsiLogger, serialNumber: string): Promise<DysonIoTCredentialsResponse> {
-        const api = await this.api;
+    async getIoT(api: DysonCloudAPIDevice): Promise<DysonIoTCredentialsResponse> {
+        const { log, serialNumber } = api;
         let backoff = BACKOFF_MIN;
         for (let count = 1;; ++count) {
             try {
                 // Try to retrieve the credentials, caching the result
                 log.info(`Retrieving AWS IoT credentials (attempt #${count})`);
-                const credentials = await api.getIoTCredentials(serialNumber);
+                const credentials = await api.getIoTCredentials();
                 this.cache.set(serialNumber, { credentials, created: Date.now() });
                 return credentials;
             } catch (err) {

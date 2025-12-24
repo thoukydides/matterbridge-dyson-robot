@@ -5,7 +5,8 @@ import {
     PowerSource,
     RvcCleanMode,
     RvcRunMode,
-    RvcOperationalState
+    RvcOperationalState,
+    ServiceArea
 } from 'matterbridge/matter/clusters';
 import { PowerSourceServer } from 'matterbridge/matter/behaviors';
 import {
@@ -13,7 +14,8 @@ import {
     RvcCleanModeServer360,
     RvcOperationalStateServer360,
     RvcRunMode360,
-    RvcRunModeServer360
+    RvcRunModeServer360,
+    ServiceAreaServer360
 } from './endpoint-360-behavior.js';
 import { RvcOperationalStateError } from './error-360.js';
 import { Endpoint } from 'matterbridge/matter';
@@ -190,5 +192,28 @@ export function createRvcOperationalStateClusterServer(
         phaseList:              null,
         currentPhase:           null,
         countdownTime:          null
+    });
+}
+
+// Create the Service Area cluster
+export function createServiceAreaClusterServer(
+    { behaviors }: Endpoint
+): void {
+    behaviors.require(ServiceAreaServer360.withFeatures(
+        ServiceArea.Feature.Maps,
+        ServiceArea.Feature.ProgressReporting
+    ).enable({
+        commands: {
+            selectAreas:        true
+        }
+    }), {
+        // Variable attributes (with dummy defaults)
+        currentArea:            null,
+        progress:               [],
+        selectedAreas:          [],
+        supportedAreas:         [],
+        supportedMaps:          [],
+        // Unsupported attributes
+        estimatedEndTime:       undefined
     });
 }

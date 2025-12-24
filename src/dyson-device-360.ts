@@ -4,11 +4,12 @@
 import { BasicInformation } from 'matterbridge/matter/clusters';
 import { RvcCleanMode360 } from './endpoint-360-behavior.js';
 import {
+    Dyson360CleaningStrategy,
     Dyson360EyePowerMode,
-    Dyson360HeuristPowerMode,
-    Dyson360VisNavPowerMode
+    Dyson360HeuristPowerMode
 } from './dyson-360-types.js';
-import { DysonDevice360Base, PowerModeMap } from './dyson-device-360-base.js';
+import { DysonDevice360Base, Dyson360PowerLevelMap } from './dyson-device-360-base.js';
+import { DysonDevice360ZonesMixin } from './dyson-device-360-zones.js';
 
 // A Dyson 360 Eye device
 export class DysonDevice360Eye extends DysonDevice360Base {
@@ -21,10 +22,13 @@ export class DysonDevice360Eye extends DysonDevice360Base {
         primaryColor:   BasicInformation.Color.Nickel // (or Fuchsia for Japan limited edition)
     });
 
-    override getPowerModeMaps = (): PowerModeMap[] => [
+    override getPowerLevelMaps = (): Dyson360PowerLevelMap[] => [
         [Dyson360EyePowerMode.Quiet,        RvcCleanMode360.Quiet,      'Quiet'],
         [Dyson360EyePowerMode.Max,          RvcCleanMode360.MaxBoost,   'Max']
     ];
+
+    override setPowerLevel = (powerLevel: Dyson360EyePowerMode) => this.mqtt.commandSetPowerMode(powerLevel);
+    override getPowerLevel = () => this.mqtt.status.defaultVacuumPowerMode;
 }
 
 // A Dyson 360 Heurist device
@@ -38,15 +42,18 @@ export class DysonDevice360Heurist extends DysonDevice360Base {
         primaryColor:   BasicInformation.Color.Blue
     });
 
-    override getPowerModeMaps = (): PowerModeMap[] => [
+    override getPowerLevelMaps = (): Dyson360PowerLevelMap[] => [
         [Dyson360HeuristPowerMode.Quiet,    RvcCleanMode360.Quiet,      'Quiet'],
         [Dyson360HeuristPowerMode.High,     RvcCleanMode360.High,       'High'],
         [Dyson360HeuristPowerMode.Max,      RvcCleanMode360.MaxBoost,   'Max']
     ];
+
+    override setPowerLevel = (powerLevel: Dyson360HeuristPowerMode) => this.mqtt.commandSetPowerMode(powerLevel);
+    override getPowerLevel = () => this.mqtt.status.defaultVacuumPowerMode;
 }
 
 // A Dyson 360 Vis Nav device
-export class DysonDevice360VisNav extends DysonDevice360Base {
+export class DysonDevice360VisNav extends DysonDevice360ZonesMixin(DysonDevice360Base) {
     static readonly model = { type: '277', number: 'RB03', name: '360 Vis Nav' };
 
     override getBatteryPartNumber = () => '967864-02';
@@ -56,13 +63,15 @@ export class DysonDevice360VisNav extends DysonDevice360Base {
         primaryColor:   BasicInformation.Color.Blue
     });
 
-    override getPowerModeMaps = (): PowerModeMap[] => [
-        [Dyson360VisNavPowerMode.Auto,      RvcCleanMode360.Auto,       'Auto'],
-        [Dyson360VisNavPowerMode.Quick,     RvcCleanMode360.Quick,      'Quick'],
-        [Dyson360VisNavPowerMode.Quiet,     RvcCleanMode360.Quiet,      'Quiet'],
-        [Dyson360VisNavPowerMode.Boost,     RvcCleanMode360.MaxBoost,   'Boost'],
-        [Dyson360VisNavPowerMode.Unknown,   RvcCleanMode360.Auto,       'Auto']
+    override getPowerLevelMaps = (): Dyson360PowerLevelMap[] => [
+        [Dyson360CleaningStrategy.Auto,     RvcCleanMode360.Auto,       'Auto'],
+        [Dyson360CleaningStrategy.Quick,    RvcCleanMode360.Quick,      'Quick'],
+        [Dyson360CleaningStrategy.Quiet,    RvcCleanMode360.Quiet,      'Quiet'],
+        [Dyson360CleaningStrategy.Boost,    RvcCleanMode360.MaxBoost,   'Boost']
     ];
+
+    override setPowerLevel = (powerLevel: Dyson360CleaningStrategy) => this.mqtt.commandSetCleaningStrategy(powerLevel);
+    override getPowerLevel = () => this.mqtt.status.defaultCleaningStrategy;
 }
 
 // A Dyson 360 Spot+Scrub device
@@ -76,13 +85,10 @@ export class DysonDevice360SpotScrub extends DysonDevice360Base {
         primaryColor:   BasicInformation.Color.Black
     });
 
-    override getPowerModeMaps = (): PowerModeMap[] => [
-        [Dyson360VisNavPowerMode.Auto,      RvcCleanMode360.Auto,       'Auto'],
-        [Dyson360VisNavPowerMode.Quick,     RvcCleanMode360.Quick,      'Quick'],
-        [Dyson360VisNavPowerMode.Quiet,     RvcCleanMode360.Quiet,      'Quiet'],
-        [Dyson360VisNavPowerMode.Boost,     RvcCleanMode360.MaxBoost,   'Boost'],
-        [Dyson360VisNavPowerMode.Unknown,   RvcCleanMode360.Auto,       'Auto']
-    ];
+    override getPowerLevelMaps = (): Dyson360PowerLevelMap[] => [];
+
+    override setPowerLevel = (powerLevel: Dyson360EyePowerMode) => this.mqtt.commandSetPowerMode(powerLevel);
+    override getPowerLevel = () => this.mqtt.status.defaultVacuumPowerMode;
 }
 
 // List of constructors for Dyson robot vacuum devices

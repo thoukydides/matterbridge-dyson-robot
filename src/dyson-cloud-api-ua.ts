@@ -6,19 +6,24 @@ import { Config } from './config-types.js';
 import { Client, Dispatcher } from 'undici';
 import { columns, getValidationTree, MS } from './utils.js';
 import { IncomingHttpHeaders } from 'undici/types/header.js';
-import { CheckerT, IErrorDetail } from 'ts-interface-checker';
+import { Checker, CheckerT, IErrorDetail } from 'ts-interface-checker';
 import { INSPECT_VERBOSE } from './logger-options.js';
 import { inspect } from 'util';
 import { STATUS_CODES } from 'http';
 import { PLUGIN_NAME, PLUGIN_VERSION } from './settings.js';
 import { DysonCloudStatusCodeError } from './dyson-cloud-error.js';
 import { setTimeout } from 'node:timers/promises';
+import { MaybePromise } from 'matterbridge/matter';
 
 // Request types
 export type Method      = Dispatcher.HttpMethod;
 export type Headers     = IncomingHttpHeaders;
-export type Request     = Dispatcher.DispatchOptions;
 export type Response    = Dispatcher.ResponseData;
+
+// Requests specify the method used to retrieve the response body
+export interface Request<Type = unknown> extends Dispatcher.DispatchOptions {
+    consume:    (response: Response) => MaybePromise<Type>;
+}
 
 // Base URL for the Dyson cloud API
 const DYSON_API_URL_GLOBAL  = 'https://appapi.cp.dyson.com';
@@ -44,7 +49,6 @@ export class DysonCloudAPIUserAgent {
     // Headers to include in all requests
     readonly headers: Headers = {
         'user-agent':   USER_AGENT,
-        'accept':       'application/json',
         'content-type': 'application/json'
     };
 
@@ -74,11 +78,36 @@ export class DysonCloudAPIUserAgent {
         this.headers.Authorization = `Bearer ${token}`;
     }
 
-    // Issue a request and validate the JSON formatted response
-    async request<Type>(checker: CheckerT<Type>, method: Method, path: string, body?: object): Promise<Type> {
+    // Requests that expect an empty response
+    put(path: string, body: object): Promise<void> { return this.requestEmpty('PUT', path, body); }
+    async requestEmpty(method: Method, path: string, body?: object): Promise<void> {
         // Issue the request
         const { headers } = this;
-        const request: Request = { method, path, headers };
+        const consume = async (response: Response): Promise<number> => {
+            await response.body.dump();
+            return Number(response.headers['content-length']);
+        };
+        const request: Request<number> = { method, path, headers, consume };
+        if (body) request.body = JSON.stringify(body);
+        const contentLength = await this.requestWithRetries(request);
+
+        // Check that the response is empty
+        if (contentLength) {
+            this.logCheckerValidation(LogLevel.ERROR, request);
+            throw new Error(`Unexpected non-empty Dyson cloud API response (${contentLength} bytes)`);
+        }
+    }
+
+    // Issue a request and validate the JSON formatted response
+    /* eslint-disable max-len */
+    getJSON <Type>(checker: CheckerT<Type>, path: string              ): Promise<Type> { return this.requestJSON(checker, 'GET',   path); }
+    postJSON<Type>(checker: CheckerT<Type>, path: string, body: object): Promise<Type> { return this.requestJSON(checker, 'POST',  path, body); }
+    /* eslint-enable max-len */
+    async requestJSON<Type>(checker: Checker, method: Method, path: string, body?: object): Promise<Type> {
+        // Issue the request
+        const headers = { ...this.headers, accept: 'application/json' };
+        const consume = (response: Response): Promise<string> => response.body.text();
+        const request: Request<string> = { method, path, headers, consume };
         if (body) request.body = JSON.stringify(body);
         const text = await this.requestWithRetries(request);
 
@@ -109,8 +138,22 @@ export class DysonCloudAPIUserAgent {
         return json as Type;
     }
 
+    // Requests that expect a binary response
+    getBinary(path: string, accept: string): Promise<Buffer> { return this.requestBinary('GET', path, accept); }
+    async requestBinary(method: Method, path: string, accept: string, body?: object): Promise<Buffer> {
+        // Issue the request
+        const headers = { ...this.headers, accept };
+        const consume = (response: Response): Promise<ArrayBuffer> => response.body.arrayBuffer();
+        const request: Request<ArrayBuffer> = { method, path, headers, consume };
+        if (body) request.body = JSON.stringify(body);
+        const arrayBuffer = await this.requestWithRetries(request);
+
+        // Return the result, converted to a Node.js Buffer
+        return Buffer.from(arrayBuffer);
+    }
+
     // Perform the request, retrying if required, returning the response body
-    async requestWithRetries(request: Request): Promise<string> {
+    async requestWithRetries<Type>(request: Request<Type>): Promise<Type> {
         // Request counters
         let requestCount: number | undefined;
         let retryCount = 0;
@@ -152,7 +195,7 @@ export class DysonCloudAPIUserAgent {
     }
 
     // Perform the request and return the response body
-    async requestCore(logPrefix: string, request: Request): Promise<string> {
+    async requestCore<Type>(logPrefix: string, request: Request<Type>): Promise<Type> {
         const startTime = Date.now();
         let status = 'OK';
         try {
@@ -163,12 +206,12 @@ export class DysonCloudAPIUserAgent {
 
             // Attempt to issue the request and retrieve the response
             let response: Response;
-            let text: string;
+            let body: Type;
             try {
                 response = await this.client.request(request);
                 this.logHeaders(`${logPrefix} Response`, response.headers);
-                text = await response.body.text();
-                this.logBody(`${logPrefix} Response`, text);
+                body = await request.consume(response);
+                this.logBody(`${logPrefix} Response`, body);
             } catch (err) {
                 const message = err instanceof Error ? err.message : String(err);
                 status = `ERROR: ${message}`;
@@ -183,7 +226,7 @@ export class DysonCloudAPIUserAgent {
             }
 
             // Return the response body
-            return text;
+            return body;
         } finally {
             // Log completion of the request
             this.log.debug(`${logPrefix} ${status} +${Date.now() - startTime}ms`);
@@ -218,13 +261,15 @@ export class DysonCloudAPIUserAgent {
     }
 
     // Log checker validation errors
-    logCheckerValidation(level: LogLevel, request: Request, body: unknown, errors?: IErrorDetail[]): void {
+    logCheckerValidation(level: LogLevel, request: Request, body?: unknown, errors?: IErrorDetail[]): void {
         this.log.log(level, `${request.method} ${request.path}:`);
         if (errors) {
             const validationLines = getValidationTree(errors);
             validationLines.forEach(line => { this.log.log(level, line); });
         }
-        const bodyLines = inspect(body, INSPECT_VERBOSE).split('\n');
-        bodyLines.forEach(line => { this.log.info(`    ${line}`); });
+        if (typeof body === 'string') {
+            const bodyLines = inspect(body, INSPECT_VERBOSE).split('\n');
+            bodyLines.forEach(line => { this.log.info(`    ${line}`); });
+        }
     }
 }

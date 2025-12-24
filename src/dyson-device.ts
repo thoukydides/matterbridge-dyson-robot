@@ -10,6 +10,7 @@ import { MS, UnionToIntersection } from './utils.js';
 import { DeviceConfigMqtt } from './dyson-mqtt-client-live.js';
 import { logError } from './log-error.js';
 import NodePersist from 'node-persist';
+import { DysonCloudAPIDevice } from './dyson-cloud-api-device.js';
 
 // List of constructors for Dyson devices
 const DYSON_DEVICE_TYPES = [
@@ -26,7 +27,8 @@ export async function createDysonDevice(
     log:        AnsiLogger,
     config:     Config,
     persist:    NodePersist.LocalStorage,
-    device:     DeviceConfigMqtt
+    device:     DeviceConfigMqtt,
+    api?:       DysonCloudAPIDevice
 ): Promise<DysonDevice> {
     // Select the appropriate class for this device
     const { rootTopic } = device;
@@ -39,7 +41,7 @@ export async function createDysonDevice(
     await mqtt.waitUntilInitialised(MQTT_CACHE_FALLBACK_DELAY);
 
     // Create the Dyson device itself
-    return new deviceClass(log, config, device, mqtt as UnionToIntersection<typeof mqtt>);
+    return new deviceClass(log, config, device, mqtt as UnionToIntersection<typeof mqtt>, api);
 }
 
 // Test whether a specific model is supported

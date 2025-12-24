@@ -13,16 +13,18 @@ import {
     PowerSource,
     RvcCleanMode,
     RvcRunMode,
-    RvcOperationalState
+    RvcOperationalState,
+    ServiceArea
 } from 'matterbridge/matter/clusters';
 import { AnsiLogger } from 'matterbridge/logger';
 import { Config } from './config-types.js';
 import {
+    BatteryPowerSourceOptions,
     createBatteryPowerSourceClusterServer,
     createRvcCleanModeClusterServer,
     createRvcOperationalStateClusterServer,
     createRvcRunModeClusterServer,
-    BatteryPowerSourceOptions,
+    createServiceAreaClusterServer,
     RvcCleanModeOptions
 } from './endpoint-360-rvc.js';
 import {
@@ -31,7 +33,7 @@ import {
     formatEnumLog
 } from './endpoint-base.js';
 import { ifValueChanged } from './decorator-changed.js';
-import { formatList, formatSeconds, MS, plural } from './utils.js';
+import { assertIsDefined, formatList, formatSeconds, MS, plural } from './utils.js';
 import { AN, AV, RI } from './logger-options.js';
 import {
     Behavior360,
@@ -45,6 +47,7 @@ import {
 export interface EndpointOptions360 extends EndpointOptionsBase {
     powerSource:    BatteryPowerSourceOptions;
     rvcCleanMode:   RvcCleanModeOptions;
+    supportsMaps:   boolean;
 }
 
 // Updates to the Power Source cluster attributes
@@ -62,6 +65,15 @@ export interface UpdateRvcOperationalState360 {
     isActive:               boolean;
     operationalError:       RvcOperationalState.ErrorStateStruct;
     operationalState:       RvcOperationalState.OperationalState;
+}
+
+// Updates to the Service Area cluster
+export interface UpdateServiceArea360 {
+    currentArea:            number | null;
+    progress:               ServiceArea.Progress[];
+    selectedAreas:          number[];
+    supportedAreas:         ServiceArea.Area[];
+    supportedMaps:          ServiceArea.Map[];
 }
 
 // A Matterbridge endpoint with robot vacuum cleaner clusters
@@ -88,6 +100,7 @@ export class Endpoint360 extends EndpointBase {
         createRvcRunModeClusterServer(this);
         createRvcCleanModeClusterServer(this, options.rvcCleanMode);
         createRvcOperationalStateClusterServer(this);
+        if (options.supportsMaps) createServiceAreaClusterServer(this);
 
         // Add a command handler behavior
         this.behaviorDevice360 = new BehaviorDevice360(this.log);
@@ -215,4 +228,41 @@ export class Endpoint360 extends EndpointBase {
             }
         }
     }
+
+    // Update the Service Area cluster attributes when required
+    @ifValueChanged
+    async updateServiceArea(attributes: UpdateServiceArea360): Promise<void> {
+        if (!this.options.supportsMaps) return;
+        const { currentArea, progress, selectedAreas, supportedAreas, supportedMaps } = attributes;
+        const clusterId = ServiceArea.Cluster.id;
+        const areaName = (areaId: number | null): string => formatAreaName(supportedMaps, supportedAreas, areaId);
+        const progressStatus = progress.map(({ areaId, status }) =>
+            `${areaName(areaId)}: ${AV}${ServiceArea.OperationalStatus[status]}${RI} (${AV}${status}${RI})`);
+        const logMessage = `${AN}Service Area${RI}:`
+                         + ` ${AV}${plural(supportedMaps.length, 'map')}${RI}, ${AV}${plural(supportedAreas.length, 'area')}${RI},`
+                         + ` selected [${selectedAreas.map(areaName).join(', ')}],`
+                         + ` @ ${areaName(currentArea)}, status [${progressStatus.join(', ')}]`;
+        this.log.info(logMessage);
+        await this.updateAttribute(clusterId, 'supportedMaps',  supportedMaps,  this.log);
+        await this.updateAttribute(clusterId, 'supportedAreas', supportedAreas, this.log);
+        await this.updateAttribute(clusterId, 'currentArea',    currentArea,    this.log);
+        await this.updateAttribute(clusterId, 'progress',       progress,       this.log);
+        await this.updateAttribute(clusterId, 'selectedAreas',  selectedAreas,  this.log);
+    }
+}
+
+// Format a Service Area area identifier for logging
+export function formatAreaName(
+    supportedMaps:  ServiceArea.Map[],
+    supportedAreas: ServiceArea.Area[],
+    areaId:         number | null
+): string {
+    if (areaId === null) return `${AV}n/a${RI}`;
+    const area = supportedAreas.find(a => a.areaId === areaId);
+    assertIsDefined(area);
+    assertIsDefined(area.areaInfo.locationInfo);
+    const map = supportedMaps.find(m => m.mapId === area.mapId);
+    assertIsDefined(map);
+    const name = `${map.name}:${area.areaInfo.locationInfo.locationName}`.replaceAll(/\s+/g, '_');
+    return `${AV}${name}${RI} (${AV}${area.mapId}:${areaId}${RI})`;
 }

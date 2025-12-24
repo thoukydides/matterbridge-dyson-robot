@@ -20,11 +20,11 @@ import { DysonDevice } from './dyson-device-base.js';
 import { formatList, plural } from './utils.js';
 import { PrefixLogger } from './logger-prefix.js';
 import {
+    DeviceConfigMqttWithApi,
     DysonCloudAuth,
     DysonCloudLocal,
     DysonCloudRemote
 } from './dyson-cloud.js';
-import { DeviceConfigMqtt } from './dyson-mqtt-client-live.js';
 import { getDeviceConfigMqtt } from './dyson-mqtt-config.js';
 import { logError } from './log-error.js';
 
@@ -125,7 +125,7 @@ export class PlatformDyson extends MatterbridgeDynamicPlatform {
         this.log.configure(this.config.debugFeatures);
 
         // Convert the configuration to usable device details
-        let mappedDevices: DeviceConfigMqtt[];
+        let mappedDevices: DeviceConfigMqttWithApi[];
         switch (this.config.provisioningMethod) {
         case 'Remote Account': {
             // Obtain list of details from the MyDyson account
@@ -160,7 +160,7 @@ export class PlatformDyson extends MatterbridgeDynamicPlatform {
     }
 
     // Create a single device, but do not register it with Matterbridge
-    async createDevice(deviceConfig: DeviceConfigMqtt): Promise<void> {
+    async createDevice(deviceConfig: DeviceConfigMqttWithApi): Promise<void> {
         const { serialNumber, name: deviceName} = deviceConfig;
         const deviceLog = new PrefixLogger(this.log, deviceName);
 
@@ -181,7 +181,8 @@ export class PlatformDyson extends MatterbridgeDynamicPlatform {
             }
 
             // Create the device instance
-            const device = await createDysonDevice(deviceLog, this.config, this.persist, deviceConfig);
+            const deviceApi = 'api' in deviceConfig ? deviceConfig.api : undefined;
+            const device = await createDysonDevice(deviceLog, this.config, this.persist, deviceConfig, deviceApi);
 
             // Validate the device's main functions
             const entities = device.getEntities();

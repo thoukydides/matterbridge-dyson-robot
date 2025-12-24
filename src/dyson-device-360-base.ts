@@ -22,13 +22,16 @@ import {
 import { PLUGIN_URL, VENDOR_ID, VENDOR_NAME } from './settings.js';
 import { RvcCleanMode360, RvcRunMode360 } from './endpoint-360-behavior.js';
 import { PowerSource, RvcOperationalState } from 'matterbridge/matter/clusters';
-import { Dyson360PowerMode, Dyson360State } from './dyson-360-types.js';
+import { Dyson360CleaningStrategy, Dyson360PowerMode, Dyson360State } from './dyson-360-types.js';
 import {
     Dyson360MappedFaults,
     mapDyson360Faults
 } from './dyson-device-360-faults.js';
 import { assert } from 'console';
-import { attachDevice360CommandHandlers } from './dyson-device-360-commands.js';
+import {
+    Device360Command,
+    Device360CommandHandlers
+} from './dyson-device-360-commands.js';
 import { EndpointBase } from './endpoint-base.js';
 import { DysonDevice360Map } from './dyson-device-360-map.js';
 
@@ -88,7 +91,8 @@ function mapState(state: Dyson360State): {
 }
 
 // Mapping of robot power mode to its corresponding Matter Clean Mode and label
-export type PowerModeMap = [Dyson360PowerMode, ...RvcCleanModeLabels[number]];
+export type Dyson360PowerLevel = Dyson360PowerMode | Dyson360CleaningStrategy;
+export type Dyson360PowerLevelMap = [Dyson360PowerLevel, ...RvcCleanModeLabels[number]];
 
 // Thresholds for battery levels
 const BATTERY_THRESHOLD_CRITICAL = 10;
@@ -96,7 +100,8 @@ const BATTERY_THRESHOLD_WARNING  = 25;
 const BATTERY_THRESHOLD_FULL     = 100;
 
 // A Dyson robot vacuum device
-export abstract class DysonDevice360Base extends DysonDevice<DysonMqtt360> {
+export abstract class DysonDevice360Base
+    extends DysonDevice<DysonMqtt360> {
 
     // The MQTT client and status update listener
     static readonly mqttConstructor = DysonMqtt360;
@@ -120,7 +125,7 @@ export abstract class DysonDevice360Base extends DysonDevice<DysonMqtt360> {
     // Create the endpoint for this device
     makeEndpoint(): Endpoint360 {
         const rvcCleanModeLabels: RvcCleanModeLabels =
-            this.getPowerModeMaps().map(([, mode, label]) => [mode, label]);
+            this.getPowerLevelMaps().map(([, mode, label]) => [mode, label]);
 
         // Static configuration of the RVC clusters
         const endpointOptions: EndpointOptions360 = {
@@ -145,15 +150,25 @@ export abstract class DysonDevice360Base extends DysonDevice<DysonMqtt360> {
             rvcCleanMode: {
                 labels:             rvcCleanModeLabels,
                 simpleModeTags:     this.config.simpleModeTagsRvc
-            }
+            },
+            supportsMaps:           this.supportsMaps()
         };
 
         // Create the endpoint and attach a command handler
         const endpoint = new Endpoint360(this.log, this.config, endpointOptions);
-        attachDevice360CommandHandlers(this.log, this.mqtt, endpoint,
-                                       this.cleanModeToPowerMode.bind(this));
+        this.attachCommandHandlers(endpoint);
         return endpoint;
     }
+
+    // Attach command handlers to the endpoint
+    attachCommandHandlers(endpoint: Endpoint360): Device360CommandHandlers {
+        const handlers = new Device360CommandHandlers(this.log, this.mqtt, endpoint);
+        handlers.attachCleanModeHandler(this.makePowerCommand.bind(this));
+        return handlers;
+    }
+
+    // Indicates whether the device supports Service Area map features
+    supportsMaps = (): boolean => false;
 
     // List of endpoint function names and descriptions to validate
     override getEntities(): DysonEntityDescription[] {
@@ -180,18 +195,25 @@ export abstract class DysonDevice360Base extends DysonDevice<DysonMqtt360> {
     // Model-specific information
     abstract getBatteryPartNumber(): string;
     abstract getProductAppearance(): BasicInformation.ProductAppearance;
-    abstract getPowerModeMaps(): PowerModeMap[];
+    abstract getPowerLevelMaps(): Dyson360PowerLevelMap[];
+    abstract setPowerLevel(powerLevel: Dyson360PowerLevel): Promise<void>;
+    abstract getPowerLevel(): Dyson360PowerLevel | undefined;
 
-    // Map an RVC Clean Mode to its corresponding Dyson power mode
-    cleanModeToPowerMode(cleanMode: RvcCleanMode360): Dyson360PowerMode {
-        const map = this.getPowerModeMaps().find(([, m]) => m === cleanMode);
+    // Construct a command to set power level based on an RVC Clean Mode
+    makePowerCommand(cleanMode: RvcCleanMode360): Device360Command {
+        const map = this.getPowerLevelMaps().find(([, m]) => m === cleanMode);
         assertIsDefined(map);
-        return map[0];
+        const powerLevel = map[0];
+        return {
+            description:    map[0],
+            command:        () => this.setPowerLevel(powerLevel),
+            condition:      () => this.getPowerLevel() === powerLevel
+        };
     }
 
     // Map a Dyson power mode to its corresponding RVC Clean Mode
-    powerModeToCleanMode(powerMode: Dyson360PowerMode): RvcCleanMode360 {
-        const map = this.getPowerModeMaps().find(([m]) => m === powerMode);
+    powerModeToCleanMode(powerMode?: string | number): RvcCleanMode360 {
+        const map = this.getPowerLevelMaps().find(([m]) => m === powerMode);
         assertIsDefined(map);
         return map[1];
     }
@@ -203,7 +225,7 @@ export abstract class DysonDevice360Base extends DysonDevice<DysonMqtt360> {
 
         // Map the state to cluster attribute values
         const faults = mapDyson360Faults(this.log, status.state, status.faults);
-        const cleanMode         = this.powerModeToCleanMode(status.currentVacuumPowerMode);
+        const cleanMode         = this.powerModeToCleanMode(this.getPowerLevel());
         const { runMode }       = mapState(status.state);
         const operationalState  = this.mapOperationalState(status, faults);
         const batteryStatus     = this.mapBatteryStatus(status, faults);

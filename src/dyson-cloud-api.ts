@@ -10,12 +10,12 @@ import {
     DysonEmailUserStatusResponse,
     DysonEmailVerifyRequest,
     DysonEmailVerifyResponse,
-    DysonIoTCredentialsRequest,
-    DysonIoTCredentialsResponse,
     DysonManifestResponse
 } from './dyson-cloud-types.js';
 import { checkers } from './ti/dyson-cloud-types.js';
 import { DysonCloudAPIUserAgent } from './dyson-cloud-api-ua.js';
+import { DysonCloudAPIDevice } from './dyson-cloud-api-device.js';
+import { assertIsDefined } from './utils.js';
 
 // Dyson cloud API client for all device types
 export class DysonCloudAPI {
@@ -28,7 +28,7 @@ export class DysonCloudAPI {
         readonly log:       AnsiLogger,
         readonly config:    Config,
         readonly china:     boolean,
-        readonly token?:    string
+        public   token?:    string
     ) {
         // Create a user agent
         this.ua = new DysonCloudAPIUserAgent(log, config, china);
@@ -40,27 +40,27 @@ export class DysonCloudAPI {
     // Retrieve list of supported markets (countries)
     getSupportedMarket(): Promise<string[]> {
         const path = '/v1/supportedmarket';
-        return this.ua.request(checkers.DysonSupportedMarketResponse, 'GET', path);
+        return this.ua.getJSON(checkers.DysonSupportedMarketResponse, path);
     }
 
     // Retrieve version (required before login)
     getVersion(platform = DysonAppPlatform.iOS): Promise<string> {
         const path = `/v1/provisioningservice/application/${platform}/version`;
-        return this.ua.request(checkers.DysonVersionResponse, 'GET', path);
+        return this.ua.getJSON(checkers.DysonVersionResponse, path);
     }
 
     // Check the status of a user account
     getUserStatus(email: string): Promise<DysonEmailUserStatusResponse> {
         const body: DysonEmailUserStatusRequest = { email };
         const path = '/v3/userregistration/email/userstatus';
-        return this.ua.request(checkers.DysonEmailUserStatusResponse, 'POST', path, body);
+        return this.ua.postJSON(checkers.DysonEmailUserStatusResponse, path, body);
     }
 
     // Start authorisation
     async startAuthorisation(email: string): Promise<string> {
         const body: DysonEmailAuthRequest = { email };
         const path = '/v3/userregistration/email/auth';
-        const response = await this.ua.request(checkers.DysonEmailAuthResponse, 'POST', path, body);
+        const response = await this.ua.postJSON(checkers.DysonEmailAuthResponse, path, body);
         return response.challengeId;
     }
 
@@ -68,7 +68,8 @@ export class DysonCloudAPI {
     async completeAuthorisation(challengeId: string, email: string, otpCode: string, password: string): Promise<DysonEmailVerifyResponse> {
         const body: DysonEmailVerifyRequest = { challengeId, email, otpCode, password };
         const path = '/v3/userregistration/email/verify';
-        const response = await this.ua.request(checkers.DysonEmailVerifyResponse, 'POST', path, body);
+        const response = await this.ua.postJSON(checkers.DysonEmailVerifyResponse, path, body);
+        this.token = response.token;
         this.ua.setBearerToken(response.token);
         return response;
     }
@@ -76,13 +77,12 @@ export class DysonCloudAPI {
     // Request the list of devices associated with the account
     getManifest(): Promise<DysonManifestResponse> {
         const path = '/v3/manifest';
-        return this.ua.request(checkers.DysonManifestResponse, 'GET', path, undefined);
+        return this.ua.getJSON(checkers.DysonManifestResponse, path);
     }
 
-    // Retrieve the AWS IoT credentials for a specific device
-    getIoTCredentials(serialNumber: string): Promise<DysonIoTCredentialsResponse> {
-        const body: DysonIoTCredentialsRequest = { Serial: serialNumber };
-        const path = '/v2/authorize/iot-credentials';
-        return this.ua.request(checkers.DysonIoTCredentialsResponse, 'POST', path, body);
+    // Create a device-specific cloud API client
+    createDeviceClient(log: AnsiLogger, serialNumber: string, rootTopic: string): DysonCloudAPIDevice {
+        assertIsDefined(this.token);
+        return new DysonCloudAPIDevice(log, this.config, this.china, this.token, serialNumber, rootTopic);
     }
 }

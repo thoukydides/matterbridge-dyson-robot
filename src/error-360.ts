@@ -1,7 +1,11 @@
 // Matterbridge plugin for Dyson robot vacuum and air treatment devices
 // Copyright © 2025 Alexander Thoukydides
 
-import { ModeBase, RvcOperationalState } from 'matterbridge/matter/clusters';
+import {
+    ModeBase,
+    RvcOperationalState,
+    ServiceArea
+} from 'matterbridge/matter/clusters';
 import { VENDOR_ERROR_360 } from './endpoint-360-behavior.js';
 
 // RVC Operational State errors
@@ -116,4 +120,44 @@ export class ChangeToModeError extends Error {
     static readonly UnsupportedMode = this.create('UnsupportedMode');
     static readonly GenericFailure  = this.create('GenericFailure');
     static readonly InvalidInMode   = this.create('InvalidInMode');
+}
+
+// Service Area SelectAreas errors
+export class SelectAreaError extends Error {
+
+    // Create a new error
+    constructor(readonly status: ServiceArea.SelectAreasStatus | number, message?: string, options?: ErrorOptions) {
+        super(message, options);
+        Error.captureStackTrace(this, SelectAreaError);
+        const statusName = ServiceArea.SelectAreasStatus[status];
+        this.name = `SelectAreaError[${statusName ?? `0x${status.toString(16)}`}]`;
+    }
+
+    // Convert an arbitrary error (or nullish for success) to a SelectAreasResponse
+    static toResponse(err?: unknown): ServiceArea.SelectAreasResponse {
+        return {
+            status:     err instanceof SelectAreaError ? err.status
+                        : ServiceArea.SelectAreasStatus[err ? 'InvalidInMode' : 'Success'],
+            statusText: err instanceof Error ? err.message.substring(0, 256) : 'Unable to select areas'
+        };
+    }
+
+    // Helper function to create a new error class with a specific status code
+    static create(
+        statusName: keyof typeof ServiceArea.SelectAreasStatus
+    ): new (message?: string, options?: ErrorOptions) => SelectAreaError {
+        const statusCode = ServiceArea.SelectAreasStatus[statusName];
+        return class extends SelectAreaError {
+            constructor(message?: string, options?: ErrorOptions) {
+                message ??= `SelectArea status ${statusName}`;
+                super(statusCode, message, options);
+            }
+        };
+    }
+
+    // Standard status codes defined by the Service Area cluster
+    static readonly Success         = this.create('Success');
+    static readonly UnsupportedArea = this.create('UnsupportedArea');
+    static readonly InvalidInMode   = this.create('InvalidInMode');
+    static readonly InvalidSet      = this.create('InvalidSet');
 }

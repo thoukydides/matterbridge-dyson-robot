@@ -2,7 +2,7 @@
 // Copyright © 2025 Alexander Thoukydides
 
 import { DysonDeviceAirBase } from './dyson-device-air-base.js';
-import { DysonDeviceAirWithHeat as DysonDeviceAirHeatMixin } from './dyson-device-air-heat.js';
+import { DysonDeviceAirHeatMixin } from './dyson-device-air-heat.js';
 
 // =============================================================================
 // Dyson Pure (Hot)+Cool Link family...

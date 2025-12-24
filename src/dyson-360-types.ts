@@ -58,13 +58,16 @@ export interface Dyson360Faults {
 // Details of an active fault (Dyson 360 Vis Nav only?)
 export enum Dyson360FaultNextAction {
     WaitToClean                     = 'WAIT_TO_CLEAR',
-    LocalUserContinue               = 'LOCAL_USER_CONTINUE'
+    LocalUserAck                    = 'LOCAL_USER_ACK',
+    LocalUserContinue               = 'LOCAL_USER_CONTINUE',
+    LogOnly                         = 'LOG_ONLY'
 }
 export enum Dyson360FaultPresent {
     Present                         = 'PRESENT',
     NotPresent                      = 'NOT_PRESENT'
 }
 export enum Dyson360FaultUserAction {
+    NoAction                        = 'NO_ACTION',
     UserRecoverable                 = 'USER_RECOVERABLE'
 }
 export interface Dyson360ActiveFault {
@@ -75,6 +78,10 @@ export interface Dyson360ActiveFault {
 }
 
 // Dyson robot vacuum power mode
+export enum Dyson360EyeEventPowerMode {
+    Quiet                           = 1,
+    Max                             = 0
+}
 export enum Dyson360EyePowerMode {
     Quiet                           = 'halfPower',
     Max                             = 'fullPower'
@@ -85,11 +92,10 @@ export enum Dyson360HeuristPowerMode {
     Max                             = '3'
 }
 export enum Dyson360VisNavPowerMode {
-    Unknown                         = '0',
-    Auto                            = '1',
-    Quick                           = '2',
-    Quiet                           = '3',
-    Boost                           = '4'
+    Idle                            = '0',
+    Quiet                           = '1',      // Auto (low) / Quiet / Quick
+    High                            = '2',      // Auto (high)
+    Boost                           = '3'       // Boost
 }
 export type Dyson360PowerMode =
     Dyson360EyePowerMode
@@ -113,9 +119,9 @@ export enum Dyson360CleaningMode {
 
 // Dyson robot vacuum cleaning programme (Heurist and Vis Nav only)
 export interface Dyson360CleaningProgramme {
-    orderedZones:                   [];
+    orderedZones?:                  string[];
     persistentMapId:                string;     // UUID
-    unorderedZones:                 string[];   // e.g. ['4','1','2','3']
+    unorderedZones?:                string[];   // e.g. ['4','1','2','3']
     zonesDefinitionLastUpdatedDate: string;     // e.g. '2025-12-17T10:53:21.8147587Z'
 }
 
@@ -138,7 +144,7 @@ export enum Dyson360CleaningStrategy {
     Quick                           = 'quick',
     Quiet                           = 'quiet',
     Boost                           = 'boost',
-    Mixed                           = 'mixed'
+    Mixed                           = 'mixed'   // (360 Heurist only)
 }
 
 // Dyson robot vacuum position
@@ -161,4 +167,49 @@ export enum Dyson360OutOfBoxState {
     AwaitingMapUploadingCompletion  = 'AWAITING_MAP_UPLOADING_COMPLETION',
     AwaitingZoningCompletion        = 'AWAITING_ZONING_COMPLETION',
     Complete                        = 'OUT_OF_BOX_COMPLETE'
+}
+
+// Dyson robot vacuum zone icon (Vis Nav only)
+export enum Dyson360ZoneIcon {
+    Balcony                         = 'balcony',
+    Bathroom                        = 'bathroom',
+    Bedroom                         = 'bedroom',        // Secondary bedroom / Guest room
+    DiningRoom                      = 'dining_room',
+    Hallway                         = 'hallway',
+    Kitchen                         = 'kitchen',
+    LivingRoom                      = 'living_room',
+    MainBedroom                     = 'main_bedroom',   // Main bedroom
+    Study                           = 'study',
+    Toilet                          = 'toilet',
+    UtilityRoom                     = 'utility_room',
+    Work                            = 'work',           // Office
+    Custom                          = 'custom'          // User defined
+}
+
+// Dyson robot vacuum clean map timeline event
+export enum Dyson360TimelineEvent {
+    Charging                        = 'CHARGING',
+    CleanEnded                      = 'CLEAN_ENDED',
+    CleanStarted                    = 'CLEAN_STARTED',
+    FaultUserRecoverable            = 'FAULT_USER_RECOVERABLE',
+    NeedsCharge                     = 'NEEDS_CHARGE',
+    Paused                          = 'PAUSED',
+    PersistentMapChanged            = 'PERSISTENT_MAP_CHANGED',
+    Resumed                         = 'RESUMED',
+    RunEnded                        = 'RUN_ENDED',
+    RunStarted                      = 'RUN_STARTED',
+    TraverseEnded                   = 'TRAVERSE_ENDED',
+    TraverseStarted                 = 'TRAVERSE_STARTED',
+    ZoneEntered                     = 'ZONE_ENTERED',
+    ZoneLeft                        = 'ZONE_LEFT'
+}
+
+// Dyson robot vacuum dust category
+export enum Dyson360DustName {
+    ExtraFine                       = 'extraFine',
+    Fine                            = 'fine',
+    Medium                          = 'medium',
+    Large                           = 'large',
+    Other                           = 'other',
+    Total                           = 'total'
 }

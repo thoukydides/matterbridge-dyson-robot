@@ -282,16 +282,14 @@ The following sections describe the functionality exposed to Matter. Different e
 <details>
 <summary>Robot Vacuums</summary>
 
-Each robot vacuum appears as a standalone Matter device with a single endpoint. This supports basic start/stop/pause/resume control and changing power mode. Detailed status information is provided for the robot vacuum's activity, battery, and any faults.
-
-Zone cleaning is not currently supported; access to the maps and zone configuration needs to be implemented via the MyDyson account instead of the MQTT API used for everything else.
+Each robot vacuum appears as a standalone Matter device with a single endpoint. This supports basic start/stop/pause/resume control and changing power mode. Detailed status information is provided for the robot vacuum's activity, battery, and any faults. Zone cleaning is also supported for Dyson 360 Vis Nav devices (only).
 
 #### Robotic Vacuum Cleaner Device
 
 - **RVC Run Mode** cluster:
   - `Idle`: Abort cleaning and return to dock (same as `GoHome`).
   - `Cleaning`: Start a full-clean.
-  - `Mapping`: Status only; no information is available about how to initiate mapping via MQTT.
+  - `Mapping`: Status only (use the MyDyson app to initiate mapping and configure zones).
 
 - **RVC Clean Mode** cluster:
   | Mode       | Dyson 360 Eye | Dyson 360 Heurist | Dyson 360 Vis Nav | Dyson Spot+Clean |
@@ -313,7 +311,10 @@ Zone cleaning is not currently supported; access to the maps and zone configurat
   - Battery charge level and charging status.
   - Any active fault.
 
-No **Service Area** cluster is currently implemented.
+**Service Area** cluster (currently only implemented for Dyson 360 Vis Nav):
+  - `SelectAreas`: Start a zone clean of specified areas (using the per-zone power modes configured in the MyDyson app).
+  - Lists of maps and zones.
+  - Current zone and per-zone cleaning status.
 
 </details>
 

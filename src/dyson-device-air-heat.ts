@@ -16,7 +16,7 @@ import { numeric } from './dyson-device-air-quality.js';
 import { DysonEntityDescription } from './dyson-device-base.js';
 
 // Mixin to add heating to a Dyson air treatment device
-export function DysonDeviceAirWithHeat<TBase extends AbstractConstructor<DysonDeviceAirBase>>(Base: TBase) {
+export function DysonDeviceAirHeatMixin<TBase extends AbstractConstructor<DysonDeviceAirBase>>(Base: TBase) {
     abstract class DysonDeviceAirWithHeat extends Base {
 
         // Mixin constructor

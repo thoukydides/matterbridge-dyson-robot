@@ -9,6 +9,7 @@ import { Changed } from './decorator-changed.js';
 import { createHash } from 'crypto';
 import { DeviceConfigMqtt } from './dyson-mqtt-client-live.js';
 import { EndpointBase } from './endpoint-base.js';
+import { DysonCloudAPIDevice } from './dyson-cloud-api-device.js';
 
 // Dyson model details
 export interface DysonDeviceModel {
@@ -28,7 +29,8 @@ export type DysonDeviceConstructorParams<MQTT extends DysonMqttLike = DysonMqttL
     log:    AnsiLogger,
     config: Config,
     device: DeviceConfigMqtt,
-    mqtt:   MQTT
+    mqtt:   MQTT,
+    api?:   DysonCloudAPIDevice
 ];
 
 // Dyson device constructor type
@@ -58,7 +60,8 @@ export abstract class DysonDevice<MQTT extends DysonMqttLike = DysonMqttLike> {
         readonly log:       AnsiLogger,
         readonly config:    Config,
         readonly device:    DeviceConfigMqtt,
-        readonly mqtt:      MQTT
+        readonly mqtt:      MQTT,
+        readonly api?:      DysonCloudAPIDevice
     ) {
         // Prepare the decorator support
         this.changed = new Changed(log);
