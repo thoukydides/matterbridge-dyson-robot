@@ -214,7 +214,7 @@ export function DysonDevice360ZonesMixin<TBase extends AbstractConstructor<Dyson
                 }
                 return true;
             }
-            this.log.warn(`RVC map ${persistentMapId} does not exist`);
+            if (this.api) this.log.warn(`RVC map ${persistentMapId} does not exist`);
             return false;
         }
 
