@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v1.7.0] - 2025-12-24
+### Added
+* Zone cleaning (Service Areas) implemented for Dyson 360 Vis Nav.
+* Improved Apple Home compatibility for robot vacuum devices by only tagging each cleaning mode with a single ModeTag. This is controlled by the new `simpleModeTagsRvc` configuration option.
+### Fixed
+* Accept additional changes to MQTT messages for Dyson 360 Vis Nav.
+
 ## [v1.6.9] - 2025-12-18
 ### Fixed
 * Accept additional changes to MQTT messages for Dyson 360 Vis Nav.
@@ -238,7 +245,8 @@ All notable changes to this project will be documented in this file.
 
 Copyright © 2025 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.6.9...HEAD
+[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.7.0...HEAD
+[v1.7.0]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.6.9...v1.7.0
 [v1.6.9]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.6.8...v1.6.9
 [v1.6.8]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.6.7...v1.6.8
 [v1.6.7]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.6.6...v1.6.7
