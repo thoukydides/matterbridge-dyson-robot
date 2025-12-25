@@ -55,7 +55,7 @@ export interface Dyson360Faults {
     OPTICS:                         Dyson360FaultStatus;
 }
 
-// Details of an active fault (Dyson 360 Vis Nav only?)
+// Details of an active fault (360 Vis Nav only)
 export enum Dyson360FaultNextAction {
     WaitToClean                     = 'WAIT_TO_CLEAR',
     LocalUserAck                    = 'LOCAL_USER_ACK',
@@ -111,13 +111,13 @@ export enum Dyson360CleaningType {
     Mapping                         = 'mapping'
 }
 
-// Dyson robot vacuum cleaning mode (Heurist and Vis Nav only)
+// Dyson robot vacuum cleaning mode (360 Heurist and 360 Vis Nav only)
 export enum Dyson360CleaningMode {
     Global                          = 'global',
     ZoneConfigured                  = 'zoneConfigured'
 }
 
-// Dyson robot vacuum cleaning programme (Heurist and Vis Nav only)
+// Dyson robot vacuum cleaning programme (360 Heurist and 360 Vis Nav only)
 export interface Dyson360CleaningProgramme {
     orderedZones?:                  string[];
     persistentMapId:                string;     // UUID
@@ -125,7 +125,7 @@ export interface Dyson360CleaningProgramme {
     zonesDefinitionLastUpdatedDate: string;     // e.g. '2025-12-17T10:53:21.8147587Z'
 }
 
-// Dyson robot vacuum zone status (Heurist and Vis Nav only)
+// Dyson robot vacuum zone status (360 Heurist and 360 Vis Nav only)
 export enum Dyson360ZoneCleanStatus {
     NotRequested                    = 'CLEAN_NOT_REQUESTED',
     Unable                          = 'CANT_CLEAN',
@@ -169,7 +169,7 @@ export enum Dyson360OutOfBoxState {
     Complete                        = 'OUT_OF_BOX_COMPLETE'
 }
 
-// Dyson robot vacuum zone icon (Vis Nav only)
+// Dyson robot vacuum zone icon (360 Vis Nav only)
 export enum Dyson360ZoneIcon {
     Balcony                         = 'balcony',
     Bathroom                        = 'bathroom',

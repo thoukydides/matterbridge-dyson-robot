@@ -96,8 +96,8 @@ export class DysonCloudAPIDevice {
     }
 
     // Retrieve the map image for a specific cleaning session (360 Eye only)
-    getMapImage360(mapId: string): Promise<Buffer> {
-        const path = `/v1/mapvisualizer/devices/${this.serialNumber}/map/${mapId}`;
+    getMapImage360(clean: string): Promise<Buffer> {
+        const path = `/v1/mapvisualizer/devices/${this.serialNumber}/map/${clean}`;
         return this.ua.getBinary(path, 'image/png');
     }
 

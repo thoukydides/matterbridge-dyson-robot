@@ -29,7 +29,7 @@ export interface Dyson360UnifiedschedulerEventsResponse extends DysonUnifiedsche
     events:                             Dyson360UnifiedschedulerEvent[];
 }
 
-// GET /v1/assets/devices/{serial}/cleanhistory?culture={languagecode} (Eye only)
+// GET /v1/assets/devices/{serial}/cleanhistory?culture={languagecode} (360 Eye only)
 export interface Dyson360CleanHistoryEntry {
     Area:                               number;
     Charges:                            number;
@@ -47,7 +47,7 @@ export interface Dyson360CleanHistoryResponse {
     TriviaMessage:                      string; // e.g. ''
 }
 
-// GET /v1/app/{serial}/persistent-map-metadata (Vis Nav only)
+// GET /v1/app/{serial}/persistent-map-metadata (360 Vis Nav only)
 export interface Dyson360PersistentMapMetadataZone {
     area:                               number;
     icon:                               Dyson360ZoneIcon;
@@ -71,7 +71,7 @@ export interface Dyson360PersistentMapMetadata {
 }
 export type Dyson360PersistentMapMetadataResponse = Dyson360PersistentMapMetadata[];
 
-// GET /v1/app/{serial}/persistent-maps/{uuid} (Vis Nav only)
+// GET /v1/app/{serial}/persistent-maps/{uuid} (360 Vis Nav only)
 export interface Dyson360PersistentMapVertex {
     x:                                  number;
     y:                                  number;
@@ -183,7 +183,7 @@ export interface Dyson360CleanMap {
 }
 export type Dyson360CleanMapsResponse = Dyson360CleanMap[];
 
-// GET /v1/app/{serial}/recommended-cleans (Vis Nav only)
+// GET /v1/app/{serial}/recommended-cleans (360 Vis Nav only)
 export interface Dyson360ZonePredictionDustMilligrams {
     name:                               Dyson360DustName;
     weight:                             number;
@@ -198,7 +198,7 @@ export interface Dyson360RecommendedClean {
 }
 export type Dyson360RecommendedCleansResponse = Dyson360RecommendedClean[];
 
-// PUT /v1/app/{serial}/{uuid}/zones/{zoneid}/zone-behaviours (Vis Nav only)
+// PUT /v1/app/{serial}/{uuid}/zones/{zoneid}/zone-behaviours (360 Vis Nav only)
 export interface Dyson360ZoneBehavioursRequest {
     cleaningStrategy:                   Dyson360CleaningStrategy;
 }
