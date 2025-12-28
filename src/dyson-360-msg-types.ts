@@ -40,14 +40,23 @@ export interface Dyson360MsgConnectionStatus extends DysonMsg {
 // (This is also sometimes received with an empty MQTT topic)
 export interface Dyson360MsgHello extends DysonMsg {
     msg:                        'HELLO',
+    model?:                     string; // e.g. 'RB03'
+    productHardware?:           string; // e.g. 'RB03-1'
     protocol:                   string; // e.g. '1.0.0'
-    serial:                     string; // e.g. '<SERIAL_NUMBER: JJ5-...HDA1502A>'
+    serial:                     string; // e.g. 'AB1-CD-EFG2345H'
+    sessionId?:                 string; // UUID
     version:                    string; // e.g. '11.3.5.10'
 }
 
 export interface Dyson360MsgGoodbye extends DysonMsg {
     msg:                        'GOODBYE';
     reason:                     'UNKNOWN';
+}
+
+export interface Dyson360MsgAuthoriseVerifiedUser extends DysonMsg {
+    msg:                        'AUTHORISE-VERIFIED-USER';
+    id:                         string; // UUID
+    localpwd:                   string; // base64 encoded
 }
 
 export interface Dyson360MsgGoneAway extends DysonMsg {

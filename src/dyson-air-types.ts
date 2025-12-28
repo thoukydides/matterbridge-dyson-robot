@@ -3,6 +3,7 @@
 
 // Air treatment reset source
 export enum DysonAirResetSource {
+    ConnectionJourney       = 'CONJRNY',
     PowerUp                 = 'PWUP',
     Hibernate               = 'HIB'
 }

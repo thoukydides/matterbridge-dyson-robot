@@ -28,19 +28,21 @@ import {
 
 export interface DysonAirMsgHello extends DysonMsg {
     msg:                    'HELLO';
-    model?:                 string; // e.g. 'X455' or 'X475'
-    version:                string; // e.g. '21.04.03'
-    protocol:               string; // e.g. '1.0.0'
-    serialNumber:           string; // e.g. 'AB1-CD-EFG2345H'
+    hardwareVersion?:       string; // e.g. 'PS00.WF03',
     macAddress:             string; // e.g. "C8:FF:77:XX:XX:XX"
-    moduleHardware?:        string; // e.g. '140762-01-07'
+    model?:                 string; // e.g. 'X455' or 'X475'
     moduleBootloader?:      string; // e.g. '-.-.-.-'
-    moduleSoftware?:        string; // e.g. '5227'
+    moduleHardware?:        string; // e.g. '140762-01-07'
     moduleNwp?:             string; // e.g. '2.11.0.1'
-    productHardware?:       string; // e.g. '306614-01-03'
+    moduleSoftware?:        string; // e.g. '5227'
     productBootloader?:     string; // e.g. '000000.00.00'
+    productHardware?:       string; // e.g. '306614-01-03'
     productSoftware?:       string; // e.g. '000027.19.59'
+    protocol:               string; // e.g. '1.0.0'
+    recoveryPackageVersion?:string; // e.g. '0664PF.00.08.004.0001'
     resetSource:            DysonAirResetSource;
+    serialNumber:           string; // e.g. 'AB1-CD-EFG2345H'
+    version:                string; // e.g. '21.04.03'
 }
 
 export interface DysonAirMsgGoneAway extends DysonMsg {
@@ -50,7 +52,7 @@ export interface DysonAirMsgGoneAway extends DysonMsg {
 
 export interface DysonAirMsgGoodbye extends DysonMsg {
     msg:                    'GOODBYE';
-    reason:                 'UNKNOWN';
+    reason:                 'UNKNOWN' | 'SWITCH_TO_AP';
 }
 
 export interface DysonAirMsgImBack extends DysonMsg {
@@ -174,5 +176,10 @@ export interface DysonAirMsgStateSet extends DysonMsg {
 
 export interface DysonAirMsgScheduleSet extends DysonMsg {
     msg:                    'SCHEDULE-SET';
+    version:                string; // Schedule version e.g. '80a0' or 'a770'
+}
+
+export interface DysonAirMsgUpdateSchedule extends DysonMsg {
+    msg:                    'UPDATE-SCHEDULE',
     version:                string; // Schedule version e.g. '80a0' or 'a770'
 }
