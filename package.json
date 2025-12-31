@@ -62,8 +62,10 @@
         "matterbridge": "^3.4.4"
     },
     "dependencies": {
+        "@types/pngjs": "^6.0.5",
         "mqtt": "^5.14.1",
         "node-persist": "^4.0.4",
+        "pngjs": "^7.0.0",
         "semver": "^7.7.3",
         "ts-interface-checker": "^1.0.2",
         "undici": "^7.16.0",

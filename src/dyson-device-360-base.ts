@@ -22,7 +22,11 @@ import {
 import { PLUGIN_URL, VENDOR_ID, VENDOR_NAME } from './settings.js';
 import { RvcCleanMode360, RvcRunMode360 } from './endpoint-360-behavior.js';
 import { PowerSource, RvcOperationalState } from 'matterbridge/matter/clusters';
-import { Dyson360CleaningStrategy, Dyson360PowerMode, Dyson360State } from './dyson-360-types.js';
+import {
+    Dyson360CleaningStrategy,
+    Dyson360PowerMode,
+    Dyson360State
+} from './dyson-360-types.js';
 import {
     Dyson360MappedFaults,
     mapDyson360Faults
@@ -33,7 +37,9 @@ import {
     Device360CommandHandlers
 } from './dyson-device-360-commands.js';
 import { EndpointBase } from './endpoint-base.js';
-import { DysonDevice360Map } from './dyson-device-360-map.js';
+import { MaybePromise } from 'matterbridge/matter';
+import { DysonMsgAny } from './dyson-mqtt-parse.js';
+import { TypeMap as DysonMsgMap360 } from './ti/dyson-360-msg-types.js';
 
 // Mapping of robot vacuum state to Matter equivalents
 type StateMapColumns = [
@@ -105,21 +111,26 @@ export abstract class DysonDevice360Base
 
     // The MQTT client and status update listener
     static readonly mqttConstructor = DysonMqtt360;
-    mqttListener:   () => void;
+    mqttStatusListener:     () => void;
+    mqttMessageListener:    (msg: DysonMsgAny<DysonMsgMap360>) => void;
 
     // The RVC device endpoint
-    endpoint?:      Endpoint360;
+    endpoint?:              Endpoint360;
 
     // Construct a new Dyson device instance
     constructor(...args: DysonDeviceConstructorParams<DysonMqtt360>) {
         super(...args);
 
-        // Prepare a listener for MQTT updates
-        this.mqttListener = tryListener(this.mqtt, () =>
+        // Prepare listeners for MQTT updates
+        this.mqttStatusListener = tryListener(this.mqtt, () =>
             this.updateClusterAttributes(this.mqtt.status));
-
-        // Start processing map-related MQTT messages
-        void new DysonDevice360Map(this.log, this.config, this.mqtt);
+        this.mqttMessageListener = tryListener(this.mqtt, msg => {
+            if (msg.msg === 'STATE-CHANGE' && msg.endOfClean) {
+                assertIsDefined(msg.cleanId);
+                assertIsDefined(msg.cleanDuration);
+                this.cleanFinished(msg.cleanId, msg.cleanDuration);
+            }
+        });
     }
 
     // Create the endpoint for this device
@@ -182,13 +193,15 @@ export abstract class DysonDevice360Base
 
     // Start the device after the endpoints are active
     override async start(): Promise<void> {
-        this.mqtt.on('status', this.mqttListener);
+        this.mqtt.on('status',  this.mqttStatusListener);
+        this.mqtt.on('message', this.mqttMessageListener);
         await this.updateClusterAttributes(this.mqtt.status);
     }
 
     // Stop the device when Matterbridge is shutting down
     override async stop(): Promise<void> {
-        this.mqtt.off('status', this.mqttListener);
+        this.mqtt.off('status',  this.mqttStatusListener);
+        this.mqtt.off('message', this.mqttMessageListener);
         await super.stop();
     }
 
@@ -198,6 +211,9 @@ export abstract class DysonDevice360Base
     abstract getPowerLevelMaps(): Dyson360PowerLevelMap[];
     abstract setPowerLevel(powerLevel: Dyson360PowerLevel): Promise<void>;
     abstract getPowerLevel(): Dyson360PowerLevel | undefined;
+
+    // Display a summary or map when a clean finishes
+    cleanFinished(_cleanId: string, _cleanDuration: number): MaybePromise { /* empty */ }
 
     // Construct a command to set power level based on an RVC Clean Mode
     makePowerCommand(cleanMode: RvcCleanMode360): Device360Command {

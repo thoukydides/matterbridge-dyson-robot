@@ -1,152 +1,302 @@
 // Matterbridge plugin for Dyson robot vacuum and air treatment devices
 // Copyright © 2025 Alexander Thoukydides
 
-import { AnsiLogger, LogLevel } from 'matterbridge/logger';
-import { Config } from './config-types.js';
-import { DysonMqtt360 } from './dyson-mqtt-360.js';
-import { formatSeconds, getValidationTree, tryListener } from './utils.js';
-import { Dyson360MapData } from './dyson-360-types.js';
+import { AnsiLogger } from 'matterbridge/logger';
 import {
-    Dyson360MsgMapData,
-    Dyson360MsgMapGlobal,
-    Dyson360MsgMapGrid,
-    Dyson360MsgStateChange
-} from './dyson-360-msg-types.js';
-import { checkers } from './ti/dyson-360-types.js';
-import { inflateSync } from 'node:zlib';
-import { INSPECT_VERBOSE } from './logger-options.js';
-import { IErrorDetail } from 'ts-interface-checker';
-import { inspect } from 'node:util';
-import { DysonMapGrid } from './dyson-map-grid.js';
-import { DysonMapCoordinate } from './dyson-map-coordinate.js';
+    DysonBitmapOctet,
+    DysonOctetOccupancyFilter,
+    DysonOctetResampleFilter
+} from './dyson-bitmap-octet.js';
+import { assertIsDefined, formatSeconds, plural } from './utils.js';
 import {
-    DYSON_MAP_CONFIG_MATTERBRIDGE,
-    DYSON_MAP_CONFIG_MONOSPACED,
-    dysonMapText
-} from './dyson-map-text.js';
+    DysonAnsiChar,
+    dysonRenderAnsiBitmapsQuadrature
+} from './dyson-bitmap-ansi.js';
+import {
+    Dyson360CleanHistoryEntry,
+    Dyson360CleanMap,
+    Dyson360PersistentMapResponse
+} from './dyson-360-cloud-types.js';
+import { inflateSync } from 'zlib';
+import { Dyson360TimelineEvent } from './dyson-360-types.js';
+import { LogMapStyle } from './config-types.js';
 
-// Map rendering for a Dyson robot vacuum device
-export class DysonDevice360Map {
+// Maximum map width
+const MAX_MAP_WIDTH_CHAR    = 80;   // (characters)
 
-    // Current clean, if any
-    cleanId?: string;
-    readonly grids = new Map<string, DysonMapGrid>();
+// Character aspect ratio (for Matterbridge frontend log viewer)
+const ASPECT_RATIO          = 5/9;  // (width / height)
 
-    // Construct a new Dyson map renderer
-    constructor(
-        readonly log:       AnsiLogger,
-        readonly config:    Config,
-        readonly mqtt:      DysonMqtt360
-    ) {
-        // Listen to map-related MQTT messages
-        mqtt.on('message', tryListener(this.mqtt, msg => {
-            switch (msg.msg) {
-            case 'MAP-GLOBAL':
-            case 'MAP-GRID':
-            case 'MAP-DATA':
-                this.updateMap(msg);
-                break;
-            case 'STATE-CHANGE':
-                if (msg.endOfClean) this.finishMap(msg);
-                break;
-            }
-        }));
+// Dyson 360 Eye map pixels
+enum Dyson360EyeOctet { Empty, Cleaned, Start, End }
+const RGBA_360_EYE = new Map<number, Dyson360EyeOctet>([
+    [0x835ED5FF,    Dyson360EyeOctet.Cleaned],  // Purple
+    [0x8763D6FF,    Dyson360EyeOctet.Cleaned],  // Purple       (with pale grid line)
+    [0x8B68D7FF,    Dyson360EyeOctet.Cleaned],  // Purple       (with grid lines crossing)
+    [0x455CC7FF,    Dyson360EyeOctet.Start],    // Blue         (start location)
+    [0xDD4157FF,    Dyson360EyeOctet.End],      // Red          (end location)
+    [0x00000000,    Dyson360EyeOctet.Empty],    // Transparent
+    [0xFFFFFF08,    Dyson360EyeOctet.Empty],    // Transparent  (with pale grid line)
+    [0xFFFFFF10,    Dyson360EyeOctet.Empty],    // Transparent  (with grid lines crossing)
+    [0xFFFFFFFF,    Dyson360EyeOctet.Empty]     // White        (robot's path)
+]);
+
+// Dyson 360 Vis Nav map pixels
+enum Dyson360VisNavCleanedOctet { Empty, Cleaned, Fault }
+const RGBA_VIS_NAV_CLEANED = new Map<number, Dyson360VisNavCleanedOctet>([
+    [0x000000FF,    Dyson360VisNavCleanedOctet.Empty],          // Black
+    [0xFFFFFFFF,    Dyson360VisNavCleanedOctet.Cleaned]         // White
+]);
+enum Dyson360VisNavPresentationOctet { Empty, Zone, Boundary, Dock }
+const RGBA_VIS_NAV_PRESENTATION = new Map<number, Dyson360VisNavPresentationOctet>([
+    [0x000000FF,    Dyson360VisNavPresentationOctet.Zone],      // Black
+    [0xFFFFFFFF,    Dyson360VisNavPresentationOctet.Boundary],  // White
+    [0x808080FF,    Dyson360VisNavPresentationOctet.Empty]      // Gray
+]);
+
+// Glyphs for monospaced fonts and Matterbridge frontend
+// (Matterbridge versions are subset of Arial with same widths)
+export type Dyson360MapStyle = Exclude<LogMapStyle, 'Off'>;
+const QUADRATURE_GLYPHS: Record<Dyson360MapStyle, string> = {
+    Monospaced:     ' ▘▝▀▖▌▞▛▗▚▐▜▄▙▟█',
+    Matterbridge:   ' ▀▀▀▄▌██▄█▐█▄███'
+};
+const GLYPHS = {
+    boundary:   { Monospaced: '▪', Matterbridge: '╬' },
+    cleaned:    { Monospaced: '☺', Matterbridge: '☺' }, // (char substituted)
+    empty:      { Monospaced: '┼', Matterbridge: '┼' },
+    end:        { Monospaced: '●', Matterbridge: '═' },
+    fault:      { Monospaced: '‼', Matterbridge: '▒' },
+    start:      { Monospaced: '○', Matterbridge: '─' },
+    zone:       { Monospaced: ' ', Matterbridge: '░' }
+} as const satisfies Record<string, Record<Dyson360MapStyle, string>>;
+type GlyphKey = keyof typeof GLYPHS;
+
+// ANSI 256-colour codes
+const COLOURS = {
+    boundary:   { fg:  15,  bg: 235 },  // White on dark grey       (360 Vis Nav)
+    cleaned:    { fg:  98,  bg:  16 },  // Light purple on black    (360 Eye)
+    empty:      { fg: 233,  bg:  16 },  // Dark grey on black
+    end:        { fg:  15,  bg: 197 },  // White on reddish pink    (360 Eye)
+    fault:      { fg:  16,  bg:  11 },  // White on light grey      (360 Vis Nav)
+    start:      { fg:  15,  bg:  62 },  // White on pale blue
+    zone:       { fg: 235,  bg: 235 }   // Dark grey on dark grey   (360 Vis Nav)
+} as const satisfies Record<GlyphKey, { fg: number, bg: number}>;
+
+// Dust level colour gradient: purple-orange-yellow-white (360 Vis Nav)
+const DUST_COLOURS = [54, 89, 124, 166, 208, 214, 220, 226, 227, 228, 229, 230, 231] as const;
+
+// Ansi code to reset all attributes
+const EOL = '\u001B[0m';
+
+// Render a Dyson 360 Eye cleaned area map
+export function dysonRenderMap360Eye(
+    log:            AnsiLogger,
+    style:          Dyson360MapStyle,
+    clean:          Dyson360CleanHistoryEntry,
+    cleanPNG:       Buffer,
+    cleanDuration?: number
+): void {
+    // Retrieve and parse the cleaned area image (5 mm/pixel)
+    const fullBitmap = DysonBitmapOctet.fromPNGMapped(cleanPNG, RGBA_360_EYE);
+
+    // Scale the image to the target log width
+    const scaledBitmaps = scaleBitmaps({ bitmap: fullBitmap });
+
+    // Convert the image to text
+    const filterPixel = (octet: Dyson360EyeOctet): boolean => octet !== Dyson360EyeOctet.Empty;
+    const filterGlyph = (char: string, octets: Dyson360EyeOctet[]): DysonAnsiChar => {
+        if (octets.includes(Dyson360EyeOctet.End))   return makeGlyph(style, 'end');
+        if (octets.includes(Dyson360EyeOctet.Start)) return makeGlyph(style, 'start');
+        if (char === ' ')                            return makeGlyph(style, 'empty');
+        return { ...makeGlyph(style, 'cleaned'), char };
+    };
+    const glyphs = QUADRATURE_GLYPHS[style];
+    const lines = dysonRenderAnsiBitmapsQuadrature(scaledBitmaps, filterPixel, filterGlyph, glyphs, EOL);
+
+    // Log the clean details and cleaned area map
+    logMap(log, lines, clean.Area, clean.Charges, cleanDuration);
+}
+
+// Render a Dyson 360 Vis Nav cleaned area map
+export function dysonRenderMap360VisNav(
+    log:            AnsiLogger,
+    style:          Dyson360MapStyle,
+    clean:          Dyson360CleanMap,
+    map:            Dyson360PersistentMapResponse,
+    cleanDuration?: number
+): void {
+    // Check that the bitmaps are all the same resolution
+    const resolutions = new Set<number>([
+        map.presentationMap.resolution,
+        clean.cleanedFootprint.resolution,
+        clean.dustMap.resolution
+    ]);
+    if (resolutions.size !== 1) throw new Error(`Multiple bitmap resolutions not supported (${[...resolutions].join(' ≠ ')})`);
+    const [mmPerPixel] = resolutions;
+    assertIsDefined(mmPerPixel);
+
+    // Parse the presentation map image and add any dock locations
+    const presentationPNG = Buffer.from(map.presentationMap.data, 'base64');
+    const presentationBitmap = DysonBitmapOctet.fromPNGMapped(presentationPNG, RGBA_VIS_NAV_PRESENTATION);
+    const setPixel = <Octet extends number>(bitmap: DysonBitmapOctet<Octet>, coord: { x: number, y: number }, octet: Octet): void => {
+        const mmToPixels = (mm: number): number => Math.round(mm / mmPerPixel);
+        const x = mmToPixels(coord.x), y = mmToPixels(coord.y);
+        if (0 <= x && x < bitmap.width && 0 <= y && y < bitmap.height) bitmap.write(x, y, octet);
+        else log.warn(`Coordinate outside bitmap (${coord.x}, ${coord.y} mm)`);
+    };
+    for (const dock of map.dockLocations) {
+        setPixel(presentationBitmap, dock, Dyson360VisNavPresentationOctet.Dock);
+    }
+    const { cleanMapPosition } = clean.persistentMap;
+    const presentationOrigin = {
+        x:  -cleanMapPosition.x / mmPerPixel,
+        y:  -cleanMapPosition.y / mmPerPixel
+    };
+
+    // Parse the cleaned footprint image and add any fault locations
+    const cleanedPNG = Buffer.from(clean.cleanedFootprint.data, 'base64');
+    const cleanedBitmap = DysonBitmapOctet.fromPNGMapped(cleanedPNG, RGBA_VIS_NAV_CLEANED);
+    for (const { faultLocation } of clean.cleanTimeline) {
+        if (faultLocation !== null) {
+            setPixel(cleanedBitmap, faultLocation, Dyson360VisNavCleanedOctet.Fault);
+        }
     }
 
-    // Update a single map tile from a received MQTT message
-    updateMap(msg: Dyson360MsgMapGlobal | Dyson360MsgMapGrid | Dyson360MsgMapData): void {
-        // Start a new map if the clean identifier has changed
-        if (msg.cleanId !== this.cleanId) {
-            if (this.cleanId !== undefined) {
-                this.log.warn(`Discarding map for cleanId ${this.cleanId}`);
-                this.finishMap();
-            }
-            this.log.debug(`Starting new map for cleanId ${msg.cleanId}`);
-            this.cleanId = msg.cleanId;
+    // Convert the dust level data into a bitmap
+    const { width: dustWidth, height: dustHeight } = clean.dustMap;
+    const dustData = clean.dustMap.dustData[0];
+    assertIsDefined(dustData);
+    const dustDataDecoded = inflateSync(Buffer.from(dustData.data, 'base64'));
+    const dustDataBitmap = new DysonBitmapOctet(dustWidth, dustHeight, dustDataDecoded);
+
+    // Scale all of the images to the target log width and mirror vertically
+    const scaledBitmaps = scaleBitmaps(
+        { bitmap: cleanedBitmap },
+        { bitmap: presentationBitmap, origin: presentationOrigin },
+        { bitmap: dustDataBitmap }
+    );
+    for (const bitmap of scaledBitmaps) bitmap.invertY = true;
+
+    // Convert the image to text
+    const filterPixel = (octet: Dyson360VisNavCleanedOctet): boolean => octet === Dyson360VisNavCleanedOctet.Cleaned;
+    const filterGlyph = (
+        char:           string,
+        cleaned:        Dyson360VisNavCleanedOctet[],
+        presentation:   Dyson360VisNavPresentationOctet[],
+        dustLevels:     number[]
+    ): DysonAnsiChar => {
+        // Render the presentation map by itself
+        const PRESENTATION_ANSI_BG: Record<Dyson360VisNavPresentationOctet, DysonAnsiChar> = {
+            [Dyson360VisNavPresentationOctet.Dock]:     makeGlyph(style, 'start'),
+            [Dyson360VisNavPresentationOctet.Zone]:     makeGlyph(style, 'zone'),
+            [Dyson360VisNavPresentationOctet.Boundary]: makeGlyph(style, 'boundary'),
+            [Dyson360VisNavPresentationOctet.Empty]:    makeGlyph(style, 'empty')
+        };
+        const presentationOctet = Math.max(...presentation) as Dyson360VisNavPresentationOctet;
+        const presentationChar = PRESENTATION_ANSI_BG[presentationOctet];
+
+        // Faults take priority over everything else
+        if (cleaned.some(octet => octet === Dyson360VisNavCleanedOctet.Fault)) return makeGlyph(style, 'fault');
+
+        // Show the presentation map for dock locations and outside cleaned area
+        if (presentationOctet === Dyson360VisNavPresentationOctet.Dock || char === ' ') return presentationChar;
+
+        // Select colour based on dust level
+        const dustLevel = Math.max(0, ...dustLevels) / (dustData.scaleFactor || 255);
+        const dustAnsiId = DUST_COLOURS[Math.floor(dustLevel * DUST_COLOURS.length)] ?? DUST_COLOURS.at(-1);
+        assertIsDefined(dustAnsiId);
+
+        // Always show zone boundary, but adopt the dust level colour
+        if (presentationOctet === Dyson360VisNavPresentationOctet.Boundary) {
+            return { ...presentationChar, bg: bgColour(dustAnsiId) };
         }
 
-        // Select or create the tile for this update
-        const grid = this.grids.get(msg.gridID) ?? new DysonMapGrid();
-        this.grids.set(msg.gridID, grid);
+        // Otherwise show the cleaned area (on the presentation map background)
+        return { char, fg: fgColour(dustAnsiId), bg: presentationChar.bg };
+    };
+    const glyphs = QUADRATURE_GLYPHS[style];
+    const lines = dysonRenderAnsiBitmapsQuadrature(scaledBitmaps, filterPixel, filterGlyph, glyphs, EOL);
 
-        // Update the tile using the details from the received MQTT message
-        switch (msg.msg) {
-        case 'MAP-GLOBAL':
-            grid.setGlobalPosition(new DysonMapCoordinate(msg));
-            grid.setRotation(msg.angle);
-            break;
-        case 'MAP-GRID':
-            grid.setResolution(msg.resolution);
-            grid.setSize(new DysonMapCoordinate([msg.width, msg.height]));
-            grid.setOrigin(new DysonMapCoordinate(msg.anchor));
-            break;
-        case 'MAP-DATA':
-            grid.setData(this.decodeMapData(msg.data.content));
-            break;
-        }
+    // Count the number of charging events and cleaned area
+    const charges = clean.cleanTimeline.filter(e => e.eventName === Dyson360TimelineEvent.Charging).length;
+    const cleanedCount = cleanedBitmap.occupied(filterPixel);
+    const cleanedArea = cleanedCount * Math.pow(mmPerPixel / 1000, 2);
+
+    // Log the clean details and cleaned area map
+    logMap(log, lines, cleanedArea, charges, cleanDuration);
+}
+
+// Scale a collection of bitmaps to fit the target console width
+interface ResampleBitmap<Octet extends number = number> {
+    bitmap:     DysonBitmapOctet<Octet>;
+    occupancy?: DysonOctetOccupancyFilter<Octet>;
+    resample?:  DysonOctetResampleFilter<Octet>;
+    origin?:    { x: number, y: number };
+}
+function scaleBitmaps<Bitmaps extends [ResampleBitmap, ...ResampleBitmap[]]>(
+    ...bitmaps: Bitmaps
+): { [K in keyof Bitmaps]: Bitmaps[K]['bitmap']; } {
+    // Default filters (assume non-zero is occupied and pick highest value)
+    const defaultOccupancy: DysonOctetOccupancyFilter = octet  => octet !== 0;
+    const defaultResample:  DysonOctetResampleFilter  = octets => octets.length ? Math.max(...octets) : 0;
+
+    // Determine the bounding box of all bitmaps in the global coordinates
+    const allBounds: { minX: number, minY: number, maxX: number, maxY: number }[] = [];
+    for (const { bitmap, occupancy, origin } of bitmaps) {
+        const bounds = bitmap.boundingBox(occupancy ?? defaultOccupancy);
+        if (!bounds) continue;
+        allBounds.push({
+            minX: bounds.x + (origin?.x ?? 0),
+            minY: bounds.y + (origin?.y ?? 0),
+            maxX: bounds.x + (origin?.x ?? 0) + bounds.width,
+            maxY: bounds.y + (origin?.y ?? 0) + bounds.height
+        });
     }
+    if (!allBounds.length) throw new Error('No bitmaps have content');
 
-    // Render the final map when the clean finishes
-    finishMap(msg?: Dyson360MsgStateChange): void {
-        if (this.cleanId === undefined) return;
+    // Merge the bounding boxes into a single bounding box
+    const srcX      = Math.min(...allBounds.map(({ minX }) => minX));
+    const srcY      = Math.min(...allBounds.map(({ minY }) => minY));
+    const srcWidth  = Math.max(...allBounds.map(({ maxX }) => maxX)) - srcX;
+    const srcHeight = Math.max(...allBounds.map(({ maxY }) => maxY)) - srcY;
 
-        // Convert the map to a textual representation for logging
-        const { logMapStyle } = this.config;
-        if (logMapStyle !== 'Off') {
-            const style = logMapStyle === 'Matterbridge'
-                ? DYSON_MAP_CONFIG_MATTERBRIDGE : DYSON_MAP_CONFIG_MONOSPACED;
-            const robotCoord = this.mqtt.status.globalPosition
-                && new DysonMapCoordinate(this.mqtt.status.globalPosition);
-            const mapText = dysonMapText(this.log, [...this.grids.values()], robotCoord, style);
-            this.log.info(msg?.cleanDuration
-                ? `Cleaned for ${formatSeconds(msg.cleanDuration)}:`
-                : `Unexpected end of clean ${this.cleanId}:`);
-            for (const line of mapText) this.log.info(line);
-        }
+    // Resample each of the bitmaps to a common size (in quadrant blocks, not characters)
+    const destWidth  = Math.round(Math.min(MAX_MAP_WIDTH_CHAR * 2, srcWidth));
+    const destHeight = Math.round(srcHeight * destWidth * ASPECT_RATIO / srcWidth);
+    return bitmaps.map(({ bitmap, origin, resample }) => {
+        const srcBounds = {
+            x:          srcX - (origin?.x ?? 0),
+            y:          srcY - (origin?.y ?? 0),
+            width:      srcWidth,
+            height:     srcHeight
+        };
+        return bitmap.resample(srcBounds, destWidth, destHeight, resample ?? defaultResample);
+    }) as { [K in keyof Bitmaps]: Bitmaps[K]['bitmap']; };
+}
 
-        // Discard the map data
-        this.cleanId = undefined;
-        this.grids.clear();
-    }
+// Construct an ANSI colour coded glyph (using 256-colour mode IDs)
+function makeGlyph(style: Dyson360MapStyle, key: GlyphKey): DysonAnsiChar {
+    return {
+        char:   GLYPHS[key][style],
+        fg:     fgColour(COLOURS[key].fg),
+        bg:     bgColour(COLOURS[key].bg)
+    };
+}
 
-    // Decode and check the MAP-DATA content field
-    decodeMapData(content: string): Dyson360MapData {
-        let json: unknown;
-        try {
-            const deflated = Buffer.from(content, 'base64');
-            // (Note: zlib deflate compressed, despite 'gzipped' label)
-            const text = inflateSync(deflated).toString();
-            json = JSON.parse(text);
-        } catch (err) {
-            const message = err instanceof Error ? err.message : String(err);
-            throw new Error(`Failed to decode and parse Dyson map data as JSON: ${message}`);
-        }
+// Construct ANSI colour codes (using 256-colour mode IDs)
+function fgColour(id: number): string { return `\u001B[38;5;${id}m`; }
+function bgColour(id: number): string { return `\u001B[48;5;${id}m`; }
 
-        // Check that the map data has the expected fields
-        const checker = checkers.Dyson360MapData;
-        const validation = checker.validate(json);
-        if (validation) {
-            this.logCheckerValidation(LogLevel.ERROR, json, validation);
-            throw new Error('Unexpected structure of Dyson map data');
-        }
-        const strictValidation = checker.strictValidate(json);
-        if (strictValidation) {
-            this.logCheckerValidation(LogLevel.WARN, json, strictValidation);
-            // (Continue processing map data that includes unexpected properties)
-        }
-
-        // Return the result
-        return json as Dyson360MapData;
-    }
-
-    // Log checker validation errors
-    logCheckerValidation(level: LogLevel, content: unknown, errors?: IErrorDetail[]): void {
-        this.log.log(level, 'MAP-DATA content:');
-        if (errors) {
-            const validationLines = getValidationTree(errors);
-            validationLines.forEach(line => { this.log.log(level, line); });
-        }
-        const contentLines = inspect(content, INSPECT_VERBOSE).split('\n');
-        contentLines.forEach(line => { this.log.info(`    ${line}`); });
-    }
+// Output a cleaned area map to the log
+function logMap(
+    log:            AnsiLogger,
+    lines:          string[],
+    cleanedArea:    number,
+    charges:        number,
+    cleanDuration?: number
+): void {
+    log.info(`Cleaned ${cleanedArea.toFixed(2)} m² with ${plural(charges, 'charge')}`
+             + (cleanDuration ? ` in ${formatSeconds(cleanDuration)}` : ''));
+    for (const line of lines) log.info(line);
 }

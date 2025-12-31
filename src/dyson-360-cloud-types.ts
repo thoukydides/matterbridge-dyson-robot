@@ -179,7 +179,7 @@ export interface Dyson360CleanMap {
     robotPath:                          [];
     sequenceNumber:                     number;
     zones:                              Dyson360PersistentMapBitmap;
-    zoneStatus:                         Dyson360ZoneStatus | null;
+    zoneStatus:                         Dyson360ZoneStatus[] | null;
 }
 export type Dyson360CleanMapsResponse = Dyson360CleanMap[];
 
