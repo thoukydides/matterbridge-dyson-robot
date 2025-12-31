@@ -267,9 +267,7 @@ export class DysonCloudAPIUserAgent {
             const validationLines = getValidationTree(errors);
             validationLines.forEach(line => { this.log.log(level, line); });
         }
-        if (typeof body === 'string') {
-            const bodyLines = inspect(body, INSPECT_VERBOSE).split('\n');
-            bodyLines.forEach(line => { this.log.info(`    ${line}`); });
-        }
+        const bodyLines = inspect(body, INSPECT_VERBOSE).split('\n');
+        bodyLines.forEach(line => { this.log.info(`    ${line}`); });
     }
 }
