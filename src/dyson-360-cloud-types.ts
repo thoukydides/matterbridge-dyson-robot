@@ -31,7 +31,7 @@ export interface Dyson360UnifiedschedulerEventsResponse extends DysonUnifiedsche
 
 // GET /v1/assets/devices/{serial}/cleanhistory?culture={languagecode} (360 Eye only)
 export interface Dyson360CleanHistoryEntry {
-    Area:                               number;
+    Area:                               number; // m²
     Charges:                            number;
     Clean:                              string; // UUID
     Finished:                           string; // e.g. '2025-12-18T09:06:18'
@@ -49,7 +49,7 @@ export interface Dyson360CleanHistoryResponse {
 
 // GET /v1/app/{serial}/persistent-map-metadata (360 Vis Nav only)
 export interface Dyson360PersistentMapMetadataZone {
-    area:                               number;
+    area:                               number; // m²
     icon:                               Dyson360ZoneIcon;
     id:                                 string; // e.g. '1'
     name:                               string; // e.g. 'Kitchen'
@@ -63,37 +63,37 @@ export interface Dyson360PersistentMapMetadataZoneProperties {
 }
 export interface Dyson360PersistentMapMetadata {
     id:                                 string; // UUID
-    name:                               string; // e.g. 'Downstairs'
+    name:                               string | null; // e.g. 'Downstairs'
     lastVisited:                        string; // e.g. '2025-12-17T13:36:17.768Z'
     zones:                              Dyson360PersistentMapMetadataZone[];
     zoneProperties:                     Dyson360PersistentMapMetadataZoneProperties[];
-    zonesDefinitionLastUpdatedDate:     string; // e.g. '2025-12-17T11:30:52.6166355Z'
+    zonesDefinitionLastUpdatedDate:     string | null; // e.g. '2025-12-17T11:30:52.6166355Z'
 }
 export type Dyson360PersistentMapMetadataResponse = Dyson360PersistentMapMetadata[];
 
 // GET /v1/app/{serial}/persistent-maps/{uuid} (360 Vis Nav only)
 export interface Dyson360PersistentMapVertex {
-    x:                                  number;
-    y:                                  number;
+    x:                                  number; // mm
+    y:                                  number; // mm
 }
 export interface Dyson360PersistentMapLocation extends Dyson360PersistentMapVertex{
-    angle:                              number;
+    angle:                              number; // °
 }
 export interface Dyson360PersistentMapBitmap {
-    resolution:                         number;
+    resolution:                         number; // mm/pixel
     data:                               string; // base64 encoded PNG image
 }
 export interface Dyson360PersistentMapThreshold {
-    startX:                             number;
-    startY:                             number;
-    endX:                               number;
-    endY:                               number;
+    startX:                             number; // mm
+    startY:                             number; // mm
+    endX:                               number; // mm
+    endY:                               number; // mm
     leftZone:                           string; // e.g. '1'
     rightZone:                          string; // e.g. '2'
 }
 export interface Dyson360PersistentMapZonesDefinition {
     lastUpdatedDate:                    string; // e.g. '2025-12-17T11:30:52.6166355Z'
-    persistentMapDisplayOrientation:    number; // e.g. 270
+    persistentMapDisplayOrientation:    number; // °
     persistentMapId:                    string; // UUID
     persistentMapName:                  string; // e.g. 'Downstairs'
     persistentMapOffset:                Dyson360PersistentMapLocation;
@@ -155,13 +155,13 @@ export interface Dyson360CleanTimelineEntry {
 }
 export interface DysonCleanMapDustData {
     name:                               Dyson360DustName; // (only 'total')
-    scaleFactor:                        number;
+    scaleFactor:                        number; // 100% in data scale
     data:                               string; // base64 encoded, zlib deflate compressed, width×height octets
 }
 export interface DysonCleanMapDustMap {
-    width:                              number;
-    height:                             number;
-    resolution:                         number;
+    width:                              number; // pixels
+    height:                             number; // pixels
+    resolution:                         number; // mm/pixel
     dustData:                           DysonCleanMapDustData[];
 }
 export interface Dyson360CleanMap {

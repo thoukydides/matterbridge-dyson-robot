@@ -91,7 +91,7 @@ export class DysonCloudAPIDevice {
 
     // Retrieve the cleaning history for the device (360 Eye only)
     getCleaningHistory360(languageCode = DEFAULT_LANGUAGE): Promise<Dyson360CleanHistoryResponse> {
-        const path = `/v1/assets/devices/{serial}/cleanhistory?culture=${languageCode}`;
+        const path = `/v1/assets/devices/${this.serialNumber}/cleanhistory?culture=${languageCode}`;
         return this.ua.getJSON(checkers360.Dyson360CleanHistoryResponse, path);
     }
 

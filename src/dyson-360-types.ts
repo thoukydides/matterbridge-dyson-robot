@@ -43,7 +43,7 @@ export type Dyson360FaultStatus = {
     active:                         false;
 } | {
     active:                         true;
-    description:                    string; // e.g. '23.0.3',
+    description:                    string;         // e.g. '23.0.3',
 }
 export interface Dyson360Faults {
     AIRWAYS:                        Dyson360FaultStatus;
@@ -71,7 +71,7 @@ export enum Dyson360FaultUserAction {
     UserRecoverable                 = 'USER_RECOVERABLE'
 }
 export interface Dyson360ActiveFault {
-    faultCode:                      string; // e.g. '23.0.3',
+    faultCode:                      string;         // e.g. '23.0.3',
     nextActionRequired:             Dyson360FaultNextAction;
     present:                        Dyson360FaultPresent;
     requiredUserAction:             Dyson360FaultUserAction;
@@ -93,9 +93,9 @@ export enum Dyson360HeuristPowerMode {
 }
 export enum Dyson360VisNavPowerMode {
     Idle                            = '0',
-    Quiet                           = '1',      // Auto (low) / Quiet / Quick
-    High                            = '2',      // Auto (high)
-    Boost                           = '3'       // Boost
+    Quiet                           = '1',          // Auto (low) / Quiet / Quick
+    High                            = '2',          // Auto (high)
+    Boost                           = '3'           // Boost
 }
 export type Dyson360PowerMode =
     Dyson360EyePowerMode
@@ -120,9 +120,9 @@ export enum Dyson360CleaningMode {
 // Dyson robot vacuum cleaning programme (360 Heurist and 360 Vis Nav only)
 export interface Dyson360CleaningProgramme {
     orderedZones?:                  string[];
-    persistentMapId:                string;     // UUID
-    unorderedZones?:                string[];   // e.g. ['4','1','2','3']
-    zonesDefinitionLastUpdatedDate: string;     // e.g. '2025-12-17T10:53:21.8147587Z'
+    persistentMapId:                string;         // UUID
+    unorderedZones?:                string[];       // e.g. ['4','1','2','3']
+    zonesDefinitionLastUpdatedDate: string | null;  // e.g. '2025-12-17T10:53:21.8147587Z'
 }
 
 // Dyson robot vacuum zone status (360 Heurist and 360 Vis Nav only)
@@ -135,7 +135,7 @@ export enum Dyson360ZoneCleanStatus {
 }
 export interface Dyson360ZoneStatus {
     cleanStatus:                    Dyson360ZoneCleanStatus;
-    zoneId:                         string; // e.g. '1'
+    zoneId:                         string;         // e.g. '1'
 }
 
 // Dyson robot vacuum cleaning strategy
@@ -144,7 +144,7 @@ export enum Dyson360CleaningStrategy {
     Quick                           = 'quick',
     Quiet                           = 'quiet',
     Boost                           = 'boost',
-    Mixed                           = 'mixed'   // (360 Heurist only)
+    Mixed                           = 'mixed'       // (360 Heurist only)
 }
 
 // Dyson robot vacuum position

@@ -173,7 +173,7 @@ export function DysonDevice360ZonesMixin<TBase extends AbstractConstructor<Dyson
                 unorderedZones.push(zone[1].id);
             }
             if (maps.size !== 1) throw new SelectAreaError.InvalidSet('Areas must all be from the same map');
-            const map = maps.values().next().value;
+            const [map] = maps;
             assertIsDefined(map);
             const {id, zonesDefinitionLastUpdatedDate } = map;
 
@@ -190,7 +190,8 @@ export function DysonDevice360ZonesMixin<TBase extends AbstractConstructor<Dyson
         async checkMap(persistentMapId: string, rvcVersion?: string): Promise<boolean> {
             const getMyVersion = (): string | undefined => {
                 const map = [...this.mapFromMatter.values()].find(({ id }) => id === persistentMapId);
-                return map?.zonesDefinitionLastUpdatedDate;
+                const myVersion = map?.zonesDefinitionLastUpdatedDate;
+                return myVersion === null ? '' /* sorts before all dates */ : myVersion;
             };
 
             // First check whether the matching map and version is already known
@@ -257,7 +258,7 @@ export function DysonDevice360ZonesMixin<TBase extends AbstractConstructor<Dyson
                 const mapId = this.makeMapId(map);
                 const supportedMap: ServiceArea.Map = {
                     mapId,
-                    name:   map.name.substring(0, 64)
+                    name:   map.name?.substring(0, 64) ?? ''
                 };
                 this.supportedMaps.push(supportedMap);
                 this.mapFromMatter.set(mapId, map);

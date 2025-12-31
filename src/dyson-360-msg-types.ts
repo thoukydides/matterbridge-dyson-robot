@@ -214,6 +214,11 @@ export interface Dyson360MsgAbort extends DysonMsg {
     'mode-reason':              DysonModeReason;
 }
 
+export interface Dyson360MsgStartMapping extends DysonMsg {
+    msg:                        'START-MAPPING';
+    'mode-reason':              DysonModeReason;
+}
+
 export interface Dyson360MsgPersistentMapManifestUpdated extends DysonMsg {
     msg:                        'PERSISTENT-MAP-MANIFEST-UPDATED'
 }
