@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v1.8.1] - 2026-01-01
+### Fixed
+* Support Dyson 360 Vis Nav cleaned area maps without an associated persistent map.
+* Wait for cleaned area maps to be available at the end of a clean.
+
 ## [v1.8.0] - 2025-12-31
 ### Added
 * Dyson 360 Eye and Dyson 360 Vis Nav robot vacuum cleaned area maps are retrieved from the MyDyson account and displayed in the log at the end of each clean. This requires `Remote Account` provisioning, and is controlled by the new `logMapStyle` configuration option.
@@ -255,7 +260,8 @@ All notable changes to this project will be documented in this file.
 
 Copyright © 2025-2026 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.8.0...HEAD
+[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.8.1...HEAD
+[v1.8.1]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.8.0...v1.8.1
 [v1.8.0]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.7.0...v1.8.0
 [v1.7.0]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.6.9...v1.7.0
 [v1.6.9]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.6.8...v1.6.9
