@@ -1,5 +1,5 @@
 // Matterbridge plugin for Dyson robot vacuum and air treatment devices
-// Copyright © 2026 Alexander Thoukydides
+// Copyright © 2025-2026 Alexander Thoukydides
 
 // Common base for all Dyson MQTT payloads
 export interface DysonMsg {

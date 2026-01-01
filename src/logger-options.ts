@@ -1,5 +1,5 @@
 // Matterbridge plugin for Dyson robot vacuum and air treatment devices
-// Copyright © 2026 Alexander Thoukydides
+// Copyright © 2025-2026 Alexander Thoukydides
 
 import { db, nf, YELLOW } from 'matterbridge/logger';
 import { InspectOptions } from 'util';

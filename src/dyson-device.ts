@@ -1,5 +1,5 @@
 // Matterbridge plugin for Dyson robot vacuum and air treatment devices
-// Copyright © 2026 Alexander Thoukydides
+// Copyright © 2025-2026 Alexander Thoukydides
 
 import { DysonDevice } from './dyson-device-base.js';
 import { DYSON_DEVICE_TYPES_360 } from './dyson-device-360.js';

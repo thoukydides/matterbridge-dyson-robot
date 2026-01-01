@@ -1,5 +1,5 @@
 // Matterbridge plugin for Dyson robot vacuum and air treatment devices
-// Copyright © 2026 Alexander Thoukydides
+// Copyright © 2025-2026 Alexander Thoukydides
 
 import { BasicInformation } from 'matterbridge/matter/clusters';
 import { RvcCleanMode360 } from './endpoint-360-behavior.js';
