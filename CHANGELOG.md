@@ -253,7 +253,7 @@ All notable changes to this project will be documented in this file.
 
 ---
 
-Copyright © 2025 Alexander Thoukydides
+Copyright © 2026 Alexander Thoukydides
 
 [Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.8.0...HEAD
 [v1.8.0]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.7.0...v1.8.0

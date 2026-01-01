@@ -1,5 +1,5 @@
 // Matterbridge plugin for Dyson robot vacuum and air treatment devices
-// Copyright © 2025 Alexander Thoukydides
+// Copyright © 2026 Alexander Thoukydides
 
 import { MatterbridgeDynamicPlatform } from 'matterbridge';
 import { ENGINES, PLUGIN_NAME, PLUGIN_VERSION } from './settings.js';

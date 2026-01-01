@@ -1,5 +1,5 @@
 // Matterbridge plugin for Dyson robot vacuum and air treatment devices
-// Copyright © 2025 Alexander Thoukydides
+// Copyright © 2026 Alexander Thoukydides
 
 import { AnsiLogger } from 'matterbridge/logger';
 import { DysonMqtt360, DysonMqtt360Action } from './dyson-mqtt-360.js';
