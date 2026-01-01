@@ -123,36 +123,47 @@ export function dysonRenderMap360VisNav(
     log:            AnsiLogger,
     style:          Dyson360MapStyle,
     clean:          Dyson360CleanMap,
-    map:            Dyson360PersistentMapResponse,
+    map?:           Dyson360PersistentMapResponse,
     cleanDuration?: number
 ): void {
     // Check that the bitmaps are all the same resolution
     const resolutions = new Set<number>([
-        map.presentationMap.resolution,
         clean.cleanedFootprint.resolution,
         clean.dustMap.resolution
     ]);
+    if (map) resolutions.add(map.presentationMap.resolution);
     if (resolutions.size !== 1) throw new Error(`Multiple bitmap resolutions not supported (${[...resolutions].join(' ≠ ')})`);
     const [mmPerPixel] = resolutions;
     assertIsDefined(mmPerPixel);
 
-    // Parse the presentation map image and add any dock locations
-    const presentationPNG = Buffer.from(map.presentationMap.data, 'base64');
-    const presentationBitmap = DysonBitmapOctet.fromPNGMapped(presentationPNG, RGBA_VIS_NAV_PRESENTATION);
+    // Set a single pixel
     const setPixel = <Octet extends number>(bitmap: DysonBitmapOctet<Octet>, coord: { x: number, y: number }, octet: Octet): void => {
         const mmToPixels = (mm: number): number => Math.round(mm / mmPerPixel);
         const x = mmToPixels(coord.x), y = mmToPixels(coord.y);
         if (0 <= x && x < bitmap.width && 0 <= y && y < bitmap.height) bitmap.write(x, y, octet);
         else log.warn(`Coordinate outside bitmap (${coord.x}, ${coord.y} mm)`);
     };
-    for (const dock of map.dockLocations) {
-        setPixel(presentationBitmap, dock, Dyson360VisNavPresentationOctet.Dock);
+
+    // If the clean is associated with a map then parse its presentation map
+    let presentationBitmap: DysonBitmapOctet<Dyson360VisNavPresentationOctet>;
+    let presentationOrigin: { x: number, y: number } | undefined;
+    if (clean.persistentMap && map) {
+        // Parse the presentation map image and add any dock locations
+        const presentationPNG = Buffer.from(map.presentationMap.data, 'base64');
+        presentationBitmap = DysonBitmapOctet.fromPNGMapped(presentationPNG, RGBA_VIS_NAV_PRESENTATION);
+        for (const dock of map.dockLocations) {
+            setPixel(presentationBitmap, dock, Dyson360VisNavPresentationOctet.Dock);
+        }
+        const { cleanMapPosition } = clean.persistentMap;
+        presentationOrigin = {
+            x:  -cleanMapPosition.x / mmPerPixel,
+            y:  -cleanMapPosition.y / mmPerPixel
+        };
+    } else {
+        // No persistent map, so create an empty presentation bitmap
+        const emptyBuffer = Buffer.alloc(1, Dyson360VisNavPresentationOctet.Empty);
+        presentationBitmap = new DysonBitmapOctet(1, 1, emptyBuffer);
     }
-    const { cleanMapPosition } = clean.persistentMap;
-    const presentationOrigin = {
-        x:  -cleanMapPosition.x / mmPerPixel,
-        y:  -cleanMapPosition.y / mmPerPixel
-    };
 
     // Parse the cleaned footprint image and add any fault locations
     const cleanedPNG = Buffer.from(clean.cleanedFootprint.data, 'base64');

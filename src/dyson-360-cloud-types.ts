@@ -164,6 +164,10 @@ export interface DysonCleanMapDustMap {
     resolution:                         number; // mm/pixel
     dustData:                           DysonCleanMapDustData[];
 }
+export interface DysonCleanMapPersistentMap {
+    id:                                 string; // UUID
+    cleanMapPosition:                   Dyson360PersistentMapLocation;
+};
 export interface Dyson360CleanMap {
     cleanedFootprint:                   Dyson360PersistentMapBitmap;
     cleanId:                            string; // UUID
@@ -172,10 +176,7 @@ export interface Dyson360CleanMap {
     highSensitivityAdditionalObjects:   Dyson360PersistentMapBitmap;
     lowSensitivityObjects:              Dyson360PersistentMapBitmap;
     occupancyProbability:               Dyson360PersistentMapBitmap;
-    persistentMap: {
-        id:                             string; // UUID
-        cleanMapPosition:               Dyson360PersistentMapLocation;
-    };
+    persistentMap:                      DysonCleanMapPersistentMap | null;
     robotPath:                          [];
     sequenceNumber:                     number;
     zones:                              Dyson360PersistentMapBitmap;

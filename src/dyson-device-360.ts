@@ -14,6 +14,7 @@ import {
 } from './dyson-device-360-base.js';
 import { DysonDevice360ZonesMixin } from './dyson-device-360-zones.js';
 import { dysonRenderMap360Eye, dysonRenderMap360VisNav } from './dyson-device-360-map.js';
+import { Dyson360PersistentMapResponse } from './dyson-360-cloud-types.js';
 
 // A Dyson 360 Eye device
 export class DysonDevice360Eye extends DysonDevice360Base {
@@ -102,7 +103,8 @@ export class DysonDevice360VisNav extends DysonDevice360ZonesMixin(DysonDevice36
             const history = await this.api.getCleanMaps360();
             const clean = history.find(entry => entry.cleanId === cleanId);
             if (!clean) throw new Error(`Clean ${cleanId} not found in history`);
-            const map = await this.api.getPersistentMap360(clean.persistentMap.id);
+            let map: Dyson360PersistentMapResponse | undefined;
+            if (clean.persistentMap) map = await this.api.getPersistentMap360(clean.persistentMap.id);
 
             // Render the map
             dysonRenderMap360VisNav(this.log, logMapStyle, clean, map, cleanDuration);
