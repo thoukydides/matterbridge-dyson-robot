@@ -7,7 +7,7 @@ import {
     DysonOctetOccupancyFilter,
     DysonOctetResampleFilter
 } from './dyson-bitmap-octet.js';
-import { assertIsDefined, formatSeconds, plural } from './utils.js';
+import { assertIsDefined } from './utils.js';
 import {
     DysonAnsiChar,
     dysonRenderAnsiBitmapsQuadrature
@@ -20,6 +20,7 @@ import {
 import { inflateSync } from 'zlib';
 import { Dyson360TimelineEvent } from './dyson-360-types.js';
 import { LogMapStyle } from './config-types.js';
+import { Dyson360CleanSummary } from './dyson-device-360-base.js';
 
 // Maximum map width
 const MAX_MAP_WIDTH_CHAR    = 80;   // (characters)
@@ -63,7 +64,7 @@ const QUADRATURE_GLYPHS: Record<Dyson360MapStyle, string> = {
 };
 const GLYPHS = {
     boundary:   { Monospaced: '▪', Matterbridge: '╬' },
-    cleaned:    { Monospaced: '☺', Matterbridge: '☺' }, // (char substituted)
+    cleaned:    { Monospaced: '☺', Matterbridge: '☺' }, // (quadrature block element substituted)
     empty:      { Monospaced: '┼', Matterbridge: '┼' },
     end:        { Monospaced: '●', Matterbridge: '═' },
     fault:      { Monospaced: '‼', Matterbridge: '▒' },
@@ -91,12 +92,11 @@ const EOL = '\u001B[0m';
 
 // Render a Dyson 360 Eye cleaned area map
 export function dysonRenderMap360Eye(
-    log:            AnsiLogger,
-    style:          Dyson360MapStyle,
-    clean:          Dyson360CleanHistoryEntry,
-    cleanPNG:       Buffer,
-    cleanDuration?: number
-): void {
+    _log:       AnsiLogger,
+    style:      Dyson360MapStyle,
+    clean:      Dyson360CleanHistoryEntry,
+    cleanPNG:   Buffer
+): Dyson360CleanSummary {
     // Retrieve and parse the cleaned area image (5 mm/pixel)
     const fullBitmap = DysonBitmapOctet.fromPNGMapped(cleanPNG, RGBA_360_EYE);
 
@@ -112,20 +112,19 @@ export function dysonRenderMap360Eye(
         return { ...makeGlyph(style, 'cleaned'), char };
     };
     const glyphs = QUADRATURE_GLYPHS[style];
-    const lines = dysonRenderAnsiBitmapsQuadrature(scaledBitmaps, filterPixel, filterGlyph, glyphs, EOL);
+    const mapLines = dysonRenderAnsiBitmapsQuadrature(scaledBitmaps, filterPixel, filterGlyph, glyphs, EOL);
 
     // Log the clean details and cleaned area map
-    logMap(log, lines, clean.Area, clean.Charges, cleanDuration);
+    return { charges: clean.Charges, cleanedArea: clean.Area, mapLines };
 }
 
 // Render a Dyson 360 Vis Nav cleaned area map
 export function dysonRenderMap360VisNav(
-    log:            AnsiLogger,
-    style:          Dyson360MapStyle,
-    clean:          Dyson360CleanMap,
-    map?:           Dyson360PersistentMapResponse,
-    cleanDuration?: number
-): void {
+    log:    AnsiLogger,
+    style:  Dyson360MapStyle,
+    clean:  Dyson360CleanMap,
+    map?:   Dyson360PersistentMapResponse
+): Dyson360CleanSummary {
     // Check that the bitmaps are all the same resolution
     const resolutions = new Set<number>([
         clean.cleanedFootprint.resolution,
@@ -227,7 +226,7 @@ export function dysonRenderMap360VisNav(
         return { char, fg: fgColour(dustAnsiId), bg: presentationChar.bg };
     };
     const glyphs = QUADRATURE_GLYPHS[style];
-    const lines = dysonRenderAnsiBitmapsQuadrature(scaledBitmaps, filterPixel, filterGlyph, glyphs, EOL);
+    const mapLines = dysonRenderAnsiBitmapsQuadrature(scaledBitmaps, filterPixel, filterGlyph, glyphs, EOL);
 
     // Count the number of charging events and cleaned area
     const charges = clean.cleanTimeline.filter(e => e.eventName === Dyson360TimelineEvent.Charging).length;
@@ -235,7 +234,7 @@ export function dysonRenderMap360VisNav(
     const cleanedArea = cleanedCount * Math.pow(mmPerPixel / 1000, 2);
 
     // Log the clean details and cleaned area map
-    logMap(log, lines, cleanedArea, charges, cleanDuration);
+    return { charges, cleanedArea, mapLines };
 }
 
 // Scale a collection of bitmaps to fit the target console width
@@ -298,16 +297,3 @@ function makeGlyph(style: Dyson360MapStyle, key: GlyphKey): DysonAnsiChar {
 // Construct ANSI colour codes (using 256-colour mode IDs)
 function fgColour(id: number): string { return `\u001B[38;5;${id}m`; }
 function bgColour(id: number): string { return `\u001B[48;5;${id}m`; }
-
-// Output a cleaned area map to the log
-function logMap(
-    log:            AnsiLogger,
-    lines:          string[],
-    cleanedArea:    number,
-    charges:        number,
-    cleanDuration?: number
-): void {
-    log.info(`Cleaned ${cleanedArea.toFixed(2)} m² with ${plural(charges, 'charge')}`
-             + (cleanDuration ? ` in ${formatSeconds(cleanDuration)}` : ''));
-    for (const line of lines) log.info(line);
-}

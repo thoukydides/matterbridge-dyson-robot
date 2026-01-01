@@ -6,14 +6,19 @@ import { RvcCleanMode360 } from './endpoint-360-behavior.js';
 import {
     Dyson360CleaningStrategy,
     Dyson360EyePowerMode,
-    Dyson360HeuristPowerMode
+    Dyson360HeuristPowerMode,
+    Dyson360TimelineEvent
 } from './dyson-360-types.js';
 import {
     DysonDevice360Base,
-    Dyson360PowerLevelMap
+    Dyson360PowerLevelMap,
+    Dyson360CleanSummaryResult
 } from './dyson-device-360-base.js';
 import { DysonDevice360ZonesMixin } from './dyson-device-360-zones.js';
-import { dysonRenderMap360Eye, dysonRenderMap360VisNav } from './dyson-device-360-map.js';
+import {
+    dysonRenderMap360Eye,
+    dysonRenderMap360VisNav
+} from './dyson-device-360-map.js';
 import { Dyson360PersistentMapResponse } from './dyson-360-cloud-types.js';
 
 // A Dyson 360 Eye device
@@ -35,20 +40,20 @@ export class DysonDevice360Eye extends DysonDevice360Base {
     override setPowerLevel = (powerLevel: Dyson360EyePowerMode) => this.mqtt.commandSetPowerMode(powerLevel);
     override getPowerLevel = () => this.mqtt.status.defaultVacuumPowerMode;
 
-    // Display a summary or map when a clean finishes
-    override async cleanFinished(cleanId: string, cleanDuration: number): Promise<void> {
+    // Retrieve details of a completed clean
+    override async getCompletedClean(cleanId: string): Promise<Dyson360CleanSummaryResult> {
         const { logMapStyle } = this.config;
-        super.cleanFinished(cleanId, cleanDuration);
-        if (this.api && logMapStyle !== 'Off') {
-            // Retrieve details of the specified (or most recent) clean
-            const history = await this.api.getCleaningHistory360();
-            const clean = history.Entries.find(entry => entry.Clean === cleanId);
-            if (!clean) throw new Error(`Clean ${cleanId} not found in history`);
-            const map = await this.api.getMapImage360(cleanId);
+        if (!this.api || logMapStyle === 'Off') return 'Unavailable';
 
-            // Render the Map
-            dysonRenderMap360Eye(this.log, logMapStyle, clean, map, cleanDuration);
-        }
+        // Retrieve details of the specified (or most recent) clean
+        const history = await this.api.getCleaningHistory360();
+        const clean = history.Entries.find(entry => entry.Clean === cleanId);
+        if (!clean)                             return 'Not found';
+        if (clean.IsInterim)                    return 'Not ready';
+        const map = await this.api.getMapImage360(cleanId);
+
+        // Render the Map
+        return dysonRenderMap360Eye(this.log, logMapStyle, clean, map);
     }
 }
 
@@ -94,21 +99,22 @@ export class DysonDevice360VisNav extends DysonDevice360ZonesMixin(DysonDevice36
     override setPowerLevel = (powerLevel: Dyson360CleaningStrategy) => this.mqtt.commandSetCleaningStrategy(powerLevel);
     override getPowerLevel = () => this.mqtt.status.defaultCleaningStrategy;
 
-    // Display a summary or map when a clean finishes
-    override async cleanFinished(cleanId: string, cleanDuration: number): Promise<void> {
+    // Retrieve details of a completed clean
+    override async getCompletedClean(cleanId: string): Promise<Dyson360CleanSummaryResult> {
         const { logMapStyle } = this.config;
-        super.cleanFinished(cleanId, cleanDuration);
-        if (this.api && logMapStyle !== 'Off') {
-            // Retrieve details of the specified (or most recent) clean
-            const history = await this.api.getCleanMaps360();
-            const clean = history.find(entry => entry.cleanId === cleanId);
-            if (!clean) throw new Error(`Clean ${cleanId} not found in history`);
-            let map: Dyson360PersistentMapResponse | undefined;
-            if (clean.persistentMap) map = await this.api.getPersistentMap360(clean.persistentMap.id);
+        if (!this.api || logMapStyle === 'Off') return 'Unavailable';
 
-            // Render the map
-            dysonRenderMap360VisNav(this.log, logMapStyle, clean, map, cleanDuration);
-        }
+        // Retrieve details of the specified (or most recent) clean
+        const history = await this.api.getCleanMaps360();
+        const clean = history.find(entry => entry.cleanId === cleanId);
+        if (!clean)                             return 'Not found';
+        const interim = clean.cleanTimeline.at(-1)?.eventName !== Dyson360TimelineEvent.RunEnded;
+        if (interim)                            return 'Not ready';
+        let persistentMap: Dyson360PersistentMapResponse | undefined;
+        if (clean.persistentMap) persistentMap = await this.api.getPersistentMap360(clean.persistentMap.id);
+
+        // Render the map
+        return dysonRenderMap360VisNav(this.log, logMapStyle, clean, persistentMap);
     }
 }
 

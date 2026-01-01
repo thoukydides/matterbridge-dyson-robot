@@ -8,7 +8,7 @@ import {
 } from './dyson-device-base.js';
 import { DysonMqtt360, DysonMqttStatus360 } from './dyson-mqtt-360.js';
 import { EntityName } from './config-types.js';
-import { assertIsDefined, tryListener } from './utils.js';
+import { assertIsDefined, formatMilliseconds, formatSeconds, MS, plural, tryListener } from './utils.js';
 import { DysonMqttStatus } from './dyson-mqtt.js';
 import { BasicInformation } from 'matterbridge/matter/clusters';
 import { ifValueChanged } from './decorator-changed.js';
@@ -38,8 +38,25 @@ import {
 } from './dyson-device-360-commands.js';
 import { EndpointBase } from './endpoint-base.js';
 import { MaybePromise } from 'matterbridge/matter';
-import { DysonMsgAny } from './dyson-mqtt-parse.js';
-import { TypeMap as DysonMsgMap360 } from './ti/dyson-360-msg-types.js';
+import { setTimeout } from 'node:timers/promises';
+
+// Details of a completed clean
+export interface Dyson360CleanSummary {
+    charges?:       number,
+    cleanDuration?: number  // seconds
+    cleanedArea?:   number, // m²
+    mapLines?:      string[],
+}
+export type Dyson360CleanSummaryUnavailable =
+    'Not found'     // Clean not found in history (retry)
+  | 'Not ready'     // Clean has not finished (retry)
+  | 'Unavailable';  // No API or map rendering disabled
+export type Dyson360CleanSummaryResult = Dyson360CleanSummary | Dyson360CleanSummaryUnavailable;
+
+// Retry configuration for retrieving details of a completed clean
+const CLEAN_RETRY_AFTER     =      5 * MS;  // 5 second minimum backoff
+const CLEAN_RETRY_LIMIT     = 5 * 60 * MS;  // Give up after 1 minute
+const CLEAN_RETRY_FACTOR    = 2;            // Double backoff on each failure
 
 // Mapping of robot vacuum state to Matter equivalents
 type StateMapColumns = [
@@ -112,10 +129,12 @@ export abstract class DysonDevice360Base
     // The MQTT client and status update listener
     static readonly mqttConstructor = DysonMqtt360;
     mqttStatusListener:     () => void;
-    mqttMessageListener:    (msg: DysonMsgAny<DysonMsgMap360>) => void;
 
     // The RVC device endpoint
     endpoint?:              Endpoint360;
+
+    // State used to detect the end of a clean
+    runMode = RvcRunMode360.Idle;
 
     // Construct a new Dyson device instance
     constructor(...args: DysonDeviceConstructorParams<DysonMqtt360>) {
@@ -124,13 +143,6 @@ export abstract class DysonDevice360Base
         // Prepare listeners for MQTT updates
         this.mqttStatusListener = tryListener(this.mqtt, () =>
             this.updateClusterAttributes(this.mqtt.status));
-        this.mqttMessageListener = tryListener(this.mqtt, msg => {
-            if (msg.msg === 'STATE-CHANGE' && msg.endOfClean) {
-                assertIsDefined(msg.cleanId);
-                assertIsDefined(msg.cleanDuration);
-                this.cleanFinished(msg.cleanId, msg.cleanDuration);
-            }
-        });
     }
 
     // Create the endpoint for this device
@@ -194,14 +206,12 @@ export abstract class DysonDevice360Base
     // Start the device after the endpoints are active
     override async start(): Promise<void> {
         this.mqtt.on('status',  this.mqttStatusListener);
-        this.mqtt.on('message', this.mqttMessageListener);
         await this.updateClusterAttributes(this.mqtt.status);
     }
 
     // Stop the device when Matterbridge is shutting down
     override async stop(): Promise<void> {
         this.mqtt.off('status',  this.mqttStatusListener);
-        this.mqtt.off('message', this.mqttMessageListener);
         await super.stop();
     }
 
@@ -212,8 +222,53 @@ export abstract class DysonDevice360Base
     abstract setPowerLevel(powerLevel: Dyson360PowerLevel): Promise<void>;
     abstract getPowerLevel(): Dyson360PowerLevel | undefined;
 
-    // Display a summary or map when a clean finishes
-    cleanFinished(_cleanId: string, _cleanDuration: number): MaybePromise { /* empty */ }
+    // Retrieve details of a completed clean
+    getCompletedClean(_cleanId: string): MaybePromise<Dyson360CleanSummaryResult> { return {}; }
+
+    // Retrieve details of a completed clean
+    async getCompletedCleanWithRetries(cleanId: string): Promise<Dyson360CleanSummary> {
+        const giveUpAt = Date.now() + CLEAN_RETRY_LIMIT;
+        let backoff = CLEAN_RETRY_AFTER;
+        for (;;) {
+            const result = await this.getCompletedClean(cleanId);
+            switch (result) {
+            case 'Not found':
+            case 'Not ready':
+                // Failure might be due to requesting the results too soon
+                if (giveUpAt < Date.now() + backoff) {
+                    this.log.warn(`Abandoned retrieval of clean ${cleanId}: ${result}`);
+                    return {};
+                } else {
+                    this.log.debug(`Failed to retrieve clean ${cleanId}: ${result}; retrying in ${formatMilliseconds(backoff)}...`);
+                    await setTimeout(backoff);
+                    backoff *= CLEAN_RETRY_FACTOR;
+                }
+                break;
+            case 'Unavailable':
+                // Not using MyDyson API or map rendering disabled
+                return {};
+            default:
+                // Success
+                return result;
+            }
+        }
+    }
+
+    // Log details of a completed clean
+    async logCompletedClean(cleanId: string, cleanDuration?: number): Promise<void> {
+        // Attempt to retrieve the details of the clean
+        const result = await this.getCompletedCleanWithRetries(cleanId);
+
+        // Log the summary
+        const { charges, cleanedArea, mapLines } = result;
+        if (result.cleanDuration) cleanDuration = result.cleanDuration;
+        const parts: string[] = [];
+        if (cleanedArea)            parts.push(`${cleanedArea.toFixed(2)} m²`);
+        if (charges !== undefined)  parts.push(`with ${plural(charges, 'charge')}`);
+        if (cleanDuration)          parts.push(`in ${formatSeconds(cleanDuration)}`);
+        if (parts.length) this.log.info(`Cleaned ${parts.join(' ')}`);
+        for (const line of mapLines ?? []) this.log.info(line);
+    }
 
     // Construct a command to set power level based on an RVC Clean Mode
     makePowerCommand(cleanMode: RvcCleanMode360): Device360Command {
@@ -254,6 +309,13 @@ export abstract class DysonDevice360Base
             this.endpoint.updateRvcOperationalState(operationalState),
             this.endpoint.updatePowerSource(batteryStatus)
         ]);
+
+        // Check for the end of a clean
+        const prevRunMode = this.runMode;
+        this.runMode = runMode;
+        if (runMode === RvcRunMode360.Idle && prevRunMode === RvcRunMode360.Cleaning) {
+            if (status.cleanId) await this.logCompletedClean(status.cleanId, status.cleanDuration);
+        }
     }
 
     // Convert the battery status to Power Source cluster attributes
