@@ -152,7 +152,7 @@ export enum Dyson360CleaningStrategy {
 // Dyson robot vacuum position
 export type Dyson360Position = [number, number];
 
-// Map data (after base64 and gzip decoding)
+// Dyson map data (after base64 and gzip decoding) (360 Eye only)
 export type Dyson360MapBitmap = number[][];
 export type Dyson360MapPath = [number, number, number];
 export interface Dyson360MapData {
@@ -162,6 +162,9 @@ export interface Dyson360MapData {
     unnavigable:                    Dyson360MapBitmap;  // 0 = free, 1-101 = dilated obstacle mask
     path:                           Dyson360MapPath[];
 }
+
+// Dyson maps only support discrete 90° multiples for most rotations
+export type Dyson360Rotation        = 0 | 90 | 180 | 270;
 
 // Dyson robot vacuum initial setup state
 export enum Dyson360OutOfBoxState {

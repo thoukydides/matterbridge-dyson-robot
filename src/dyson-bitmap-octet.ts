@@ -4,6 +4,12 @@
 import { PNG } from 'pngjs';
 import { formatList, plural } from './utils.js';
 
+// Dimensions
+export interface DysonBitmapOctetSize {
+    width:  number;
+    height: number;
+}
+
 // A bounding box
 export interface DysonBitmapOctetBounds {
     x:      number;
@@ -24,42 +30,38 @@ export type DysonOctetOccupancyFilter<Octet extends number = number> = (octet: O
 // A persistent map or cleaned area bitmap (one octet per pixel)
 export class DysonBitmapOctet<Octet extends number = number> {
 
-    // Transformations
-    invertY = false;
-
     // Construct a new bitmap
     constructor(readonly width: number, readonly height: number, readonly buffer: Buffer) {}
 
     // Resample a rectangular region
     resample(
-        src:        DysonBitmapOctetBounds,
-        destWidth:  number,
-        destHeight: number,
-        filter:     DysonOctetResampleFilter<Octet>
+        src:    DysonBitmapOctetBounds,
+        dest:   DysonBitmapOctetSize,
+        filter: DysonOctetResampleFilter<Octet>
     ): DysonBitmapOctet<Octet> {
-        const destBuffer = Buffer.alloc(destWidth * destHeight);
-        const width = src.width / destWidth, height = src.height / destHeight;
-        for (let destY = 0; destY < destHeight; ++destY) {
-            for (let destX = 0; destX < destWidth; ++destX) {
+        const destBuffer = Buffer.alloc(dest.width * dest.height);
+        const width = src.width / dest.width, height = src.height / dest.height;
+        for (let destY = 0; destY < dest.height; ++destY) {
+            for (let destX = 0; destX < dest.width; ++destX) {
                 const x = src.x + destX * width;
                 const y = src.y + destY * height;
                 const octets = this.pixels({ x, y, width, height });
-                destBuffer[destY * destWidth + destX] = filter(octets);
+                destBuffer[destY * dest.width + destX] = filter(octets);
             }
         }
-        return new DysonBitmapOctet<Octet>(destWidth, destHeight, destBuffer);
+        return new DysonBitmapOctet<Octet>(dest.width, dest.height, destBuffer);
     }
 
     // Read a single pixel
     read(x: number, y: number): Octet {
-        const py = this.invertY ? this.height - 1 - y : y;
-        return this.buffer.readUInt8(py * this.width + x) as Octet;
+        const i = y * this.width + x;
+        return this.buffer.readUInt8(i) as Octet;
     }
 
     // Write a single pixel
     write(x: number, y: number, octet: Octet): void {
-        const py = this.invertY ? this.height - 1 - y : y;
-        this.buffer.writeUInt8(octet, py * this.width + x);
+        const i = y * this.width + x;
+        this.buffer.writeUInt8(octet, i);
     }
 
     // Pixels within a rectangle
