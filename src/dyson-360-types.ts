@@ -57,16 +57,18 @@ export interface Dyson360Faults {
 
 // Details of an active fault (360 Vis Nav only)
 export enum Dyson360FaultNextAction {
-    WaitToClean                     = 'WAIT_TO_CLEAR',
     LocalUserAck                    = 'LOCAL_USER_ACK',
     LocalUserContinue               = 'LOCAL_USER_CONTINUE',
-    LogOnly                         = 'LOG_ONLY'
+    LogOnly                         = 'LOG_ONLY',
+    UserAck                         = 'USER_ACK',
+    WaitToClean                     = 'WAIT_TO_CLEAR'
 }
 export enum Dyson360FaultPresent {
     Present                         = 'PRESENT',
     NotPresent                      = 'NOT_PRESENT'
 }
 export enum Dyson360FaultUserAction {
+    Maintenance                     = 'MAINTENANCE',
     NoAction                        = 'NO_ACTION',
     UserRecoverable                 = 'USER_RECOVERABLE'
 }

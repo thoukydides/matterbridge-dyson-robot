@@ -222,3 +222,9 @@ export interface Dyson360MsgStartMapping extends DysonMsg {
 export interface Dyson360MsgPersistentMapManifestUpdated extends DysonMsg {
     msg:                        'PERSISTENT-MAP-MANIFEST-UPDATED'
 }
+
+export interface Dyson360MsgAcknowledgeFault extends DysonMsg {
+    msg:                        'ACKNOWLEDGE-FAULT',
+    'mode-reason':              DysonModeReason,
+    faultCode:                  string; // e.g. '19.12.-1'
+}
