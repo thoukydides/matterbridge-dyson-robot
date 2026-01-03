@@ -543,8 +543,8 @@
                     "title": "739 = Dyson Cool (CF1 or AM12)"
                 },
                 {
-                    "const": "804",
-                    "title": "804 = Dyson Spot+Scrub (RB05)"
+                    "const": "RB05",
+                    "title": "RB05 = Dyson Spot+Scrub (RB05)"
                 }
             ]
         }

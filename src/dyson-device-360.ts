@@ -120,7 +120,7 @@ export class DysonDevice360VisNav extends DysonDevice360ZonesMixin(DysonDevice36
 
 // A Dyson 360 Spot+Scrub device
 export class DysonDevice360SpotScrub extends DysonDevice360Base {
-    static readonly model = { type: '804', number: 'RB05', name: 'Spot+Scrub' };
+    static readonly model = { type: 'RB05', number: 'RB05', name: 'Spot+Scrub' };
 
     override getBatteryPartNumber = () => '975571-01';
 
