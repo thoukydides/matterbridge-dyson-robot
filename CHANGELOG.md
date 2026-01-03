@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v1.8.3] - 2026-01-03
+### Fixed
+* Accept additional API capability and corrected MQTT root topic for the Spot+Scrub Ai. (#17)
+### Changed
+* Updated dependencies.
+
 ## [v1.8.2] - 2026-01-02
 ### Fixed
 * Accept additional changes to MQTT messages for Dyson 360 Vis Nav.
@@ -266,7 +272,8 @@ All notable changes to this project will be documented in this file.
 
 Copyright © 2025-2026 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.8.2...HEAD
+[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.8.3...HEAD
+[v1.8.3]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.8.2...v1.8.3
 [v1.8.2]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.8.1...v1.8.2
 [v1.8.1]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.8.0...v1.8.1
 [v1.8.0]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.7.0...v1.8.0
