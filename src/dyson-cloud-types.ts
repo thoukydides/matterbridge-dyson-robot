@@ -68,6 +68,7 @@ export enum DysonManifestCapability {
     MidCleanConfiguration   = 'MidCleanConfiguration',
     OutOfBoxState           = 'OutOfBoxState',
     Restrictions            = 'Restrictions',
+    ReadyOffDock            = 'ReadyOffDock',
     Scheduling              = 'Scheduling'
 };
 export interface DysonManifestFirmware {
