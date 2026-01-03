@@ -127,7 +127,37 @@ body:
     id: additional
     attributes:
       label: Additional Information
-      description: "Provide any additional information that might assist with resolving your bug report. This could include links to product web pages, user manuals, screenshots, videos, or anything else relevant. If you have tried workarounds or debugging steps, include them here."
+      description: |
+        Provide any additional information that might assist with resolving your bug report. This could include links to product web pages, user manuals, screenshots, videos, or anything else relevant. If you have tried workarounds or debugging steps, include them here.
+
+        If the issue relates to an unsupported or recently released Dyson product the use the `opendyson` tool to capture a full MQTT message log whilst exercising as much of the device's functionality as possible, e.g. adjusting every setting of an air purifier or performing a full clean with a robot vacuum:
+
+        - Install `opendyson`, e.g. if `Go` is installed and configured:
+          `go install github.com/libdyson-wg/opendyson`
+        - Login to your MyDyson account:
+          `opendyson login`
+        - Identify devices and retrieve their connection credentials:
+          `opendyson devices`
+        - Capture an MQTT message log:
+          `opendyson listen SERIALNUMBER` (with the device's actual serial number substituted)
+        - Paste or attach the output of `opendyson devices` and `opendyson listen` here (as text, not a screenshot)
+        
+        For robot vacuums, also use the Proxyman app to capture the MyDyson app's HTTPS requests:
+        
+        - Install [Proxyman](https://apps.apple.com/gb/app/proxyman/id1551292695). (The free edition is sufficient; the Proxyman Pro in-app purchases are not required.)
+        - Run `Proxyman`, and on its **More** tab:
+          - Follow the "How to setup" instructions to install and trust the root certificate.
+          - Under **SSL Proxying List** add `appapi.cp.dyson.com` and enable it.
+          - Start the VPN. Ensure that `Ready to intercept` is displayed.
+        - Launch the MyDyson app.
+        - On Proxyman's **Home** tab search for and select `appapi.cp.dyson.com`. Ensure that requests are being captured and decoded.
+        - Switch back to the MyDyson app and try all of the robot vacuum's basic functionality, including:
+          - Change the power level for an "All areas" clean.
+          - Start an "All areas" clean.
+          - Change the power level for a zone.
+          - Start a clean of a single zone.
+          - View the most recent cleaned area map.
+        - Return to Proxyman, and click on the cog icon above the list of messages, select **Share**, and then **Save to Files**. This will create a `.proxymanlogv2` file (a Zip archive containing a JSON representation of each captured request). Attach the saved file (not a screenshot) here.
       placeholder: "Any other relevant information..."
     validations:
       required: false

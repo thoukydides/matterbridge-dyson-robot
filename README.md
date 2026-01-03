@@ -490,6 +490,45 @@ All notable changes to this project are documented in [`CHANGELOG.md`](CHANGELOG
           
 If you have discovered an issue or have an idea for how to improve this project, please [open a new issue](https://github.com/thoukydides/matterbridge-dyson-robot/issues/new/choose) using the appropriate issue template.
 
+Most device-specific issues cannot be meaningfully investigated without a **debug log file**, captured with the `Log MQTT Payloads as JSON` debug option enabled. Issues related to robot vacuum devices (especially 360 Heurist, 360 Vis Nav, or Spot+Scrub Ai) also require the `Log API Bodies` debug option enabled.
+
+<details>
+<summary>Reporting Issues with Unsupported or Recently Released Products</summary>
+
+#### MQTT Log for All Product Types
+
+Most Dyson connected products use MQTT messages to control their basic functionality and provide status. Please use the `opendyson` tool to capture a full MQTT message log whilst exercising as much of the device's functionality as possible, e.g. adjusting every setting of an air purifier or performing a full clean with a robot vacuum:
+
+- Install `opendyson`, e.g. if `Go` is installed and configured:
+  `go install github.com/libdyson-wg/opendyson`
+- Login to your MyDyson account:
+  `opendyson login`
+- Identify devices and retrieve their connection credentials:
+  `opendyson devices`
+- Capture an MQTT message log:
+  `opendyson listen SERIALNUMBER` (with the device's actual serial number substituted)
+- Paste or attach the output of `opendyson devices` and `opendyson listen` into the **Additional Information** section of the issue (as text, not a screenshot).
+
+#### API HTTPS Log for Robot Vacuums
+
+Dyson robot vacuums perform many operations (such as controlling zone cleaning and viewing cleaned area maps) via the MyDyson API instead of using MQTT messages. Please use a tool like Proxyman to capture examples of these HTTPS requests and their responses:
+
+- Install [Proxyman](https://apps.apple.com/gb/app/proxyman/id1551292695). (The free edition is sufficient; the Proxyman Pro in-app purchases are not required.)
+- Run `Proxyman`, and on its **More** tab:
+  - Follow the "How to setup" instructions to install and trust the root certificate.
+  - Under **SSL Proxying List** add `appapi.cp.dyson.com` and enable it.
+  - Start the VPN. Ensure that `Ready to intercept` is displayed.
+- Launch the MyDyson app.
+- On Proxyman's **Home** tab search for and select `appapi.cp.dyson.com`. Ensure that requests are being captured and decoded.
+- Switch back to the MyDyson app and try all of the robot vacuum's basic functionality, including:
+  - Change the power level for an "All areas" clean.
+  - Start an "All areas" clean.
+  - Change the power level for a zone.
+  - Start a clean of a single zone.
+  - View the most recent cleaned area map.
+- Return to Proxyman, and click on the cog icon above the list of messages, select **Share**, and then **Save to Files**. This will create a `.proxymanlogv2` file (a Zip archive containing a JSON representation of each captured request). Attach this to the issue. (Ensure that you attach the actual file, not a screenshot.)
+</details>
+
 ### Pull Requests
 
 As explained in [`CONTRIBUTING.md`](https://github.com/thoukydides/.github/blob/master/CONTRIBUTING.md), this project does **NOT** accept pull requests. Any PRs submitted will be closed without discussion.
