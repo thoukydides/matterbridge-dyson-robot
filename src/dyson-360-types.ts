@@ -198,6 +198,7 @@ export enum Dyson360TimelineEvent {
     CleanEnded                      = 'CLEAN_ENDED',
     CleanStarted                    = 'CLEAN_STARTED',
     FaultUserRecoverable            = 'FAULT_USER_RECOVERABLE',
+    FaultReplaceOnDock              = 'FAULT_REPLACE_ON_DOCK',
     NeedsCharge                     = 'NEEDS_CHARGE',
     Paused                          = 'PAUSED',
     PersistentMapChanged            = 'PERSISTENT_MAP_CHANGED',
