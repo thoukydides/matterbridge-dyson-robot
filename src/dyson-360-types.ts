@@ -70,7 +70,8 @@ export enum Dyson360FaultPresent {
 export enum Dyson360FaultUserAction {
     Maintenance                     = 'MAINTENANCE',
     NoAction                        = 'NO_ACTION',
-    UserRecoverable                 = 'USER_RECOVERABLE'
+    UserRecoverable                 = 'USER_RECOVERABLE',
+    ReplaceOnDock                   = 'REPLACE_ON_DOCK'
 }
 export interface Dyson360ActiveFault {
     faultCode:                      string;         // e.g. '23.0.3',
