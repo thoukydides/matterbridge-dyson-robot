@@ -62,7 +62,7 @@ export abstract class DysonMqttClientLive extends DysonMqttClient {
         mqtt.removeAllListeners('message');
 
         // Close the client
-        await mqtt.endAsync();
+        await mqtt.endAsync(true);
     }
 
     // Create a new MQTT client
