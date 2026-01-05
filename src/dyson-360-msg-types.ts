@@ -8,6 +8,7 @@ import {
     Dyson360CleaningStrategy,
     Dyson360CleaningType,
     Dyson360Faults,
+    Dyson360GoodbyeReason,
     Dyson360OutOfBoxState,
     Dyson360Position,
     Dyson360PowerMode,
@@ -50,7 +51,8 @@ export interface Dyson360MsgHello extends DysonMsg {
 
 export interface Dyson360MsgGoodbye extends DysonMsg {
     msg:                        'GOODBYE';
-    reason:                     'UNKNOWN';
+    reason:                     Dyson360GoodbyeReason;
+    sessionId?:                 string; // UUID
 }
 
 export interface Dyson360MsgAuthoriseVerifiedUser extends DysonMsg {
@@ -79,12 +81,12 @@ export interface Dyson360MsgCurrentState extends DysonMsg {
     cleaningProgramme?:         Dyson360CleaningProgramme;
     currentCleaningMode?:       Dyson360CleaningMode;
     currentCleaningStrategy?:   Dyson360CleaningStrategy,
-    currentVacuumPowerMode:     Dyson360PowerMode;
+    currentVacuumPowerMode?:    Dyson360PowerMode;
     defaultCleaningMode?:       Dyson360CleaningMode;
     defaultCleaningStrategy?:   Dyson360CleaningStrategy,
     defaultVacuumPowerMode?:    Dyson360PowerMode;
     faults?:                    Dyson360Faults;
-    fullCleanType:              Dyson360CleaningType;
+    fullCleanType?:             Dyson360CleaningType;
     globalPosition?:            Dyson360Position;
     outOfBoxState?:             Dyson360OutOfBoxState;
     persistentMapId?:           string; // UUID
@@ -107,13 +109,13 @@ export interface Dyson360MsgStateChange extends DysonMsg {
     cleaningProgramme?:         Dyson360CleaningProgramme;
     currentCleaningMode?:       Dyson360CleaningMode;
     currentCleaningStrategy?:   Dyson360CleaningStrategy,
-    currentVacuumPowerMode:     Dyson360PowerMode;
+    currentVacuumPowerMode?:    Dyson360PowerMode;
     defaultCleaningMode?:       Dyson360CleaningMode;
     defaultCleaningStrategy?:   Dyson360CleaningStrategy,
     defaultVacuumPowerMode?:    Dyson360PowerMode;
     endOfClean?:                boolean;
     faults?:                    Dyson360Faults;
-    fullCleanType:              Dyson360CleaningType;
+    fullCleanType?:             Dyson360CleaningType;
     globalPosition?:            Dyson360Position;
     newActiveFaults?:           Dyson360ActiveFault[],
     newOutOfBoxState?:          Dyson360OutOfBoxState;

@@ -1,6 +1,7 @@
 // Matterbridge plugin for Dyson robot vacuum and air treatment devices
 // Copyright © 2025-2026 Alexander Thoukydides
 
+import { Dyson360BackReason } from './dyson-360-types.js';
 import {
     DysonAirCurrentSensorData,
     DysonAirEnvironmentalUsageData
@@ -12,6 +13,7 @@ import {
 import {
     DysonAirFaultChange,
     DysonAirFaultStatus,
+    DysonAirGoodbyeReason,
     DysonAirResetFilterLife,
     DysonAirResetHEPAFilterLife,
     DysonAirResetSource,
@@ -52,12 +54,12 @@ export interface DysonAirMsgGoneAway extends DysonMsg {
 
 export interface DysonAirMsgGoodbye extends DysonMsg {
     msg:                    'GOODBYE';
-    reason:                 'UNKNOWN' | 'SWITCH_TO_AP';
+    reason:                 DysonAirGoodbyeReason;
 }
 
 export interface DysonAirMsgImBack extends DysonMsg {
     msg:                    'IM-BACK';
-    reason?:                'WIFI-RECONNECT' | 'BROKER-RECONNECT';
+    reason?:                Dyson360BackReason;
     version?:               string; // e.g. '0664PF.00.08.005.0002'
 }
 

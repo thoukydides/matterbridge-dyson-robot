@@ -1,6 +1,18 @@
 // Matterbridge plugin for Dyson robot vacuum and air treatment devices
 // Copyright © 2025-2026 Alexander Thoukydides
 
+// Dyson robot goodbye reason
+export enum Dyson360GoodbyeReason {
+    Shutdown                        = 'SHUTDOWN',
+    Unknown                         = 'UNKNOWN'
+}
+
+// Dyson robot back reason
+export enum Dyson360BackReason {
+    BrokerReconnect                 = 'BROKER-RECONNECT',
+    WiFiReconnect                   = 'WIFI-RECONNECT'
+}
+
 // Dyson robot vacuum state
 export enum Dyson360State {
     MachineOff                      = 'MACHINE_OFF',
@@ -169,6 +181,7 @@ export type Dyson360Rotation        = 0 | 90 | 180 | 270;
 
 // Dyson robot vacuum initial setup state
 export enum Dyson360OutOfBoxState {
+    Unknown                         = '',
     AwaitingMapping                 = 'AWAITING_SUCCESSFUL_MAPPING',
     AwaitingMapUploadingCompletion  = 'AWAITING_MAP_UPLOADING_COMPLETION',
     AwaitingZoningCompletion        = 'AWAITING_ZONING_COMPLETION',

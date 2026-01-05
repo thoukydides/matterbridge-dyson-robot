@@ -1,6 +1,12 @@
 // Matterbridge plugin for Dyson robot vacuum and air treatment devices
 // Copyright © 2025-2026 Alexander Thoukydides
 
+// Dyson air treatment goodbye reason
+export enum DysonAirGoodbyeReason {
+    SwitchToAP              = 'SWITCH_TO_AP',
+    Unknown                 = 'UNKNOWN'
+}
+
 // Air treatment reset source
 export enum DysonAirResetSource {
     ConnectionJourney       = 'CONJRNY',
