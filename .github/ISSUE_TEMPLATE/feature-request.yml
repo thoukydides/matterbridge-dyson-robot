@@ -44,21 +44,35 @@ body:
       description: |
         Describe how this feature is supported by the Dyson MQTT protocol. Include:
         - A brief explanation of the observed MQTT behaviour
-        - A relevant MQTT log extract (see below)
+        - A relevant MQTT message log extract (see below)
         - Or link to another open source project that supports this feature
-      
-        **To capture Dyson MQTT logs:**
-        - In the Matterbridge frontend: *Home* > *Plugins* > *matterbridge-dyson-robot* > ⚙️
-          - *debug* > ✅
-          - *Enable advanced debug option* > *Log MQTT Payloads as JSON*
-        - Or in `matterbridge-dyson-robot.config.json`:
-          ```json
-          "debug": true,
-          "debugFeatures": ["Log MQTT Payloads as JSON"]
-          ```
-        - View logs with: `journalctl -u matterbridge.service -n 1000 -f --output cat`
-      
-        Replace any sensitive information with `REDACTED`.
+
+        Use either of these methods to capture an MQTT message log:
+        
+        1. Matterbridge plugin log:
+        
+          - In the Matterbridge frontend: *Home* > *Plugins* > *matterbridge-dyson-robot* > ⚙️
+            - *debug* > ✅
+            - *Enable advanced debug option* > *Log MQTT Payloads as JSON*
+          - Or in `matterbridge-dyson-robot.config.json`:
+            ```json
+            "debug": true,
+            "debugFeatures": ["Log MQTT Payloads as JSON"]
+            ```
+          - View logs with: `journalctl -u matterbridge.service -n 1000 -f --output cat`
+        
+        2. Using the `opendyson` tool:
+
+          - Install `opendyson`, e.g. if `Go` is installed and configured:
+            `go install github.com/libdyson-wg/opendyson`
+          - Login to your MyDyson account:
+            `opendyson login`
+          - Identify devices and retrieve their connection credentials:
+            `opendyson devices`
+          - Capture an MQTT message log:
+            `opendyson listen SERIALNUMBER` (with the device's actual serial number substituted)
+        
+        Paste the log below or attached as a text file. Do NOT use a screenshot. Replace sensitive information (access tokens, etc) with `REDACTED`.
       placeholder: |
         Describe and paste relevant logs...
     validations:

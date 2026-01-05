@@ -65,9 +65,26 @@ body:
     id: appliance
     attributes:
       label: Dyson Appliance(s)
-      description: |
-        Specify which Dyson appliance(s) the issue relates to. You can find the model name and number behind the clear bin on robot vacuums, or on the base of air treatment devices.
-      placeholder: "e.g. Dyson 360 Eye RB01"
+      description: "Specify the model name and number of the Dyson appliance that the issue relates to. These details can be found behind the clear bin on robot vacuums, or on the base of air treatment devices."
+      placeholder: "e.g. Dyson 360 Vis Nav RB03"
+    validations:
+      required: true
+      
+  - type: input
+    id: topic
+    attributes:
+      label: Dyson MQTT Root Topic
+      description: "Specify the MQTT root topic used to communicate with this appliance. This can be found in the plugin's log."
+      placeholder: "e.g. N223 or 664"
+    validations:
+      required: true
+      
+  - type: input
+    id: firmware
+    attributes:
+      label: Dyson Firmware Version
+      description: "Specify the appliance's firmware version. This can be found in the MyDyson app under the device's settings."
+      placeholder: "e.g. RB03PR.01.08.006.5079"
     validations:
       required: true
       

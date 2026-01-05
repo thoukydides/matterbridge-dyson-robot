@@ -1,0 +1,90 @@
+name: 👌 Compatible device
+description: "Report a device that has been confirmed as fully supported and operates without warnings or missing functionality."
+labels: ["compatible device"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ⚠️ Use this template only if the device operates correctly with no significant warnings or missing features.
+
+  - type: input
+    id: version
+    attributes:
+      label: Plugin Version
+      description: "State the plugin version confirmed as compatible."
+    validations:
+      required: true
+
+  - type: input
+    id: appliance
+    attributes:
+      label: Dyson Appliance
+      description: "Specify the model name and number of the Dyson appliance that has been tested. These details can be found behind the clear bin on robot vacuums, or on the base of air treatment devices."
+      placeholder: "e.g. Dyson 360 Vis Nav RB03"
+    validations:
+      required: true
+      
+  - type: input
+    id: topic
+    attributes:
+      label: Dyson MQTT Root Topic
+      description: "Specify the MQTT root topic used to communicate with this appliance. This can be found in the plugin's log."
+      placeholder: "e.g. N223 or 664"
+    validations:
+      required: true
+      
+  - type: input
+    id: firmware
+    attributes:
+      label: Dyson Firmware Version
+      description: "Specify the appliance's firmware version. This can be found in the MyDyson app under the device's settings."
+      placeholder: "e.g. RB03PR.01.08.006.5079"
+    validations:
+      required: true
+
+  - type: textarea
+    id: log
+    attributes:
+      label: MQTT Message Log
+      description: |
+        If possible, please provide an MQTT message log for the appliance. This is optional but extremely helpful, and may be used to expand the plugin's regression tests.
+
+        Use either of these methods to capture the log:
+        
+        1. Matterbridge plugin log:
+        
+          - In the Matterbridge frontend: *Home* > *Plugins* > *matterbridge-dyson-robot* > ⚙️
+            - *debug* > ✅
+            - *Enable advanced debug option* > *Log MQTT Payloads as JSON*
+          - Or in `matterbridge-dyson-robot.config.json`:
+            ```json
+            "debug": true,
+            "debugFeatures": ["Log MQTT Payloads as JSON"]
+            ```
+          - View logs with: `journalctl -u matterbridge.service -n 1000 -f --output cat`
+        
+        2. Using the `opendyson` tool:
+
+          - Install `opendyson`, e.g. if `Go` is installed and configured:
+            `go install github.com/libdyson-wg/opendyson`
+          - Login to your MyDyson account:
+            `opendyson login`
+          - Identify devices and retrieve their connection credentials:
+            `opendyson devices`
+          - Capture an MQTT message log:
+            `opendyson listen SERIALNUMBER` (with the device's actual serial number substituted)
+        
+        Whichever method is used, capture the log whilst exercising as much of the device's functionality as possible, e.g. adjusting every setting of an air purifier or performing a full clean with a robot vacuum.
+        
+        Paste the log below or attached as a text file. Do NOT use a screenshot. Replace sensitive information (access tokens, etc) with `REDACTED`.
+      placeholder: "Paste the logs..."
+    validations:
+      required: false
+
+  - type: markdown
+    attributes:
+      value: |
+        **Important Notes:**
+        - 👌 Only use this issue template to report devices that have been confirmed as fully supported by this plugin.
+        - 🔐 Ensure sensitive information like tokens or passwords are `REDACTED` before sharing.
