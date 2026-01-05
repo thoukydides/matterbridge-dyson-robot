@@ -21,6 +21,31 @@ import {
 } from './dyson-device-360-map.js';
 import { Dyson360PersistentMapResponse } from './dyson-360-cloud-types.js';
 
+/* eslint-disable max-len */
+
+// Common instructions for compatibility warning messages
+const DYSON360_COMPATIBILITY_COMMON =
+`If you are willing to help add support, please follow the detailed instructions in the project README.md for contributing opendyson logs and Proxyman API traces:
+    https://github.com/thoukydides/matterbridge-dyson-robot#reporting-issues
+    (expand the "Reporting Issues with Unsupported or Recently Released Products" section)`;
+
+// Device-specific compatibility warning messages
+const DYSON360_COMPATIBILITY_HEURIST =
+`Support for Dyson 360 Heurist (RB02) is incomplete.
+
+The device is currently treated similarly to a Dyson 360 Eye, with partial updates for known MQTT differences. There is a high likelihood of warnings, errors, or missing functionality. Mapping and zone cleaning are not currently supported.
+
+${DYSON360_COMPATIBILITY_COMMON}`;
+
+const DYSON360_COMPATIBILITY_SPOTSCRUB =
+`Dyson Spot+Scrub Ai (RB05) is not currently supported by this plugin.
+
+Initialisation is expected to fail, and no functionality is implemented for this model. This is not a regression and does not indicate a configuration error.
+
+${DYSON360_COMPATIBILITY_COMMON}`;
+
+/* eslint-enable max-len */
+
 // A Dyson 360 Eye device
 export class DysonDevice360Eye extends DysonDevice360Base {
     static readonly model = { type: 'N223', number: 'RB01', name: '360 Eye' };
@@ -76,6 +101,8 @@ export class DysonDevice360Heurist extends DysonDevice360Base {
 
     override setPowerLevel = (powerLevel: Dyson360HeuristPowerMode) => this.mqtt.commandSetPowerMode(powerLevel);
     override getPowerLevel = () => this.mqtt.status.defaultVacuumPowerMode;
+
+    override getCompatibilityWarning = () => DYSON360_COMPATIBILITY_HEURIST;
 }
 
 // A Dyson 360 Vis Nav device
@@ -120,7 +147,7 @@ export class DysonDevice360VisNav extends DysonDevice360ZonesMixin(DysonDevice36
 
 // A Dyson 360 Spot+Scrub device
 export class DysonDevice360SpotScrub extends DysonDevice360Base {
-    static readonly model = { type: 'RB05', number: 'RB05', name: 'Spot+Scrub' };
+    static readonly model = { type: 'RB05', number: 'RB05', name: 'Spot+Scrub Ai' };
 
     override getBatteryPartNumber = () => '975571-01';
 
@@ -133,6 +160,8 @@ export class DysonDevice360SpotScrub extends DysonDevice360Base {
 
     override setPowerLevel = (powerLevel: Dyson360EyePowerMode) => this.mqtt.commandSetPowerMode(powerLevel);
     override getPowerLevel = () => this.mqtt.status.defaultVacuumPowerMode;
+
+    override getCompatibilityWarning = () => DYSON360_COMPATIBILITY_SPOTSCRUB;
 }
 
 // List of constructors for Dyson robot vacuum devices

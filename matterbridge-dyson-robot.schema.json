@@ -471,6 +471,10 @@
                     "title": "277 = Dyson 360 Vis Nav (RB03)"
                 },
                 {
+                    "const": "RB05",
+                    "title": "RB05 = Dyson Spot+Scrub Ai (RB05)"
+                },
+                {
                     "const": "358",
                     "title": "358 = Dyson Pure Humidify+Cool (PH01 or PH02)"
                 },
@@ -541,10 +545,6 @@
                 {
                     "const": "739",
                     "title": "739 = Dyson Cool (CF1 or AM12)"
-                },
-                {
-                    "const": "RB05",
-                    "title": "RB05 = Dyson Spot+Scrub (RB05)"
                 }
             ]
         }

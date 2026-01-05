@@ -1,7 +1,7 @@
 // Matterbridge plugin for Dyson robot vacuum and air treatment devices
 // Copyright © 2025-2026 Alexander Thoukydides
 
-import { AnsiLogger } from 'matterbridge/logger';
+import { AnsiLogger, LogLevel } from 'matterbridge/logger';
 import { Config, EntityName } from './config-types.js';
 import { DysonMqttLike } from './dyson-mqtt.js';
 import { Constructor } from './utils.js';
@@ -10,6 +10,7 @@ import { createHash } from 'crypto';
 import { DeviceConfigMqtt } from './dyson-mqtt-client-live.js';
 import { EndpointBase } from './endpoint-base.js';
 import { DysonCloudAPIDevice } from './dyson-cloud-api-device.js';
+import { dysonDeviceCompatibilityWarning } from './dyson-device-compatibility.js';
 
 // Dyson model details
 export interface DysonDeviceModel {
@@ -46,11 +47,11 @@ export interface DysonDeviceConstructor<
 export abstract class DysonDevice<MQTT extends DysonMqttLike = DysonMqttLike> {
 
     // Details of the device model
-    static readonly model: DysonDeviceModel;
-    static readonly filters: { hepa?: string[], carbon?: string[] };
+    static readonly model:                  DysonDeviceModel;
+    static readonly filters:                { hepa?: string[], carbon?: string[] };
 
     // MQTT client constructor
-    static readonly mqttConstructor: Constructor<DysonMqttLike>;
+    static readonly mqttConstructor:        Constructor<DysonMqttLike>;
 
     // Decorator support
     changed:        Changed;
@@ -65,6 +66,11 @@ export abstract class DysonDevice<MQTT extends DysonMqttLike = DysonMqttLike> {
     ) {
         // Prepare the decorator support
         this.changed = new Changed(log);
+
+        // Warn of any expected compatibility issues
+        const warning = this.getCompatibilityWarning()?.trim();
+        const warningLevel = config.provisioningMethod === 'Mock Devices' ? LogLevel.DEBUG : LogLevel.WARN;
+        if (warning) for (const line of warning.split('\n')) this.log.log(warningLevel, line);
     }
 
     // List of endpoint function names and descriptions to validate
@@ -92,14 +98,21 @@ export abstract class DysonDevice<MQTT extends DysonMqttLike = DysonMqttLike> {
     get classStatic(): typeof DysonDevice { return this.constructor as typeof DysonDevice; }
     get modelName():    string { return this.classStatic.model.name; }
     get modelNumber():  string { return this.classStatic.model.number; }
+    get modelType():    string { return this.classStatic.model.type; }
 
     // Retrieve common per-device data
     get deviceName():   string { return this.device.name; }
     get serialNumber(): string { return this.device.serialNumber; }
 
+    // Retrieve any compatibility warning for this device
+    getCompatibilityWarning(): string | undefined {
+        const productName = `${this.modelName} (${this.modelNumber})`;
+        return dysonDeviceCompatibilityWarning(this.modelType, productName);
+    }
+
     // Convert the MQTT root topic to a ProductID
     get productId(): number {
-        const hex = this.classStatic.model.type.replace(/[^A-F0-9]/ig, '');
+        const hex = this.modelType.replace(/[^A-F0-9]/ig, '');
         const parsed = parseInt(hex.substring(0, 4), 16);
         return isNaN(parsed) ? 0x0000 : parsed;
     }

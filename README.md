@@ -411,24 +411,24 @@ Sensor devices can be duplicated, e.g. the measured temperature may be reported 
 This plugin has been tested with the following devices:
 | Description                               | Model     | MQTT Root Topic | Firmware                | Tested By
 | ----------------------------------------- | :-------: | :-------------: | :---------------------: | ---
-| Dyson 360 Eye robot vacuum                | RB01      | `N223`          | `11.3.5.10`             | Developer
-| Dyson 360 Vis Nav robot vacuum            | RB03      | `277`           | `RB03PR.01.08.006.5079` | Developer
-| Dyson Pure Humidify+Cool                  | PH01      | `358`           |                         | MQTT logs
-| Dyson Pure Humidify+Cool Cryptomic        | PH02      | `358`           | `ECG2PF.46.00.007.0003` | MQTT logs
-| Dyson Purifier Humidify+Cool Formaldehyde | PH04      | `358E`          | `ECG2PF.47.01.000.0005` | MQTT logs
-| Dyson Purifier Humidify+Cool Formaldehyde | PH04      | `358K`          | `ECG2PF.49.03.000.0020` | MQTT logs
-| Dyson Pure Cool                           | TP04      | `438`           | `ECG2PF.02.06.003.0002` | [smuteau](https://github.com/smuteau) ([#1](https://github.com/thoukydides/matterbridge-dyson-robot/issues/1))
-| Dyson HEPA Purifier Cool Formaldehyde     | TP09      | `438E`          |                         | [Nagromdark](https://github.com/Nagromdark) ([#2](https://github.com/thoukydides/matterbridge-dyson-robot/issues/2))
-| Dyson Pure Cool                           | TP11/PC1  | `438M`          |                         | MQTT logs
-| Dyson Pure Hot+Cool Link                  | HP02      | `455`           | `21.04.03`              | Developer
-| Dyson Pure Cool Link Desk                 | DP01      | `469`           |                         | MQTT logs
-| Dyson Pure Cool Link                      | TP02      | `475`           | `21.04.03`              | Developer
-| Dyson Pure Cool Desk                      | DP04      | `520`           |                         | MQTT logs
-| Dyson Pure Hot+Cool                       | HP04/HP06 | `527`           |                         | MQTT logs
-| Dyson Purifier Hot+Cool                   | HP07      | `527E`          |                         | MQTT logs
-| Dyson Purifier Hot+Cool Formaldehyde      | HP09      | `527K`          |                         | MQTT logs
-| Dyson Purifier Hot+Cool                   | HP1/HP11  | `527M`          |                         | [FireHelmet](https://github.com/FireHelmet) ([#14](https://github.com/thoukydides/matterbridge-dyson-robot/issues/14))
-| Dyson Purifier Big+Quiet Formaldehyde     | BP03      | `664`           | `0664PF.00.08.005.0002` | Developer
+| Dyson 360 Eye robot vacuum                | RB01      | `N223`          | `11.3.5.10`             | ✅ Developer
+| Dyson 360 Vis Nav robot vacuum            | RB03      | `277`           | `RB03PR.01.08.006.5079` | ✅ Developer
+| Dyson Pure Humidify+Cool                  | PH01      | `358`           |                         | 📄 MQTT logs
+| Dyson Pure Humidify+Cool Cryptomic        | PH02      | `358`           | `ECG2PF.46.00.007.0003` | 📄 MQTT logs
+| Dyson Purifier Humidify+Cool Formaldehyde | PH04      | `358E`          | `ECG2PF.47.01.000.0005` | 📄 MQTT logs
+| Dyson Purifier Humidify+Cool Formaldehyde | PH04      | `358K`          | `ECG2PF.49.03.000.0020` | 📄 MQTT logs
+| Dyson Pure Cool                           | TP04      | `438`           | `ECG2PF.02.06.003.0002` | ✅ [smuteau](https://github.com/smuteau) ([#1](https://github.com/thoukydides/matterbridge-dyson-robot/issues/1))
+| Dyson HEPA Purifier Cool Formaldehyde     | TP09      | `438E`          |                         | ✅ [Nagromdark](https://github.com/Nagromdark) ([#2](https://github.com/thoukydides/matterbridge-dyson-robot/issues/2))
+| Dyson Pure Cool                           | TP11/PC1  | `438M`          |                         | 📄 MQTT logs
+| Dyson Pure Hot+Cool Link                  | HP02      | `455`           | `21.04.03`              | ✅ Developer
+| Dyson Pure Cool Link Desk                 | DP01      | `469`           |                         | 📄 MQTT logs
+| Dyson Pure Cool Link                      | TP02      | `475`           | `21.04.03`              | ✅ Developer
+| Dyson Pure Cool Desk                      | DP04      | `520`           |                         | 📄 MQTT logs
+| Dyson Pure Hot+Cool                       | HP04/HP06 | `527`           |                         | 📄 MQTT logs
+| Dyson Purifier Hot+Cool                   | HP07      | `527E`          |                         | 📄 MQTT logs
+| Dyson Purifier Hot+Cool Formaldehyde      | HP09      | `527K`          |                         | 📄 MQTT logs
+| Dyson Purifier Hot+Cool                   | HP1/HP11  | `527M`          |                         | ✅ [FireHelmet](https://github.com/FireHelmet) ([#14](https://github.com/thoukydides/matterbridge-dyson-robot/issues/14))
+| Dyson Purifier Big+Quiet Formaldehyde     | BP03      | `664`           | `0664PF.00.08.005.0002` | ✅ Developer
 
 It should also work with other Dyson robot vacuums and air treatment devices, although some modifications may be required for full compatibility.
 
