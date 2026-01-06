@@ -226,22 +226,23 @@ export class DysonCloudRemote extends DysonCloud<ConfigRemoteAccount> {
         const manifest = await api.getManifest();
 
         // Extract details of the devices supported by this plugin
-        const rows: string[][] = [];
+        const rows: string[][] = [['Serial Number', 'Name', 'MQTT', 'Model', 'Product Name', 'Firmware', 'Status']];
         const deviceConfigs: WithAPI<DeviceConfigRemoteMqtt>[] = [];
         for (const device of manifest) {
-            const { serialNumber, model, type, productName } = device;
+            const { serialNumber, model, type, productName, connectedConfiguration } = device;
+            const firmware = connectedConfiguration?.firmware.version;
             const name = device.name ?? productName;
             const deviceLog = new PrefixLogger(this.log, name);
             let status: string;
             if (isSupportedModel(type)) {
                 assertIsDefined(device.connectedConfiguration);
-                status = 'SUPPORTED';
+                status = 'Supported';
                 const { mqttRootTopicLevel: rootTopic } = device.connectedConfiguration.mqtt;
                 const deviceApi = api.createDeviceClient(deviceLog, serialNumber, rootTopic);
                 const getCredentials = async () => this.getIoT(deviceApi);
                 deviceConfigs.push({ name, serialNumber, rootTopic, getCredentials, api: deviceApi });
             } else status = '(unsupported)';
-            rows.push([serialNumber, `"${name}"`, type, model, productName, status]);
+            rows.push([serialNumber, `"${name}"`, type, model, productName, firmware ?? '?', status]);
         }
         this.log.info(`${plural(manifest.length, 'device')} in account,`
                     + ` ${plural(deviceConfigs.length, 'device')} selected:`);
@@ -332,15 +333,16 @@ export class DysonCloudLocal extends DysonCloud<ConfigLocalAccount> {
         }
 
         // Next display a summary of all devices in the account
-        const rows: string[][] = [];
+        const rows: string[][] = [['Serial Number', 'Name', 'MQTT', 'Model', 'Product Name', 'Firmware', 'Status']];
         for (const device of manifest) {
-            const { serialNumber, name, model, type, productName } = device;
+            const { serialNumber, name, model, type, productName, connectedConfiguration } = device;
+            const firmware = connectedConfiguration?.firmware.version;
             const matched = deviceConfigs.find(d => d.serialNumber === serialNumber);
             let status: string;
             if (matched)                        status = `= ${matched.host}:${matched.port}`;
             else if (isSupportedModel(type))    status = '(unconfigured)';
             else                                status = '(unsupported)';
-            rows.push([serialNumber, `"${name}"`, type, model, productName, status]);
+            rows.push([serialNumber, `"${name}"`, type, model, productName, firmware ?? '?', status]);
         }
         this.log.info(`${plural(manifest.length, 'device')} in MyDyson account,`
                     + ` ${plural(deviceConfigs.length, 'device')} selected:`);

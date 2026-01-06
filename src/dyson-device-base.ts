@@ -1,7 +1,7 @@
 // Matterbridge plugin for Dyson robot vacuum and air treatment devices
 // Copyright © 2025-2026 Alexander Thoukydides
 
-import { AnsiLogger, LogLevel } from 'matterbridge/logger';
+import { AnsiLogger } from 'matterbridge/logger';
 import { Config, EntityName } from './config-types.js';
 import { DysonMqttLike } from './dyson-mqtt.js';
 import { Constructor } from './utils.js';
@@ -10,7 +10,7 @@ import { createHash } from 'crypto';
 import { DeviceConfigMqtt } from './dyson-mqtt-client-live.js';
 import { EndpointBase } from './endpoint-base.js';
 import { DysonCloudAPIDevice } from './dyson-cloud-api-device.js';
-import { dysonDeviceCompatibilityWarning } from './dyson-device-compatibility.js';
+import { DysonDeviceCompatibility } from './dyson-device-compatibility.js';
 
 // Dyson model details
 export interface DysonDeviceModel {
@@ -47,14 +47,17 @@ export interface DysonDeviceConstructor<
 export abstract class DysonDevice<MQTT extends DysonMqttLike = DysonMqttLike> {
 
     // Details of the device model
-    static readonly model:                  DysonDeviceModel;
-    static readonly filters:                { hepa?: string[], carbon?: string[] };
+    static readonly model:              DysonDeviceModel;
+    static readonly filters:            { hepa?: string[], carbon?: string[] };
 
     // MQTT client constructor
-    static readonly mqttConstructor:        Constructor<DysonMqttLike>;
+    static readonly mqttConstructor:    Constructor<DysonMqttLike>;
+
+    // Compatibility log message generator
+    readonly        compatibility:      DysonDeviceCompatibility;
 
     // Decorator support
-    changed:        Changed;
+    changed:                            Changed;
 
     // Construct a new Dyson device instance
     constructor(
@@ -68,9 +71,9 @@ export abstract class DysonDevice<MQTT extends DysonMqttLike = DysonMqttLike> {
         this.changed = new Changed(log);
 
         // Warn of any expected compatibility issues
-        const warning = this.getCompatibilityWarning()?.trim();
-        const warningLevel = config.provisioningMethod === 'Mock Devices' ? LogLevel.DEBUG : LogLevel.WARN;
-        if (warning) for (const line of warning.split('\n')) this.log.log(warningLevel, line);
+        const productName = `${this.modelName} (${this.modelNumber})`;
+        this.compatibility = new DysonDeviceCompatibility(log, config, productName, this.modelType);
+        this.compatibility.logCompatibility(this.compatibilityWarning);
     }
 
     // List of endpoint function names and descriptions to validate
@@ -105,10 +108,7 @@ export abstract class DysonDevice<MQTT extends DysonMqttLike = DysonMqttLike> {
     get serialNumber(): string { return this.device.serialNumber; }
 
     // Retrieve any compatibility warning for this device
-    getCompatibilityWarning(): string | undefined {
-        const productName = `${this.modelName} (${this.modelNumber})`;
-        return dysonDeviceCompatibilityWarning(this.modelType, productName);
-    }
+    get compatibilityWarning(): string | undefined { return this.compatibility.warning; }
 
     // Convert the MQTT root topic to a ProductID
     get productId(): number {

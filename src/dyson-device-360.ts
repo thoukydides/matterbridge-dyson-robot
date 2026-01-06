@@ -102,7 +102,7 @@ export class DysonDevice360Heurist extends DysonDevice360Base {
     override setPowerLevel = (powerLevel: Dyson360HeuristPowerMode) => this.mqtt.commandSetPowerMode(powerLevel);
     override getPowerLevel = () => this.mqtt.status.defaultVacuumPowerMode;
 
-    override getCompatibilityWarning = () => DYSON360_COMPATIBILITY_HEURIST;
+    override get compatibilityWarning() { return DYSON360_COMPATIBILITY_HEURIST; }
 }
 
 // A Dyson 360 Vis Nav device
@@ -161,7 +161,7 @@ export class DysonDevice360SpotScrub extends DysonDevice360Base {
     override setPowerLevel = (powerLevel: Dyson360EyePowerMode) => this.mqtt.commandSetPowerMode(powerLevel);
     override getPowerLevel = () => this.mqtt.status.defaultVacuumPowerMode;
 
-    override getCompatibilityWarning = () => DYSON360_COMPATIBILITY_SPOTSCRUB;
+    override get compatibilityWarning() { return DYSON360_COMPATIBILITY_SPOTSCRUB; }
 }
 
 // List of constructors for Dyson robot vacuum devices
