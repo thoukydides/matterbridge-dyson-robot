@@ -110,6 +110,13 @@ export abstract class DysonMqttClientLive extends DysonMqttClient {
         }
     }
 
+    // Terminate the MQTT client
+    async stop(): Promise<void> {
+        if (!this.delegate) return;
+        await this.destroyClient(this.delegate);
+        this.delegate = undefined;
+    }
+
     // The current MQTT client
     get mqtt(): MqttClient {
         if (!this.delegate) throw new Error('No MQTT client');
@@ -119,7 +126,6 @@ export abstract class DysonMqttClientLive extends DysonMqttClient {
     // Forward other MQTT client methods
     async publishAsync  (...args: Parameters<MqttClient['publishAsync'  ]>) { return this.mqtt.publishAsync  (...args); }
     async subscribeAsync(...args: Parameters<MqttClient['subscribeAsync']>) { return this.mqtt.subscribeAsync(...args); }
-    async endAsync      (...args: Parameters<MqttClient['endAsync'      ]>) { return this.mqtt.endAsync      (...args); }
 }
 
 // A Dyson MQTT client using a local network connection

@@ -30,8 +30,10 @@ export abstract class DysonMqttClient extends EventEmitter<DysonMqttClientEventM
     // Start (re)connecting the MQTT client (resolves after initiating connect)
     abstract connect(): Promise<void>;
 
+    // Terminate the MQTT client
+    abstract stop(): Promise<void>;
+
     // Forward other MQTT client methods
     abstract publishAsync  (...args: Parameters<MqttClient['publishAsync'  ]>): ReturnType<MqttClient['publishAsync'  ]>;
     abstract subscribeAsync(...args: Parameters<MqttClient['subscribeAsync']>): ReturnType<MqttClient['subscribeAsync']>;
-    abstract endAsync      (...args: Parameters<MqttClient['endAsync'      ]>): ReturnType<MqttClient['endAsync'      ]>;
 }

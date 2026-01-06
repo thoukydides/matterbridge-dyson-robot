@@ -106,7 +106,7 @@ export class DysonMqttConnection {
     async stop(): Promise<void> {
         this.log.info('Stopping MQTT client...');
         this.terminate.abort();
-        await this.mqtt.endAsync();
+        await this.mqtt.stop();
         this.log.info('MQTT client stopped');
     }
 }

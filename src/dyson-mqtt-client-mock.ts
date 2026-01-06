@@ -108,7 +108,7 @@ export class DysonMqttClientMock extends DysonMqttClient {
     }
 
     // Stop mocking MQTT messages
-    endAsync(..._args: Parameters<MqttClient['endAsync']>) {
+    stop() {
         this.log.debug('Stopping mock MQTT client');
         this.lines = [];
         return Promise.resolve();
