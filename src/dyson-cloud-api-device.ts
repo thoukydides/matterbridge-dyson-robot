@@ -6,6 +6,8 @@ import { DysonCloudAPIUserAgent } from './dyson-cloud-api-ua.js';
 import {
     DysonIoTCredentialsRequest,
     DysonIoTCredentialsResponse,
+    DysonManifestConnectedConfiguration,
+    DysonManifestDevice,
     DysonOwnershipStatus,
     DysonTimezoneResponse,
     DysonUnifiedschedulerEventsResponse
@@ -30,6 +32,7 @@ import { checkers as checkers360 } from './ti/dyson-360-cloud-types.js';
 import { checkers as checkersAir } from './ti/dyson-air-cloud-types.js';
 import { Config } from './config-types.js';
 import { Dyson360CleaningStrategy } from './dyson-360-types.js';
+import { assertIsDefined } from './utils.js';
 
 // Default locale
 const DEFAULT_COUNTRY   = 'GB';
@@ -43,16 +46,28 @@ export class DysonCloudAPIDevice {
 
     // Construct a new Dyson cloud API client
     constructor(
-        readonly log:           AnsiLogger,
-        readonly config:        Config,
-        readonly china:         boolean,
-        readonly token:         string,
-        readonly serialNumber:  string,
-        readonly rootTopic:     string
+        readonly log:       AnsiLogger,
+        readonly config:    Config,
+        readonly china:     boolean,
+        readonly token:     string,
+        readonly manifest:  DysonManifestDevice
     ) {
         // Create an authenticated user agent
         this.ua = new DysonCloudAPIUserAgent(log, config, china);
         this.ua.setBearerToken(token);
+    }
+
+    // Interesting information about this device
+    get serialNumber    (): string { return this.manifest.serialNumber; }
+    get modelNumber     (): string { return this.manifest.model; }
+    get modelName       (): string { return this.manifest.productName; }
+    get mqttRootTopic   (): string { return this.connectedConfiguration.mqtt.mqttRootTopicLevel; }
+    get firmwareVersion (): string { return this.connectedConfiguration.firmware.version; }
+
+    // Shortcut to nested (and optional but always present) object
+    get connectedConfiguration(): DysonManifestConnectedConfiguration {
+        assertIsDefined(this.manifest.connectedConfiguration);
+        return this.manifest.connectedConfiguration;
     }
 
     // Retrieve the AWS IoT credentials for a specific device
@@ -77,7 +92,7 @@ export class DysonCloudAPIDevice {
 
     // Retrieve list of scheduled events for the device
     getScheduledEvents<Type extends DysonUnifiedschedulerEventsResponse>(checker: CheckerT<Type>): Promise<Type> {
-        const path = `/v1/unifiedscheduler/${this.serialNumber}/events?productType=${this.rootTopic}`;
+        const path = `/v1/unifiedscheduler/${this.serialNumber}/events?productType=${this.mqttRootTopic}`;
         return this.ua.getJSON(checker, path);
     }
 

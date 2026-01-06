@@ -238,7 +238,7 @@ export class DysonCloudRemote extends DysonCloud<ConfigRemoteAccount> {
                 assertIsDefined(device.connectedConfiguration);
                 status = 'Supported';
                 const { mqttRootTopicLevel: rootTopic } = device.connectedConfiguration.mqtt;
-                const deviceApi = api.createDeviceClient(deviceLog, serialNumber, rootTopic);
+                const deviceApi = api.createDeviceClient(deviceLog, device);
                 const getCredentials = async () => this.getIoT(deviceApi);
                 deviceConfigs.push({ name, serialNumber, rootTopic, getCredentials, api: deviceApi });
             } else status = '(unsupported)';
@@ -308,25 +308,24 @@ export class DysonCloudLocal extends DysonCloud<ConfigLocalAccount> {
     }
 
     // Retrieve the list of devices in the account
-    async getDevices(): Promise<DeviceConfigLocalMqtt[]> {
+    async getDevices(): Promise<WithAPI<DeviceConfigLocalMqtt>[]> {
         // Retrieve a list of devices associated with the account
         const api = await this.api;
         const manifest = await api.getManifest();
 
         // Attempt to find details in the manifest for each configured device
-        const deviceConfigs: DeviceConfigLocalMqtt[] = [];
+        const deviceConfigs: WithAPI<DeviceConfigLocalMqtt>[] = [];
         for (const deviceConfig of this.config.devices) {
             const { serialNumber } = deviceConfig;
             const device = manifest.find(d => d.serialNumber === serialNumber);
             if (device) {
                 assertIsDefined(device.connectedConfiguration);
-                const { localBrokerCredentials, mqttRootTopicLevel } = device.connectedConfiguration.mqtt;
-                deviceConfigs.push({
-                    ...deviceConfig,
-                    name:       device.name ?? device.productName,
-                    password:   decodeLocalBrokerCredentials(localBrokerCredentials).apPasswordHash,
-                    rootTopic:  mqttRootTopicLevel
-                });
+                const { localBrokerCredentials, mqttRootTopicLevel: rootTopic } = device.connectedConfiguration.mqtt;
+                const name = device.name ?? device.productName;
+                const deviceLog = new PrefixLogger(this.log, name);
+                const deviceApi = api.createDeviceClient(deviceLog, device);
+                const password = decodeLocalBrokerCredentials(localBrokerCredentials).apPasswordHash;
+                deviceConfigs.push({ ...deviceConfig, name, password, rootTopic, api: deviceApi });
             } else {
                 this.log.error(`Configured device ${serialNumber} is not in MyDyson account`);
             }

@@ -72,7 +72,7 @@ export abstract class DysonDevice<MQTT extends DysonMqttLike = DysonMqttLike> {
 
         // Warn of any expected compatibility issues
         const productName = `${this.modelName} (${this.modelNumber})`;
-        this.compatibility = new DysonDeviceCompatibility(log, config, productName, this.modelType);
+        this.compatibility = new DysonDeviceCompatibility(log, config, productName, this.modelType, this.firmwareVersion);
         this.compatibility.logCompatibility(this.compatibilityWarning);
     }
 
@@ -99,13 +99,14 @@ export abstract class DysonDevice<MQTT extends DysonMqttLike = DysonMqttLike> {
 
     // Retrieve the static data for an instance
     get classStatic(): typeof DysonDevice { return this.constructor as typeof DysonDevice; }
-    get modelName():    string { return this.classStatic.model.name; }
-    get modelNumber():  string { return this.classStatic.model.number; }
-    get modelType():    string { return this.classStatic.model.type; }
+    get modelName():            string { return this.api?.modelName   ?? this.classStatic.model.name; }
+    get modelNumber():          string { return this.api?.modelNumber ?? this.classStatic.model.number; }
+    get modelType():            string { return this.classStatic.model.type; }
 
     // Retrieve common per-device data
-    get deviceName():   string { return this.device.name; }
-    get serialNumber(): string { return this.device.serialNumber; }
+    get deviceName():           string { return this.device.name; }
+    get serialNumber():         string { return this.device.serialNumber; }
+    get firmwareVersion():      string | undefined { return this.api?.firmwareVersion; }
 
     // Retrieve any compatibility warning for this device
     get compatibilityWarning(): string | undefined { return this.compatibility.warning; }

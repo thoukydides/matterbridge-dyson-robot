@@ -163,6 +163,7 @@ export abstract class DysonDevice360Base
                 productName:        this.modelName,
                 productUrl:         PLUGIN_URL,
                 serialNumber:       this.serialNumber,
+                softwareVersion:    this.firmwareVersion,
                 uniqueId:           this.uniqueId,
                 vendorId:           VENDOR_ID,
                 vendorName:         VENDOR_NAME

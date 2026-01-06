@@ -115,7 +115,7 @@ export abstract class DysonDeviceAirBase extends DysonDevice<DysonMqttAir> {
                 productName:        this.modelName,
                 productUrl:         PLUGIN_URL,
                 serialNumber:       this.serialNumber,
-                softwareVersion:    this.mqtt.status.version,
+                softwareVersion:    this.firmwareVersion ?? this.mqtt.status.version,
                 uniqueId:           this.uniqueId,
                 vendorId:           VENDOR_ID,
                 vendorName:         VENDOR_NAME

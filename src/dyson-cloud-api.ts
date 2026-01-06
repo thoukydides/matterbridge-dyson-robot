@@ -10,6 +10,7 @@ import {
     DysonEmailUserStatusResponse,
     DysonEmailVerifyRequest,
     DysonEmailVerifyResponse,
+    DysonManifestDevice,
     DysonManifestResponse
 } from './dyson-cloud-types.js';
 import { checkers } from './ti/dyson-cloud-types.js';
@@ -81,8 +82,8 @@ export class DysonCloudAPI {
     }
 
     // Create a device-specific cloud API client
-    createDeviceClient(log: AnsiLogger, serialNumber: string, rootTopic: string): DysonCloudAPIDevice {
+    createDeviceClient(log: AnsiLogger, manifest: DysonManifestDevice): DysonCloudAPIDevice {
         assertIsDefined(this.token);
-        return new DysonCloudAPIDevice(log, this.config, this.china, this.token, serialNumber, rootTopic);
+        return new DysonCloudAPIDevice(log, this.config, this.china, this.token, manifest);
     }
 }
