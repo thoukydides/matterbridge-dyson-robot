@@ -68,8 +68,8 @@
         "pngjs": "^7.0.0",
         "semver": "^7.7.3",
         "ts-interface-checker": "^1.0.2",
-        "undici": "^7.16.0",
-        "ws": "^8.18.3"
+        "undici": "^7.18.1",
+        "ws": "^8.19.0"
     },
     "devDependencies": {
         "@actions/core": "^2.0.1",
@@ -86,7 +86,7 @@
         "ts-interface-builder": "^0.3.3",
         "tsx": "^4.21.0",
         "typescript": "^5.9.3",
-        "typescript-eslint": "^8.51.0"
+        "typescript-eslint": "^8.52.0"
     },
     "scripts": {
         "presetup-matterbridge-github-clone": "rimraf $MATTERBRIDGE_DIR",
