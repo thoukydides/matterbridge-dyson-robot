@@ -139,7 +139,7 @@ export interface Dyson360PersistentMapResponse {
     lowSensitivityObjects:              Dyson360PersistentMapBitmap;
     maturity:                           Dyson360PersistentMapBitmap;
     occupancyProbability:               Dyson360PersistentMapBitmap;
-    offset:                             Dyson360PersistentMapLocationIdentity;
+    offset:                             Dyson360PersistentMapLocationRotated;
     presentationMap:                    Dyson360PersistentMapBitmap;
     restrictionsDefinition:             Dyson360PersistentMapRestrictionsDefinition | null;
     version:                            number;             // e.g. 2

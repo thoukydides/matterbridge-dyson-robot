@@ -147,9 +147,10 @@ export function dysonRenderMap360VisNav(
             setPixel(presentationBitmap, dock, Dyson360VisNavPresentationOctet.Dock);
         }
         const { cleanMapPosition } = clean.persistentMap;
+        const { offset } = map;
         presentationOrigin = {
-            x:  -cleanMapPosition.x / mmPerPixel,
-            y:  -cleanMapPosition.y / mmPerPixel
+            x:  (offset.x - cleanMapPosition.x) / mmPerPixel,
+            y:  (offset.y - cleanMapPosition.y) / mmPerPixel
         };
     } else {
         // No persistent map, so create an empty presentation bitmap
