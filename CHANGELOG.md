@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v1.8.8] - 2026-01-13
+### Fixed
+* Support Dyson 360 Vis Nav persistent maps that have an offset.
+### Changed
+* Updated dependencies.
+
 ## [v1.8.7] - 2026-01-06
 ### Added
 * Log messages at startup summarise the compatibility status of each enabled device. These include links for creating GitHub issues with some details prefilled.
@@ -293,7 +299,8 @@ All notable changes to this project will be documented in this file.
 
 Copyright © 2025-2026 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.8.7...HEAD
+[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.8.8...HEAD
+[v1.8.8]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.8.7...v1.8.8
 [v1.8.7]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.8.6...v1.8.7
 [v1.8.6]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.8.5...v1.8.6
 [v1.8.5]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.8.4...v1.8.5
