@@ -26,22 +26,18 @@ export class RvcOperationalStateError extends Error {
         this.name = `RvcOperationalStateError[${idName}]`;
     }
 
-    // Convert an arbitrary error (or nullish for success) to an ErrorStateId
-    static toId(err?: unknown, defaultId = VENDOR_ERROR_360): RvcOperationalState.ErrorState | number {
-        if (!err) return RvcOperationalState.ErrorState.NoError as number;
-        return err instanceof RvcOperationalStateError ? err.id : defaultId;
-    }
-
     // Convert an arbitrary error (or nullish for success) to an ErrorStateStruct
-    static toStruct(err?: unknown, defaultId?: number): RvcOperationalState.ErrorStateStruct {
-        return (err instanceof RvcOperationalStateError) ? {
+    static toStruct(err?: unknown, defaultId = VENDOR_ERROR_360): RvcOperationalState.ErrorStateStruct {
+        return err instanceof RvcOperationalStateError ? {
             errorStateId:       err.id,
-            errorStateLabel:    err.label  ?.substring(0, 64) ?? '',
+            errorStateLabel:    err.label  ?.substring(0, 64) ?? undefined,
             errorStateDetails:  err.details?.substring(0, 64) ?? ''
+        } : err ? {
+            errorStateId:       defaultId,
+            errorStateLabel:    err instanceof Error ? err.message.substring(0, 64) : 'Unknown error',
+            errorStateDetails:  ''
         } : {
-            errorStateId:       this.toId(err, defaultId),
-            errorStateLabel:    err instanceof Error ? err.message.substring(0, 64)
-                                : err ? 'Unknown error' : '',
+            errorStateId:       RvcOperationalState.ErrorState.NoError,
             errorStateDetails:  ''
         };
     }
