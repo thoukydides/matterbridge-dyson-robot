@@ -37,7 +37,7 @@ import {
     Device360CommandHandlers
 } from './dyson-device-360-commands.js';
 import { EndpointBase } from './endpoint-base.js';
-import { MaybePromise } from 'matterbridge/matter';
+import { MaybePromise, VendorId } from 'matterbridge/matter';
 import { setTimeout } from 'node:timers/promises';
 
 // Details of a completed clean
@@ -165,7 +165,7 @@ export abstract class DysonDevice360Base
                 serialNumber:       this.serialNumber,
                 softwareVersion:    this.firmwareVersion,
                 uniqueId:           this.uniqueId,
-                vendorId:           VENDOR_ID,
+                vendorId:           VendorId(VENDOR_ID),
                 vendorName:         VENDOR_NAME
             },
             powerSource: {

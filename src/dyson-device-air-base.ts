@@ -46,6 +46,7 @@ import {
 import { CC, RI } from './logger-options.js';
 import { ifValueChanged } from './decorator-changed.js';
 import { EndpointBase } from './endpoint-base.js';
+import { VendorId } from 'matterbridge/matter';
 
 // Mappings between FanMode and SpeedSetting
 const FAN_MODE_TO_SPEED_LOW     = 1;
@@ -117,7 +118,7 @@ export abstract class DysonDeviceAirBase extends DysonDevice<DysonMqttAir> {
                 serialNumber:       this.serialNumber,
                 softwareVersion:    this.firmwareVersion ?? this.mqtt.status.version,
                 uniqueId:           this.uniqueId,
-                vendorId:           VENDOR_ID,
+                vendorId:           VendorId(VENDOR_ID),
                 vendorName:         VENDOR_NAME
             },
             fanControl: {

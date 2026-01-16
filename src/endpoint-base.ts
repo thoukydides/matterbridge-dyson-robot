@@ -7,7 +7,7 @@ import {
     MatterbridgeEndpoint,
     roboticVacuumCleaner
 } from 'matterbridge';
-import { AtLeastOne, ServerNode } from 'matterbridge/matter';
+import { AtLeastOne, ServerNode, VendorId } from 'matterbridge/matter';
 import {
     BasicInformation
 } from 'matterbridge/matter/clusters';
@@ -30,7 +30,7 @@ export interface BasicInformationOptions {
     productId:              number; // uint16
     productName:            string; // 32 characters max
     softwareVersion?:       string; // 64 characters max
-    vendorId:               number; // uint16
+    vendorId:               VendorId; // uint16
     vendorName:             string; // 32 characters max
     // Optional attributes
     manufacturingDate?:     string; // 'YYYMMDD'
