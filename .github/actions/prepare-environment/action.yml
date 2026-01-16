@@ -1,4 +1,5 @@
 name: Prepare Environment
+description: Prepare build environment with selected Matterbridge installation
 
 inputs:
   node-version:
