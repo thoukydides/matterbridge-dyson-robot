@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v1.9.0] - 2026-01-20
+### Fixed
+* Compatibility with Matterbridge version 3.5.0.
+### Changed
+* Use new Matter 1.4.2 RVC Operational State error codes where more applicable.
+* Updated dependencies.
+
 ## [v1.8.8] - 2026-01-13
 ### Fixed
 * Support Dyson 360 Vis Nav persistent maps that have an offset.
@@ -299,7 +306,8 @@ All notable changes to this project will be documented in this file.
 
 Copyright © 2025-2026 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.8.8...HEAD
+[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.9.0...HEAD
+[v1.9.0]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.8.8...v1.9.0
 [v1.8.8]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.8.7...v1.8.8
 [v1.8.7]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.8.6...v1.8.7
 [v1.8.6]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.8.5...v1.8.6
