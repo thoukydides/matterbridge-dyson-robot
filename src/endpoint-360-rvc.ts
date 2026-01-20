@@ -83,7 +83,7 @@ export function createRvcRunModeClusterServer({ behaviors }: Endpoint): void {
             changeToMode: true
         }
     }), {
-    // Constant attributes
+        // Constant attributes
         supportedModes: [{
             label:      'Idle',
             mode:       RvcRunMode360.Idle,
@@ -150,7 +150,7 @@ export function createRvcCleanModeClusterServer(
             changeToMode: true
         }
     }), {
-    // Constant attributes
+        // Constant attributes
         supportedModes: labels.map(([mode, label]) => ({
             label,
             mode,
@@ -175,7 +175,7 @@ export function createRvcOperationalStateClusterServer(
             goHome:                 true
         }
     }), {
-    // Constant attributes
+        // Constant attributes
         operationalStateList: [
             { operationalStateId: RvcOperationalState.OperationalState.Stopped },
             { operationalStateId: RvcOperationalState.OperationalState.Running },

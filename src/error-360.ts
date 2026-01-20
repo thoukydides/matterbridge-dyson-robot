@@ -72,6 +72,13 @@ export class RvcOperationalStateError extends Error {
     static readonly WaterTankMissing          = this.create('WaterTankMissing');
     static readonly WaterTankLidOpen          = this.create('WaterTankLidOpen');
     static readonly MopCleaningPadMissing     = this.create('MopCleaningPadMissing');
+    static readonly LowBattery                = this.create('LowBattery');
+    static readonly CannotReachTargetArea     = this.create('CannotReachTargetArea');
+    static readonly DirtyWaterTankFull        = this.create('DirtyWaterTankFull');
+    static readonly DirtyWaterTankMissing     = this.create('DirtyWaterTankMissing');
+    static readonly WheelsJammed              = this.create('WheelsJammed');
+    static readonly BrushJammed               = this.create('BrushJammed');
+    static readonly NavigationSensorObscured  = this.create('NavigationSensorObscured');
 }
 
 // RVC Clean/Run Mode ChangeToMode errors
