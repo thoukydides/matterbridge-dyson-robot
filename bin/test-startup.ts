@@ -40,6 +40,14 @@ const ANSI_ESCAPE = /\x1B\[[0-9;]*[msuK]/g;
 // ANSI colour codes used for warnings and errors
 const ANSI_WARNING = new RegExp([wr, er, ft].join('|').replaceAll('[', '\\['));
 
+// Warnings and errors that should not be treated as test failures
+/* eslint-disable max-len */
+const IGNORED_WARNINGS: RegExp[] = [
+    // https://github.com/matter-js/matter.js/pull/3021
+    /\[ThermostatServer\] No local TemperatureMeasurement cluster available and externalMeasuredIndoorTemperature state not set. Setting localTemperature to null/
+];
+/* eslint-enable max-len */
+
 // Length of time to wait
 const TIMEOUT_MATTERBRIDGE_MS = 60 * 1000; // 60 seconds
 
@@ -101,7 +109,8 @@ async function testPlugin(): Promise<void> {
         const currentWarning: string[] = [];
         const flushWarning = (): void => {
             if (currentWarning.length) {
-                failureTests.add(`Log warning: ${currentWarning.join('\n')}`);
+                const warning = currentWarning.join('\n');
+                if (!IGNORED_WARNINGS.some(re => re.test(warning))) failureTests.add(`Log warning: ${warning}`);
                 currentWarning.length = 0;
             }
         };
