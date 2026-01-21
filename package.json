@@ -59,7 +59,7 @@
     "main": "dist/index.js",
     "engines": {
         "node": "^24.11.1 || ^22.21.1 || ^20.19.6",
-        "matterbridge": "^3.4.7"
+        "matterbridge": "^3.5.0"
     },
     "dependencies": {
         "@types/pngjs": "^6.0.5",
@@ -81,7 +81,7 @@
         "@types/node-persist": "^3.1.8",
         "@types/semver": "^7.7.1",
         "eslint": "^9.39.2",
-        "globals": "^16.5.0",
+        "globals": "^17.0.0",
         "rimraf": "^6.1.2",
         "ts-interface-builder": "^0.3.3",
         "tsx": "^4.21.0",
