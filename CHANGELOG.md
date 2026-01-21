@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v1.9.1] - 2026-01-21
+### Fixed
+* Accept additional API capability and lack of local MQTT broker for the Dyson Solarcycle Morph desk light. (#19)
+### Changed
+* Updated dependencies.
+
 ## [v1.9.0] - 2026-01-20
 ### Fixed
 * Compatibility with Matterbridge version 3.5.0.
@@ -306,7 +312,8 @@ All notable changes to this project will be documented in this file.
 
 Copyright © 2025-2026 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.9.0...HEAD
+[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.9.1...HEAD
+[v1.9.1]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.9.0...v1.9.1
 [v1.9.0]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.8.8...v1.9.0
 [v1.8.8]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.8.7...v1.8.8
 [v1.8.7]:           https://github.com/thoukydides/homebridge-homeconnect/compare/v1.8.6...v1.8.7
