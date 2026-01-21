@@ -318,8 +318,7 @@ export class DysonCloudLocal extends DysonCloud<ConfigLocalAccount> {
         for (const deviceConfig of this.config.devices) {
             const { serialNumber } = deviceConfig;
             const device = manifest.find(d => d.serialNumber === serialNumber);
-            if (device) {
-                assertIsDefined(device.connectedConfiguration);
+            if (device?.connectedConfiguration?.mqtt.localBrokerCredentials) {
                 const { localBrokerCredentials, mqttRootTopicLevel: rootTopic } = device.connectedConfiguration.mqtt;
                 const name = device.name ?? device.productName;
                 const deviceLog = new PrefixLogger(this.log, name);
