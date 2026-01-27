@@ -58,7 +58,7 @@ jobs:
           exit_code: ${{ steps.test.outputs.exit_code }}
           log_file: ${{ env.LOG_FILE }}
           log_regexps: |
-            /(?<!\w)v?\d+\.\d+\.\d+/
+            /version.*(?<!\w)v?\d+\.\d+\.\d+/
 
   matterbridge-releases:
     if: github.event_name != 'issues' || !contains(github.event.issue.labels.*.name, 'compatible device')
