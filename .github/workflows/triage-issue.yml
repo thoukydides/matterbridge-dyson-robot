@@ -1,0 +1,108 @@
+name: AI Issue Triage
+run-name: 'AI Issue Triage: ${{ github.event.issue.title || github.event_name }} #${{ github.event.issue.number || inputs.issue_number }}'
+permissions:
+  issues: write
+  contents: read
+  models: read
+
+on:
+  issues:
+    types: [opened]
+  workflow_dispatch:
+    inputs:
+      issue_number:
+        description: 'Issue number'
+        required: true
+        type: number
+      dry_run:
+        description: 'Dry run (do not modify issue)'
+        type: boolean
+        default: true
+
+jobs:
+  plugin-test:
+    if: github.event_name != 'issues' || !contains(github.event.issue.labels.*.name, 'compatible device')
+    runs-on: ubuntu-latest
+    outputs:
+      name: Plugin Test
+      name_md: >- # markdown
+        Plugin Test ${{ steps.context.outputs.version_md }}
+      value: ${{ steps.context.outputs.value }}
+      prompt: |-
+        Automated test of HEAD (latest development version) start-up against Matterbridge and the live MyDyson and AWS IoT APIs.
+        If the test only shows routine start-up with no related commits or errors, assess applicability based on whether start-up testing can diagnose the specific issue type.
+        Ignore any errors that might be due to appliances being off-line.
+        Check for commit messages or log highlights that might indicate fixes or changes related to the reported issue.
+    env:
+      LOG_FILE: ${{ github.workspace }}/test.log
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+      - name: Prepare build environment
+        uses: ./.github/actions/prepare-environment
+      - name: Build the project
+        run: npm run build
+      - id: test
+        name: Run the tests
+        env:
+          DYSON_TOKEN: ${{ secrets.DYSON_TOKEN }}
+        run: | # shell
+          npm run test 2>&1 | tee "$LOG_FILE"
+          echo "exit_code=${PIPESTATUS[0]}" >> "$GITHUB_OUTPUT"
+      - name: Process the test result
+        id: context
+        uses: thoukydides/action-test-context@v1
+        with:
+          exit_code: ${{ steps.test.outputs.exit_code }}
+          log_file: ${{ env.LOG_FILE }}
+          log_regexps: |
+            /(?<!\w)v?\d+\.\d+\.\d+/
+
+  matterbridge-releases:
+    if: github.event_name != 'issues' || !contains(github.event.issue.labels.*.name, 'compatible device')
+    runs-on: ubuntu-latest
+    outputs:
+      name: Matterbridge recent releases
+      name_md: >- # markdown
+        Matterbridge [releases](https://github.com/Luligu/matterbridge/releases)
+      value: ${{ steps.fetch.outputs.releases }}
+    steps:
+      - name: Retrieve Matterbridge releases
+        id: fetch
+        uses: thoukydides/action-releases-context@v1
+        with:
+          repository: Luligu/matterbridge
+          max_tokens: 1000
+
+  matter-js-releases:
+    if: false
+    runs-on: ubuntu-latest
+    outputs:
+      name: Matter.js recent releases
+      name_md: >- # markdown
+        Matter.js [releases](https://github.com/matter-js/matter.js/releases)
+      value: ${{ steps.fetch.outputs.releases }}
+    steps:
+      - name: Retrieve Matter.js releases
+        id: fetch
+        uses: thoukydides/action-releases-context@v1
+        with:
+          repository: matter-js/matter.js
+          max_tokens: 1000
+
+  collate:
+    runs-on: ubuntu-latest
+    if: ${{ !cancelled() && (contains(needs.*.result, 'success') || contains(needs.*.result, 'failure')) }}
+    needs:
+    - plugin-test
+    - matterbridge-releases
+    - matter-js-releases
+    steps:
+    - name: AI issue triage
+      uses: thoukydides/action-triage-issue-comment@v1
+      with:
+        issue_number: ${{ github.event.issue.number || fromJson(inputs.issue_number) }}
+        needs: ${{ toJSON(needs) }}
+        dry_run: ${{ inputs.dry_run }}
