@@ -79,7 +79,7 @@ jobs:
           max_tokens: 1000
 
   matter-js-releases:
-    if: false
+    if: github.event_name != 'issues' || !contains(github.event.issue.labels.*.name, 'compatible device')
     runs-on: ubuntu-latest
     outputs:
       name: Matter.js recent releases
@@ -91,7 +91,9 @@ jobs:
         id: fetch
         uses: thoukydides/action-releases-context@v1
         with:
-          repository: matter-js/matter.js
+          md_url: https://raw.githubusercontent.com/matter-js/matter.js/refs/heads/main/CHANGELOG.md
+          md_release_regexp: |
+            /^#*\s*(?<version>v?\d+\.\d+\.\d+)\s+\((?<date>\d\d\d\d-\d\d?-\d\d?)\)\s*$/m
           max_tokens: 1000
 
   collate:
