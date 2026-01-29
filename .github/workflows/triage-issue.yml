@@ -76,7 +76,6 @@ jobs:
         uses: thoukydides/action-releases-context@v1
         with:
           repository: Luligu/matterbridge
-          max_tokens: 1000
 
   matter-js-releases:
     if: github.event_name != 'issues' || !contains(github.event.issue.labels.*.name, 'compatible device')
@@ -94,7 +93,6 @@ jobs:
           md_url: https://raw.githubusercontent.com/matter-js/matter.js/refs/heads/main/CHANGELOG.md
           md_release_regexp: |
             /^#*\s*(?<version>v?\d+\.\d+\.\d+)\s+\((?<date>\d\d\d\d-\d\d?-\d\d?)\)\s*$/m
-          max_tokens: 1000
 
   collate:
     runs-on: ubuntu-latest
