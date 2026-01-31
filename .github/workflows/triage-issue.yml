@@ -96,13 +96,14 @@ jobs:
 
   collate:
     runs-on: ubuntu-latest
-    if: ${{ !cancelled() && (contains(needs.*.result, 'success') || contains(needs.*.result, 'failure')) }}
+    if: ${{ !cancelled() }}
     needs:
     - plugin-test
     - matterbridge-releases
     - matter-js-releases
     steps:
     - name: AI issue triage
+      if: contains(needs.*.result, 'success') || contains(needs.*.result, 'failure')
       uses: thoukydides/action-triage-issue-comment@v1
       with:
         gemini_api_key: ${{ secrets.GEMINI_API_KEY_TRIAGE }}
