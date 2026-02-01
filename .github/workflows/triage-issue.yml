@@ -34,6 +34,7 @@ jobs:
       value: ${{ steps.context.outputs.value }}
       prompt: |-
         Automated test of HEAD (latest development version) start-up against Matterbridge and the live MyDyson and AWS IoT APIs.
+        Tests initialisation with Dyson 360 Vis Nav (RB03), Pure Hot+Cool Link (HP02), Pure Cool Link (TP02), and Purifier Big+Quiet Formaldehyde (BP03)
         If the test only shows routine start-up with no related commits or errors, assess applicability based on whether start-up testing can diagnose the specific issue type.
         Ignore any errors that might be due to appliances being off-line.
         Check for commit messages or log highlights that might indicate fixes or changes related to the reported issue.
