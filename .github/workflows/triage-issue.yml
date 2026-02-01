@@ -14,6 +14,10 @@ on:
         description: 'Issue number'
         required: true
         type: number
+      include_comments:
+        description: Include comments
+        type: boolean
+        default: false
       dry_run:
         description: 'Dry run (do not modify issue)'
         type: boolean
@@ -104,11 +108,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: AI issue triage
-        if: contains(needs.*.result, 'success') || contains(needs.*.result, 'failure')
         uses: thoukydides/action-triage-issue-comment@v1
         with:
           gemini_api_key: ${{ secrets.GEMINI_API_KEY_TRIAGE }}
           issue_number:   ${{ github.event.issue.number || fromJson(inputs.issue_number) }}
-          needs:          ${{ toJSON(needs) }}
+          include_comments: ${{ inputs.include_comments != 'false' }}
           guidance_file:  ./.github/prompts/issue-quality-guidance.md
+          needs:          ${{ toJSON(needs) }}
           dry_run:        ${{ inputs.dry_run }}
