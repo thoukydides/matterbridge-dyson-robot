@@ -55,8 +55,8 @@ jobs:
         id: context
         uses: thoukydides/action-test-context@v1
         with:
-          exit_code: ${{ steps.test.outputs.exit_code }}
-          log_file: ${{ env.LOG_FILE }}
+          exit_code:    ${{ steps.test.outputs.exit_code }}
+          log_file:     ${{ env.LOG_FILE }}
           log_regexps: |
             /version.*(?<!\S)v?\d+\.\d+\.\d+(?![\d&])/
           log_strip_regexps: |
@@ -98,15 +98,17 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ !cancelled() }}
     needs:
-    - plugin-test
-    - matterbridge-releases
-    - matter-js-releases
+      - plugin-test
+      - matterbridge-releases
+      - matter-js-releases
     steps:
-    - name: AI issue triage
-      if: contains(needs.*.result, 'success') || contains(needs.*.result, 'failure')
-      uses: thoukydides/action-triage-issue-comment@v1
-      with:
-        gemini_api_key: ${{ secrets.GEMINI_API_KEY_TRIAGE }}
-        issue_number: ${{ github.event.issue.number || fromJson(inputs.issue_number) }}
-        needs: ${{ toJSON(needs) }}
-        dry_run: ${{ inputs.dry_run }}
+      - uses: actions/checkout@v4
+      - name: AI issue triage
+        if: contains(needs.*.result, 'success') || contains(needs.*.result, 'failure')
+        uses: thoukydides/action-triage-issue-comment@v1
+        with:
+          gemini_api_key: ${{ secrets.GEMINI_API_KEY_TRIAGE }}
+          issue_number:   ${{ github.event.issue.number || fromJson(inputs.issue_number) }}
+          needs:          ${{ toJSON(needs) }}
+          guidance_file:  ./.github/prompts/issue-quality-guidance.md
+          dry_run:        ${{ inputs.dry_run }}
