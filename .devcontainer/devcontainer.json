@@ -33,7 +33,7 @@
 
 	// Finish setup after creating the container
 	"postCreateCommand": {
-		"install": "npm ci && npm run setup-matterbridge-npm"
+		"install": "npm ci && npm run setup-matterbridge"
 	},
 
 	// Port forwarding configuration

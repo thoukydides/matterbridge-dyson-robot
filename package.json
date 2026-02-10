@@ -89,12 +89,7 @@
         "typescript-eslint": "^8.53.1"
     },
     "scripts": {
-        "presetup-matterbridge-github-clone": "rimraf $MATTERBRIDGE_DIR",
-        "setup-matterbridge-github-clone": "git clone --single-branch --branch $MATTERBRIDGE_BRANCH https://github.com/Luligu/matterbridge.git $MATTERBRIDGE_DIR",
-        "setup-matterbridge-github-build": "cd $MATTERBRIDGE_DIR && npm ci && npm run build",
-        "setup-matterbridge-github-link": "ln -sfn $MATTERBRIDGE_DIR ./node_modules/matterbridge",
-        "setup-matterbridge-github": "npm run setup-matterbridge-github-clone && npm run setup-matterbridge-github-build && npm run setup-matterbridge-github-link",
-        "setup-matterbridge-npm": "npm i -g matterbridge && npm link matterbridge",
+        "setup-matterbridge": "npm i -g matterbridge@$MATTERBRIDGE_TAG && npm link matterbridge",
         "build-checkers": "mkdir -p ./src/ti && ts-interface-builder -c -o ./src/ti ./src/*-types.ts && tsx bin/ts-interface-post.ts ./src/ti",
         "build-tsc": "tsc -p ./src",
         "build": "npm run build-checkers && npm run build-tsc",
