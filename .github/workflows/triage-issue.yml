@@ -1,5 +1,8 @@
 name: AI Issue Triage
-run-name: 'AI Issue Triage: ${{ github.event.issue.title || github.event_name }} #${{ github.event.issue.number || inputs.issue_number }}'
+run-name: >-
+  AI Issue Triage:
+  ${{ github.event.issue.title || github.event_name }}
+  #${{ github.event.issue.number || inputs.issue_number }}
 permissions:
   issues: write
   contents: read
@@ -118,4 +121,4 @@ jobs:
           guidance_file:        ./.github/prompts/issue-quality-guidance.md
           guidance_file_tokens: 500
           needs:                ${{ toJSON(needs) }}
-          dry_run:              ${{ inputs.dry_run }}
+          dry_run:              ${{ inputs.dry_run == true }}
