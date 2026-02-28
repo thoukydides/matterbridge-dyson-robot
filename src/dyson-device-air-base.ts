@@ -16,7 +16,7 @@ import {
     FanControl,
     ResourceMonitoring
 } from 'matterbridge/matter/clusters';
-import { assertIsDefined, formatList, tryListener } from './utils.js';
+import { assertIsDefined, tryListener } from './utils.js';
 import { DysonMqttStatus } from './dyson-mqtt.js';
 import {
     EndpointsAir,
@@ -43,10 +43,10 @@ import {
     DysonAirTiltAngle,
     DysonAirTiltOscillation
 } from './dyson-air-types.js';
-import { CC, RI } from './logger-options.js';
 import { ifValueChanged } from './decorator-changed.js';
 import { EndpointBase } from './endpoint-base.js';
 import { VendorId } from 'matterbridge/matter';
+import { DysonAirSerialise } from './dyson-device-air-serialise.js';
 
 // Mappings between FanMode and SpeedSetting
 const FAN_MODE_TO_SPEED_LOW     = 1;
@@ -68,6 +68,7 @@ export abstract class DysonDeviceAirBase extends DysonDevice<DysonMqttAir> {
     // The MQTT client and status update listener
     static readonly mqttConstructor = DysonMqttAir;
     mqttListener:       () => void;
+    serialise:          DysonAirSerialise;
 
     // The air purifier device endpoints
     endpoints?:         EndpointsAir;
@@ -99,6 +100,10 @@ export abstract class DysonDeviceAirBase extends DysonDevice<DysonMqttAir> {
         // Prepare a listener for MQTT updates
         this.mqttListener = tryListener(this.mqtt, () =>
             this.updateClusterAttributes(this.mqtt.status));
+
+        // Prepare a set state command serialiser
+        const flushChanged = () => { this.changed.flush(); };
+        this.serialise = new DysonAirSerialise(this.log, this.mqtt, flushChanged);
     }
 
     // Create the endpoint for this device
@@ -237,34 +242,29 @@ export abstract class DysonDeviceAirBase extends DysonDevice<DysonMqttAir> {
 
     // Switch the fan on or off (without changing auto mode, if possible)
     async setPower(powerOn: boolean): Promise<void> {
-        const { fpwr, fmod } = this.mqtt.status;
-        const isOn = fpwr ? fpwr !== DysonAirFanPower.Off       // Non-Link
-                          : fmod !== DysonAirFanAutoPower.Off;  // Link models
-        if (isOn === powerOn) {
-            this.log.info(`Fan is already ${powerOn ? 'on' : 'off'}; no action required`);
-        } else if (powerOn) {
-            this.log.info('Switching on');
-            await this.setState({}); // (sets an appropriate on state)
+        const { fpwr } = this.mqtt.status;
+        if (powerOn) {
+            await this.setState('Switching on', {}); // (sets an appropriate on state)
         } else {
-            this.log.info('Switching off');
-            await this.setState(fpwr ? { fpwr: DysonAirFanPower.Off }       // Non-Link
+            await this.setState('Switching off',
+                                fpwr ? { fpwr: DysonAirFanPower.Off }       // Non-Link
                                      : { fmod: DysonAirFanAutoPower.Off }); // Link models
         }
     }
 
     // Switch the fan on in auto mode
     async setFanAuto(): Promise<void> {
-        this.log.info('Enabling auto mode');
         const { auto } = this.mqtt.status;
-        await this.setState(auto ? { auto: DysonAirAutoMode.Auto }       // Non-Link
+        await this.setState('Enabling auto mode',
+                            auto ? { auto: DysonAirAutoMode.Auto }       // Non-Link
                                  : { fmod: DysonAirFanAutoPower.Auto }); // Link models
     }
 
     // Set the airflow direction (all except Link models)
     async setDirection(forward: boolean): Promise<void> {
         const direction = forward ? 'Forward' : 'Backward';
-        this.log.info(`${direction} airflow`);
-        await this.setState({ fdir: DysonAirFanDirection[direction] });
+        await this.setState(`${direction} airflow`,
+                            { fdir: DysonAirFanDirection[direction] });
     }
 
     // Set the fan speed
@@ -278,35 +278,33 @@ export abstract class DysonDeviceAirBase extends DysonDevice<DysonMqttAir> {
         }
 
         // Set the speed, ensuring that auto mode is disabled
-        this.log.info(`Setting fan speed to ${fnsp}`);
         const { auto } = this.mqtt.status;
-        await this.setState(auto ? { fnsp, auto: DysonAirAutoMode.Manual }          // Non-Link
+        await this.setState(`Setting fan speed to ${fnsp}`,
+                            auto ? { fnsp, auto: DysonAirAutoMode.Manual }          // Non-Link
                                  : { fnsp, fmod: DysonAirFanAutoPower.Manual });    // Link models
     }
 
     // Set night mode
     async setNightMode(night: boolean): Promise<void> {
         const nightMode = night ? 'Night' : 'Day';
-        this.log.info(`${nightMode} mode`);
-        await this.setState({ nmod: DysonAirNightMode[nightMode] });
+        await this.setState(`${nightMode} mode`,
+                            { nmod: DysonAirNightMode[nightMode] });
     }
 
     // Set horizontal oscillation (all except Big+Quiet models)
     async setOscillateLeftRight(oscillate: boolean): Promise<void> {
-        this.log.info(`${oscillate ? 'Enabling' : 'disabling'} left/right oscillation`);
-
         // Most models use 'ON'/'OFF', but some use 'OION'/'OIOF' instead
         const { oson } = this.mqtt.status;
         const isOI = oson === DysonAirOscillation.FixedOI
                   || oson === DysonAirOscillation.OscillatingOI;
         const OSON_KEYS = [['Fixed', 'FixedOI'], ['Oscillating', 'OscillatingOI']] as const;
         const key = OSON_KEYS[oscillate ? 1 : 0][isOI ? 1 : 0];
-        await this.setState({ oson: DysonAirOscillation[key] });
+        await this.setState(`${oscillate ? 'Enabling' : 'disabling'} left/right oscillation`,
+                            { oson: DysonAirOscillation[key] });
     }
 
     // Set vertical oscillation (Big+Quiet models only)
     async setOscillateUpDown(oscillate: boolean): Promise<void> {
-        this.log.info(`${oscillate ? 'Enabling' : 'disabling'} up/down oscillation`);
         const status: DysonMqttProductState = {};
         if (oscillate) {
             // Enable oscillation in breeze mode
@@ -325,12 +323,11 @@ export abstract class DysonDeviceAirBase extends DysonDevice<DysonMqttAir> {
                 status.otau = DysonAirTiltAngle.Degrees0;
             }
         }
-        await this.setState(status);
+        await this.setState(`${oscillate ? 'Enabling' : 'disabling'} up/down oscillation`, status);
     }
 
     // Set breeze oscillation and fan speed (Humidify models only)
     async setOscillateBreeze(breeze: boolean): Promise<void> {
-        this.log.info(`${breeze ? 'Enabling' : 'disabling'} breeze oscillation`);
         const status: DysonMqttProductState = {
             oson: DysonAirOscillation.Oscillating
         };
@@ -345,23 +342,18 @@ export abstract class DysonDeviceAirBase extends DysonDevice<DysonMqttAir> {
                 status.ancp = DysonAirAnemometerControlProfile.Degrees180;
             }
         }
-        await this.setState(status);
+        await this.setState(`${breeze ? 'Enabling' : 'disabling'} breeze oscillation`, status);
     }
 
     // Send an MQTT command to set the product state
-    async setState(productState: DysonMqttProductState): Promise<void> {
+    async setState(description: string, productState: DysonMqttProductState): Promise<void> {
         // Also switch to an active power state, unless an alternative specified
         const { fpwr, fmod } = this.mqtt.status;
         if (fpwr === DysonAirFanPower.Off)      productState.fpwr ??= DysonAirFanPower.On;          // Non-Link
         if (fmod === DysonAirFanAutoPower.Off)  productState.fmod ??= DysonAirFanAutoPower.Manual;  // Link models
 
-        // Publish the command
-        const values = Object.entries(productState).map(([key, value]) => `${CC}${key}=${value}${RI}`);
-        this.log.info(`Setting state: ${formatList(values)}`);
-        await this.mqtt.commandStateSet(productState);
-
-        // Ensure that the next MQTT status update is processed
-        this.changed.flush();
+        // Queue the MQTT command
+        await this.serialise.setState(description, productState);
     }
 
     // Update cluster attributes when the MQTT status is updated
@@ -369,15 +361,20 @@ export abstract class DysonDeviceAirBase extends DysonDevice<DysonMqttAir> {
     async updateClusterAttributes(
         status: DysonMqttStatus<DysonMqttStatusAir>
     ): Promise<void> {
-        const fanStatus = this.mapDysonFanControlStatus(status);
-        const filterStatus = this.mapDysonFilterStatus(status);
-        const sensorStatus = mapDysonAirSensorStatus(this.log, status);
-        await Promise.all([
-            this.endpoints?.updateReachable(status.reachable),
-            this.endpoints?.updateFanControl(fanStatus),
-            this.endpoints?.updateFilterMonitoring(filterStatus),
-            this.endpoints?.updateSensors(sensorStatus)
-        ]);
+        if (this.serialise.ignoreMqttUpdates) {
+            this.log.info('Ignoring status update whilst command pending');
+        } else {
+            // Update the cluster attributes
+            const fanStatus = this.mapDysonFanControlStatus(status);
+            const filterStatus = this.mapDysonFilterStatus(status);
+            const sensorStatus = mapDysonAirSensorStatus(this.log, status);
+            await Promise.all([
+                this.endpoints?.updateReachable(status.reachable),
+                this.endpoints?.updateFanControl(fanStatus),
+                this.endpoints?.updateFilterMonitoring(filterStatus),
+                this.endpoints?.updateSensors(sensorStatus)
+            ]);
+        }
     }
 
     // Convert the status to On/Off and Fan Control cluster attributes

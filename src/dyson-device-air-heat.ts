@@ -45,16 +45,15 @@ export function DysonDeviceAirHeatMixin<TBase extends AbstractConstructor<DysonD
 
         // Set the heating target temperature
         async setTargetTemperature(celsius: number): Promise<void> {
-            this.log.info(`Enabling heating with target temperature ${celsius} °C`);
             const hmod = DysonAirHeatingMode.Heat;
-            await this.setState({ hmax: celsius, hmod });
+            await this.setState(`Enabling heating with target temperature ${celsius} °C`,
+                                { hmax: celsius, hmod });
         }
 
         // Enable or disable heating
         async setHeating(heat: boolean): Promise<void> {
-            this.log.info(`${heat ? 'Enabling' : 'Disabling'} heating`);
-            // Turn power on when enabling heating, but not when disabling
-            await this.setState({ hmod: DysonAirHeatingMode[heat ? 'Heat' : 'Cool'] });
+            await this.setState(`${heat ? 'Enabling' : 'Disabling'} heating`,
+                                { hmod: DysonAirHeatingMode[heat ? 'Heat' : 'Cool'] });
         }
 
         // List of endpoint function names and descriptions to validate

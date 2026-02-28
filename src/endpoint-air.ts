@@ -366,7 +366,7 @@ export class EndpointsAir {
 
             // Call the handler and then update the attribute
             await handlers.onOff(newValue, oldValue);
-            await endpoint.setAttribute(OnOff.Cluster.id, 'onOff', newValue, this.log);
+            // (status update will set the OnOff attribute)
         };
         endpoint.addCommandHandler('on',     () => { void setOnOff('On',  true); });
         endpoint.addCommandHandler('off',    () => { void setOnOff('Off', false); });
@@ -393,7 +393,7 @@ export class EndpointsAir {
 
                 // Call the handler and then update the attribute
                 await handlers.occupiedHeatingSetpoint(newValue, oldValue);
-                await endpoint.setAttribute(Thermostat.Cluster.id, 'occupiedHeatingSetpoint', newValue, this.log);
+                // (status update will set the OccupiedHeatingSetpoint attribute)
             }
         });
     }
