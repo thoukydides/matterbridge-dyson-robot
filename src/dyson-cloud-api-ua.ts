@@ -115,10 +115,10 @@ export class DysonCloudAPIUserAgent {
         let json: unknown;
         try {
             json = JSON.parse(text);
-        } catch (err) {
+        } catch (cause) {
             this.logCheckerValidation(LogLevel.ERROR, request, text);
-            const message = err instanceof Error ? err.message : String(err);
-            throw new Error(`Failed to parse Dyson cloud API response as JSON: ${message}`);
+            const message = cause instanceof Error ? cause.message : String(cause);
+            throw new Error(`Failed to parse Dyson cloud API response as JSON: ${message}`, { cause });
         }
 
         // Check that the response has the expected fields
@@ -212,10 +212,10 @@ export class DysonCloudAPIUserAgent {
                 this.logHeaders(`${logPrefix} Response`, response.headers);
                 body = await request.consume(response);
                 this.logBody(`${logPrefix} Response`, body);
-            } catch (err) {
-                const message = err instanceof Error ? err.message : String(err);
+            } catch (cause) {
+                const message = cause instanceof Error ? cause.message : String(cause);
                 status = `ERROR: ${message}`;
-                throw new Error(`Failed to issue Dyson cloud API request: ${message}`);
+                throw new Error(`Failed to issue Dyson cloud API request: ${message}`, { cause });
             }
 
             // Check whether the request was successful

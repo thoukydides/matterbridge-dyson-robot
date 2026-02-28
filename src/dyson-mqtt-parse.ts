@@ -36,10 +36,10 @@ export function dysonMqttParse<T>(
         try {
             const parsed = JSON.parse(text) as unknown;
             return normalise ? normaliseKeys(parsed) : parsed;
-        } catch (err) {
+        } catch (cause) {
             logCheckerValidation(LogLevel.ERROR, text);
-            const message = err instanceof Error ? err.message : String(err);
-            throw new Error(`Failed to parse Dyson MQTT message as JSON: ${message}`);
+            const message = cause instanceof Error ? cause.message : String(cause);
+            throw new Error(`Failed to parse Dyson MQTT message as JSON: ${message}`, { cause });
         }
     };
 
