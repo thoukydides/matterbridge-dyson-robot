@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v1.10.1] - 2026-03-01
+### Fixed
+* Fan speed setting forced to `0` (instead of preserved) when fan switched off. (#26)
+
 ## [v1.10.0] - 2026-02-28
 ### Fixed
 * Changes to air treatment machines are now serialised, with each waiting for a status update, to avoid rapid setting changes being dropped. (#26)
@@ -324,7 +328,8 @@ All notable changes to this project will be documented in this file.
 
 Copyright © 2025-2026 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.10.0...HEAD
+[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.10.1...HEAD
+[v1.10.1]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.10.0...v1.10.1
 [v1.10.0]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.9.3...v1.10.0
 [v1.9.3]:           https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.9.2...v1.9.3
 [v1.9.2]:           https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.9.1...v1.9.2
