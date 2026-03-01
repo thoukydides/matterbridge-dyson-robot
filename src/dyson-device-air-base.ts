@@ -81,9 +81,6 @@ export abstract class DysonDeviceAirBase extends DysonDevice<DysonMqttAir> {
     hasLeftRight:       boolean;
     hasUpDown:          boolean;
 
-    // Should FanMode be used (in addition to On/Off) for fan off control
-    useFanModeOff = false;
-
     // Construct a new Dyson device instance
     constructor(...args: DysonDeviceConstructorParams<DysonMqttAir>) {
         super(...args);
@@ -273,7 +270,6 @@ export abstract class DysonDeviceAirBase extends DysonDevice<DysonMqttAir> {
         const fnsp = Math.min(Math.round(speed), 10);
         if (fnsp < 1) {
             this.log.info('Fan speed set to 0; turning power off');
-            this.useFanModeOff = true;
             return this.setPower(false);
         }
 
@@ -399,13 +395,9 @@ export abstract class DysonDeviceAirBase extends DysonDevice<DysonMqttAir> {
         if (!onOff) {
             // Off, fan stopped
             speedCurrent = 0;
-            if (this.useFanModeOff) {
-                // Fan Control was set to Off or 0 speed via Matter
-                fanMode = FanControl.FanMode.Off;
-                speedSetting = 0;
-            }
+            fanMode = FanControl.FanMode.Off;
+            speedSetting = 0;
         } else {
-            this.useFanModeOff = false;
             if (isAuto) {
                 // Auto mode: assume fan either at maximum speed or stopped
                 fanMode = FanControl.FanMode.Auto;
