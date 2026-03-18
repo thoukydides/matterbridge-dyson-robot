@@ -44,7 +44,9 @@ const ANSI_WARNING = new RegExp([wr, er, ft].join('|').replaceAll('[', '\\['));
 /* eslint-disable max-len */
 const IGNORED_WARNINGS: RegExp[] = [
     // https://github.com/matter-js/matter.js/pull/3021
-    /\[ThermostatServer\] No local TemperatureMeasurement cluster available and externalMeasuredIndoorTemperature state not set. Setting localTemperature to null/
+    /\[ThermostatServer\] No local TemperatureMeasurement cluster available and externalMeasuredIndoorTemperature state not set. Setting localTemperature to null/,
+    // https://github.com/matter-js/matter.js/pull/3398
+    /\[ValidatedElements\] Error in ThermostatServerAir.atomicRequest: Throws unimplemented exception/
 ];
 /* eslint-enable max-len */
 
