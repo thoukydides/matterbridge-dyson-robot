@@ -66,6 +66,8 @@ import {
 import { createThermostatClusterServer } from './endpoint-air-thermostat.js';
 import { MaybePromise } from 'matterbridge/matter';
 import { logError } from './log-error.js';
+import { BehaviorAir, BehaviorDeviceAir } from './endpoint-air-behaviour.js';
+import { StatusResponse } from 'matterbridge/matter/types';
 
 // Device-specific endpoint configuration
 export type EndpointOptionsAirSensors = {
@@ -184,6 +186,9 @@ export class EndpointsAir {
     temperature:    MatterbridgeEndpoint[] = [];    // Temperature Measurement
     humidity:       MatterbridgeEndpoint[] = [];    // Relative Humidity Measurement
 
+    // Command handler behaviors
+    behaviorDeviceAir: BehaviorDeviceAir;
+
     // Decorator support
     changed: Changed;
 
@@ -211,6 +216,10 @@ export class EndpointsAir {
             this.createTemperatureSensorEndpoint(parent);
             this.createAirQualitySensorEndpoint(parent);
         }
+
+        // Add a command handler behavior
+        this.behaviorDeviceAir = new BehaviorDeviceAir(this.log);
+        this.thermostat?.behaviors.require(BehaviorAir, { device: this.behaviorDeviceAir });
 
         // Prepare the decorator support
         this.changed = new Changed(log);
@@ -382,8 +391,7 @@ export class EndpointsAir {
         await this.subscribeAttributes(endpoint, Thermostat.Cluster.id, 'Thermostat', handlers);
 
         // Install Thermostat command handler
-        endpoint.addCommandHandler('setpointRaiseLower', async ({ request }) => {
-            const { mode, amount } = request as Thermostat.SetpointRaiseLowerRequest;
+        this.behaviorDeviceAir.setCommandHandler('SetpointRaiseLower', async ({ mode, amount }) => {
             this.log.debug(`Thermostat SetpointRaiseLower command: ${Thermostat.SetpointRaiseLowerMode[mode]} ${amount}`);
             if ([Thermostat.SetpointRaiseLowerMode.Heat, Thermostat.SetpointRaiseLowerMode.Both].includes(mode)) {
                 // Treat the command as a write to occupiedHeatingSetpoint
@@ -394,6 +402,8 @@ export class EndpointsAir {
                 // Call the handler and then update the attribute
                 await handlers.occupiedHeatingSetpoint(newValue, oldValue);
                 // (status update will set the OccupiedHeatingSetpoint attribute)
+            } else {
+                throw new StatusResponse.InvalidCommandError(`Unsupported SetpointRaiseLowerMode ${mode}`);
             }
         });
     }
