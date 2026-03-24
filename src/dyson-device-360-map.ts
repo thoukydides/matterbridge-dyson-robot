@@ -137,7 +137,7 @@ export function dysonRenderMap360VisNav(
     };
 
     // If the clean is associated with a map then parse its presentation map
-    let presentationBitmap: DysonBitmapOctet<Dyson360VisNavPresentationOctet>;
+    let presentationBitmap: DysonBitmapOctet;
     let presentationOrigin: { x: number, y: number } | undefined;
     if (clean.persistentMap && map) {
         // Parse the presentation map image and add any dock locations
