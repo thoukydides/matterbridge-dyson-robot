@@ -13,7 +13,7 @@ import { wr, er, ft } from 'matterbridge/logger';
 
 // Spawn command to run Matterbridge (-homedir is added later)
 const SPAWN_COMMAND = 'node';
-const SPAWN_ARGS = ['node_modules/matterbridge/dist/cli.js'];
+const SPAWN_ARGS = ['node_modules/.bin/matterbridge'];
 
 // Plugin configuration file for running tests
 const PLUGIN_CONFIG_FILE = '.matterbridge/matterbridge-dyson-robot.config.json';
