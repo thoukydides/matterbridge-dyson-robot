@@ -39,6 +39,7 @@ const ANSI_ESCAPE = /\x1B\[[0-9;]*[msuK]/g;
 
 // ANSI colour codes used for warnings and errors
 const ANSI_WARNING = new RegExp([wr, er, ft].join('|').replaceAll('[', '\\['));
+process.env.FORCE_COLOR = '1'; // Ensure that ANSI colour codes are used
 
 // Warnings and errors that should not be treated as test failures
 /* eslint-disable max-len */
