@@ -2,8 +2,8 @@
 // Copyright © 2025-2026 Alexander Thoukydides
 
 {
-	"name": "Matterbridge Dyson Robot (Node 20)",
-	"image": "mcr.microsoft.com/devcontainers/javascript-node:20",
+	"name": "Matterbridge Dyson Robot (Node 24)",
+	"image": "mcr.microsoft.com/devcontainers/javascript-node:24",
 
 	// VS Code extensions to install automatically
 	"customizations": {
