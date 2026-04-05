@@ -545,6 +545,10 @@
                 {
                     "const": "739",
                     "title": "739 = Dyson Cool (CF1 or AM12)"
+                },
+                {
+                    "const": "897",
+                    "title": "897 = Dyson HushJet Purifier Compact (HJ10)"
                 }
             ]
         }

@@ -113,6 +113,15 @@ export class DysonDeviceCool extends DysonDeviceAirBase {
 }
 
 // =============================================================================
+// Dyson HushJet family... (fan only; no purification)
+
+// Dyson HushJet Purifier Compact
+export class DysonDeviceAirHushJet extends DysonDeviceAirBase {
+    static readonly model = { type: '897', number: 'HJ10', name: 'HushJet Purifier Compact' };
+    static readonly filters = {  hepa: ['975060-01'], carbon: ['975061-01'] };
+}
+
+// =============================================================================
 
 // List of constructors for Dyson air treatment devices
 export const DYSON_DEVICE_TYPES_AIR = [
@@ -133,5 +142,6 @@ export const DYSON_DEVICE_TYPES_AIR = [
     DysonDeviceAirHumidifyCoolE,
     DysonDeviceAirHumidifyCoolK,
     DysonDeviceAirBigQuiet,
-    DysonDeviceCool
+    DysonDeviceCool,
+    DysonDeviceAirHushJet
 ] as const;
