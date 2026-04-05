@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v1.10.4] - 2026-04-05
+### Added
+* HJ10 HushJet Purifier Compact support.
+### Changed
+* Updated dependencies.
+
 ## [v1.10.3] - 2026-03-24
 ### Changed
 * Updated dependencies.
