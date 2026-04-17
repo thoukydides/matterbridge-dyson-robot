@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v1.10.5] - 2026-04-17
+### Changed
+* Updated dependencies.
+
 ## [v1.10.4] - 2026-04-05
 ### Added
 * HJ10 HushJet Purifier Compact support.
@@ -344,7 +348,9 @@ All notable changes to this project will be documented in this file.
 
 Copyright © 2025-2026 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.10.3...HEAD
+[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.10.5...HEAD
+[v1.10.5]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.10.4...v1.10.5
+[v1.10.4]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.10.3...v1.10.4
 [v1.10.3]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.10.2...v1.10.3
 [v1.10.2]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.10.1...v1.10.2
 [v1.10.1]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.10.0...v1.10.1
