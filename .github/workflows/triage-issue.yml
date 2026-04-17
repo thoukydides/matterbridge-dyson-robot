@@ -44,7 +44,7 @@ jobs:
     env:
       LOG_FILE: ${{ github.workspace }}/test.log
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0
           fetch-tags: true
@@ -110,7 +110,7 @@ jobs:
       - matterbridge-releases
       - matter-js-releases
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: AI issue triage
         uses: thoukydides/action-triage-issue-comment@v1
         with:
