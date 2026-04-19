@@ -1,0 +1,57 @@
+{
+  "name": "q_ide_default",
+  "description": "Default agent configuration",
+  "prompt": "",
+  "mcpServers": {
+    "Dosu": {
+      "url": "https://api.dosu.dev/v1/mcp",
+      "disabled": false,
+      "timeout": 60000,
+      "headers": {
+        "X-Deployment-ID": "b0a52496-383b-4a4a-9d55-092b329d42b5"
+      }
+    }
+  },
+  "tools": [
+    "fs_read",
+    "execute_bash",
+    "fs_write",
+    "report_issue",
+    "use_aws",
+    "@Dosu"
+  ],
+  "toolAliases": {},
+  "allowedTools": [
+    "fs_read",
+    "report_issue",
+    "use_aws",
+    "execute_bash",
+    "fs_write",
+    "@Dosu/find_public_library",
+    "@Dosu/ask_public_library",
+    "@Dosu/whoami",
+    "@Dosu/list_available_data_sources",
+    "@Dosu/ask",
+    "@Dosu/search_documentation",
+    "@Dosu/fetch_source",
+    "@Dosu/init_knowledge"
+  ],
+  "toolsSettings": {
+    "use_aws": {
+      "preset": "readOnly"
+    },
+    "execute_bash": {
+      "preset": "readOnly"
+    }
+  },
+  "resources": [
+    "file://AmazonQ.md",
+    "file://README.md",
+    "file://.amazonq/rules/**/*.md"
+  ],
+  "hooks": {
+    "agentSpawn": [],
+    "userPromptSubmit": []
+  },
+  "useLegacyMcpJson": true
+}
