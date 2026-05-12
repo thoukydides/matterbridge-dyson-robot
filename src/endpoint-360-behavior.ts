@@ -181,17 +181,17 @@ export class RvcOperationalStateServer360 extends RvcOperationalStateBehavior {
 
     // Pause command handler
     override pause():  Promise<RvcOperationalState.OperationalCommandResponse> {
-        return this.command('Pause', RvcOperationalState.ErrorState.CommandInvalidInState as number);
+        return this.command('Pause', RvcOperationalState.ErrorState.CommandInvalidInState);
     }
 
     // Resume command handler
     override resume(): Promise<RvcOperationalState.OperationalCommandResponse> {
-        return this.command('Resume', RvcOperationalState.ErrorState.UnableToStartOrResume as number);
+        return this.command('Resume', RvcOperationalState.ErrorState.UnableToStartOrResume);
     }
 
     // GoHome command handler
     override goHome(): Promise<RvcOperationalState.OperationalCommandResponse> {
-        return this.command('GoHome', RvcOperationalState.ErrorState.CommandInvalidInState as number);
+        return this.command('GoHome', RvcOperationalState.ErrorState.CommandInvalidInState);
     }
 }
 

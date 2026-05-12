@@ -197,7 +197,7 @@ export function dysonRenderMap360VisNav(
                 [Dyson360VisNavPresentationOctet.Boundary]: makeGlyph(style, 'boundary'),
                 [Dyson360VisNavPresentationOctet.Empty]:    makeGlyph(style, 'empty')
             };
-            const presentationOctet = Math.max(...presentation) as Dyson360VisNavPresentationOctet;
+            const presentationOctet: Dyson360VisNavPresentationOctet = Math.max(...presentation);
             const presentationChar = PRESENTATION_ANSI_BG[presentationOctet];
 
             // Faults take priority over everything else
