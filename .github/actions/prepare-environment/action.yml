@@ -4,7 +4,7 @@ description: Prepare build environment with selected Matterbridge installation
 inputs:
   node-version:
     required: false
-    default: 24.x
+    default: 26.x
 
   matterbridge-tag:
     required: false

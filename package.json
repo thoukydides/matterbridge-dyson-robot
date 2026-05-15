@@ -58,8 +58,8 @@
     "type": "module",
     "main": "dist/index.js",
     "engines": {
-        "node": "^24.14.1 || ^22.22.2 || ^20.20.2",
-        "matterbridge": "^3.7.8"
+        "node": "^26.1.0 || ^24.14.1 || ^22.22.2 || ^20.20.2",
+        "matterbridge": "^3.7.9"
     },
     "dependencies": {
         "@types/pngjs": "^6.0.5",
