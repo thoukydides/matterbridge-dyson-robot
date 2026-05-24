@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v1.10.8] - 2026-05-24
+### Fixed
+* Compatibility with Matterbridge version 3.8.0.
+### Changed
+* Updated dependencies.
+
 ## [v1.10.7] - 2026-05-15
 ### Changed
 * Added Node.js 26 to supported versions.
@@ -357,8 +363,9 @@ All notable changes to this project will be documented in this file.
 
 Copyright © 2025-2026 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.10.7...HEAD
-[v1.10.6]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.10.6...v1.10.7
+[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.10.8...HEAD
+[v1.10.8]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.10.7...v1.10.8
+[v1.10.7]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.10.6...v1.10.7
 [v1.10.6]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.10.5...v1.10.6
 [v1.10.5]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.10.4...v1.10.5
 [v1.10.4]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.10.3...v1.10.4
