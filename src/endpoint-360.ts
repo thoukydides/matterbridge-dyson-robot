@@ -11,21 +11,24 @@ import { AtLeastOne } from 'matterbridge/matter';
 import {
     OperationalState,
     PowerSource,
-    RvcCleanMode,
-    RvcRunMode,
     RvcOperationalState,
     ServiceArea
 } from 'matterbridge/matter/clusters';
 import { AnsiLogger } from 'matterbridge/logger';
 import { Config } from './config-types.js';
 import {
+    batteryPowerSourceBehavior,
     BatteryPowerSourceOptions,
     createBatteryPowerSourceClusterServer,
     createRvcCleanModeClusterServer,
     createRvcOperationalStateClusterServer,
     createRvcRunModeClusterServer,
     createServiceAreaClusterServer,
-    RvcCleanModeOptions
+    rvcCleanModeBehavior,
+    RvcCleanModeOptions,
+    rvcOperationalStateBehavior,
+    rvcRunModeBehavior,
+    serviceAreaBehavior
 } from './endpoint-360-rvc.js';
 import {
     EndpointBase,
@@ -121,7 +124,6 @@ export class Endpoint360 extends EndpointBase {
     async updatePowerSource(attributes: UpdatePowerSource360): Promise<void> {
         const { status, batPercentRemaining, batChargeLevel, batChargeState,
             activeBatChargeFaults, activeBatFaults } = attributes;
-        const clusterId = PowerSource.Cluster.id;
         const logBattery = [
             formatEnumLog(PowerSource.BatChargeLevel,      batChargeLevel),
             formatEnumLog(PowerSource.PowerSourceStatus,   status),
@@ -137,12 +139,12 @@ export class Endpoint360 extends EndpointBase {
             logBattery.push(`${AN}${plural(faults.length, 'charge fault', false)}${RI} [${formatList(faults)}${RI}]`);
         }
         this.log.info(`${AN}Battery status${RI}: ${formatList(logBattery)}`);
-        await this.updateAttribute(clusterId, 'status',                 status,                 this.log);
-        await this.updateAttribute(clusterId, 'batPercentRemaining',    batPercentRemaining,    this.log);
-        await this.updateAttribute(clusterId, 'batChargeLevel',         batChargeLevel,         this.log);
-        await this.updateAttribute(clusterId, 'batChargeState',         batChargeState,         this.log);
-        await this.updateAttribute(clusterId, 'activeBatChargeFaults',  activeBatChargeFaults,  this.log);
-        await this.updateAttribute(clusterId, 'activeBatFaults',        activeBatFaults,        this.log);
+        await this.updateAttribute(batteryPowerSourceBehavior, 'status',                 status,                 this.log);
+        await this.updateAttribute(batteryPowerSourceBehavior, 'batPercentRemaining',    batPercentRemaining,    this.log);
+        await this.updateAttribute(batteryPowerSourceBehavior, 'batChargeLevel',         batChargeLevel,         this.log);
+        await this.updateAttribute(batteryPowerSourceBehavior, 'batChargeState',         batChargeState,         this.log);
+        await this.updateAttribute(batteryPowerSourceBehavior, 'activeBatChargeFaults',  activeBatChargeFaults,  this.log);
+        await this.updateAttribute(batteryPowerSourceBehavior, 'activeBatFaults',        activeBatFaults,        this.log);
 
         // Trigger BatFaultChange event if activeBatFaults has changed
         const prevActiveBatFaults = (this.changed.prevValues.get('activeBatFaults') ?? []) as PowerSource.BatFault[];
@@ -152,7 +154,7 @@ export class Endpoint360 extends EndpointBase {
                 previous:   prevActiveBatFaults
             };
             this.log.info(`${AN}Battery Fault Change event${RI}`);
-            await this.triggerEvent(clusterId, 'batFaultChange', payload, this.log);
+            await this.triggerEvent(batteryPowerSourceBehavior, 'batFaultChange', payload, this.log);
         }
 
         // Trigger BatChargeFaultChange event if activeBatChargeFaults has changed
@@ -163,34 +165,31 @@ export class Endpoint360 extends EndpointBase {
                 previous:   prevActiveBatChargeFaults
             };
             this.log.info(`${AN}Battery Charge Fault Change event${RI}`);
-            await this.triggerEvent(clusterId, 'batChargeFaultChange', payload, this.log);
+            await this.triggerEvent(batteryPowerSourceBehavior, 'batChargeFaultChange', payload, this.log);
         }
     }
 
     // Update the RVC Run Mode cluster attributes when required
     @ifValueChanged
     async updateRvcRunMode(runMode: RvcRunMode360): Promise<void> {
-        const clusterId = RvcRunMode.Cluster.id;
         this.log.info(`${AN}RVC Run Mode${RI}: ${formatEnumLog(RvcRunMode360, runMode)}`);
-        await this.updateAttribute(clusterId, 'currentMode', runMode, this.log);
+        await this.updateAttribute(rvcRunModeBehavior, 'currentMode', runMode, this.log);
     }
 
     // Update the RVC Clean Mode cluster attributes when required
     @ifValueChanged
     async updateRvcCleanMode(cleanMode: RvcCleanMode360): Promise<void> {
-        const clusterId = RvcCleanMode.Cluster.id;
         this.log.info(`${AN}RVC Clean Mode${RI}: ${formatEnumLog(RvcCleanMode360, cleanMode)}`);
-        await this.updateAttribute(clusterId, 'currentMode', cleanMode, this.log);
+        await this.updateAttribute(rvcCleanModeBehavior, 'currentMode', cleanMode, this.log);
     }
 
     // Update the RVC Operational State cluster attributes when required
     @ifValueChanged
     async updateRvcOperationalState(attributes: UpdateRvcOperationalState360): Promise<void> {
         const { operationalState, operationalError, isActive } = attributes;
-        const clusterId = RvcOperationalState.Cluster.id;
         this.log.info(`${AN}RVC Operational State${RI}: ${formatEnumLog(RvcOperationalState.OperationalState, operationalState)}`);
-        await this.updateAttribute(clusterId, 'operationalState', operationalState, this.log);
-        await this.updateAttribute(clusterId, 'operationalError', operationalError, this.log);
+        await this.updateAttribute(rvcOperationalStateBehavior, 'operationalState', operationalState, this.log);
+        await this.updateAttribute(rvcOperationalStateBehavior, 'operationalError', operationalError, this.log);
 
         // Trigger OperationCompletion event when changing from active to idle
         const { errorStateId, errorStateLabel, errorStateDetails } = operationalError;
@@ -206,7 +205,7 @@ export class Endpoint360 extends EndpointBase {
                     completionErrorCode:    errorStateId,
                     totalOperationalTime
                 };
-                await this.triggerEvent(clusterId, 'operationCompletion', payload, this.log);
+                await this.triggerEvent(rvcOperationalStateBehavior, 'operationCompletion', payload, this.log);
             }
         }
 
@@ -222,7 +221,7 @@ export class Endpoint360 extends EndpointBase {
                 const payload: RvcOperationalState.OperationalErrorEvent = {
                     errorState: operationalError
                 };
-                await this.triggerEvent(clusterId, 'operationalError', payload, this.log);
+                await this.triggerEvent(rvcOperationalStateBehavior, 'operationalError', payload, this.log);
             } else {
                 this.log.info(`${AN}RVC Operational Error${RI}: ${AV}Error cleared${RI}`);
             }
@@ -234,7 +233,6 @@ export class Endpoint360 extends EndpointBase {
     async updateServiceArea(attributes: UpdateServiceArea360): Promise<void> {
         if (!this.options.supportsMaps) return;
         const { currentArea, progress, selectedAreas, supportedAreas, supportedMaps } = attributes;
-        const clusterId = ServiceArea.Cluster.id;
         const areaName = (areaId: number | null): string => formatAreaName(supportedMaps, supportedAreas, areaId);
         const progressStatus = progress.map(({ areaId, status }) =>
             `${areaName(areaId)}: ${AV}${ServiceArea.OperationalStatus[status]}${RI} (${AV}${status}${RI})`);
@@ -243,11 +241,11 @@ export class Endpoint360 extends EndpointBase {
                          + ` selected [${selectedAreas.map(areaName).join(', ')}],`
                          + ` @ ${areaName(currentArea)}, status [${progressStatus.join(', ')}]`;
         this.log.info(logMessage);
-        await this.updateAttribute(clusterId, 'supportedMaps',  supportedMaps,  this.log);
-        await this.updateAttribute(clusterId, 'supportedAreas', supportedAreas, this.log);
-        await this.updateAttribute(clusterId, 'currentArea',    currentArea,    this.log);
-        await this.updateAttribute(clusterId, 'progress',       progress,       this.log);
-        await this.updateAttribute(clusterId, 'selectedAreas',  selectedAreas,  this.log);
+        await this.updateAttribute(serviceAreaBehavior, 'supportedMaps',  supportedMaps,  this.log);
+        await this.updateAttribute(serviceAreaBehavior, 'supportedAreas', supportedAreas, this.log);
+        await this.updateAttribute(serviceAreaBehavior, 'currentArea',    currentArea,    this.log);
+        await this.updateAttribute(serviceAreaBehavior, 'progress',       progress,       this.log);
+        await this.updateAttribute(serviceAreaBehavior, 'selectedAreas',  selectedAreas,  this.log);
     }
 }
 

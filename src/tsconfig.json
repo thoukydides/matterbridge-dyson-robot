@@ -3,8 +3,7 @@
     "compilerOptions": {
         "module": "nodenext",
         "moduleResolution": "nodenext",
-        "declaration": true,
-        "declarationMap": true,
+        "declaration": false,
         "sourceMap": true,
         "outDir": "../dist",
         "resolveJsonModule": true,

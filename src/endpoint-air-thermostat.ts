@@ -7,14 +7,16 @@ import type { ClusterType as _ClusterType } from 'matterbridge/matter/types';
 import { ThermostatServerAir } from './endpoint-air-behaviour.js';
 
 // Create the Thermostat cluster
-export function createThermostatClusterServer({ behaviors }: Endpoint): void {
-    behaviors.require(ThermostatServerAir.withFeatures(
+export const thermostatBehavior =
+    ThermostatServerAir.withFeatures(
         Thermostat.Feature.Heating
     ).enable({
         commands: {
             setpointRaiseLower: true
         }
-    }), {
+    });
+export function createThermostatClusterServer({ behaviors }: Endpoint): void {
+    behaviors.require(thermostatBehavior, {
         // Constant attributes
         absMinHeatSetpointLimit:             1.00 * 100,    // centi-°C
         absMaxHeatSetpointLimit:            37.00 * 100,    // centi-°C

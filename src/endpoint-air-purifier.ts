@@ -41,8 +41,9 @@ interface FilterReplacementProduct {
 }
 
 // Create the On/Off cluster
+export const onOffBehavior = MatterbridgeOnOffServer;
 export function createOnOffClusterServer({ behaviors }: Endpoint): void {
-    behaviors.require(MatterbridgeOnOffServer, {
+    behaviors.require(onOffBehavior, {
         // Variable attributes
         onOff:                          false
     });

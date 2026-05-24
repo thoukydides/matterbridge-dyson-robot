@@ -18,24 +18,15 @@ import {
     EndpointOptionsBase,
     formatEnumLog
 } from './endpoint-base.js';
-import { AtLeastOne, ClusterId } from 'matterbridge/matter';
+import { AtLeastOne, Behavior, ClusterId } from 'matterbridge/matter';
 import {
     ActivatedCarbonFilterMonitoring,
     AirQuality,
     ConcentrationMeasurement,
-    CarbonDioxideConcentrationMeasurement,
     FanControl,
-    FormaldehydeConcentrationMeasurement,
     HepaFilterMonitoring,
-    NitrogenDioxideConcentrationMeasurement,
-    OnOff,
-    Pm10ConcentrationMeasurement,
-    Pm25ConcentrationMeasurement,
-    RelativeHumidityMeasurement,
     ResourceMonitoring,
-    TemperatureMeasurement,
-    Thermostat,
-    TotalVolatileOrganicCompoundsConcentrationMeasurement
+    Thermostat
 } from 'matterbridge/matter/clusters';
 import {
     createActivatedCarbonFilterMonitoringClusterServer,
@@ -43,13 +34,14 @@ import {
     createHepaFilterMonitoringClusterServer,
     createOnOffClusterServer,
     FanControlOptions,
-    FilterMonitoringOptions
+    FilterMonitoringOptions,
+    onOffBehavior
 } from './endpoint-air-purifier.js';
 import { Changed, ifValueChanged } from './decorator-changed.js';
 import { AN, AV, CN, CV, RI } from './logger-options.js';
 import {
     assertIsBoolean,
-    assertIsNumber,
+    assertIsDefined,
     formatList
 } from './utils.js';
 import {
@@ -61,9 +53,18 @@ import {
     createNitrogenDioxideConcentrationMeasurementClusterServer,
     createFormaldehydeConcentrationMeasurementClusterServer,
     createPm25ConcentrationMeasurementClusterServer,
-    createPm10ConcentrationMeasurementClusterServer
+    createPm10ConcentrationMeasurementClusterServer,
+    airQualityBehavior,
+    temperatureMeasurementBehavior,
+    relativeHumidityMeasurementBehavior,
+    totalVolatileOrganicCompoundsConcentrationMeasurementBehavior,
+    carbonDioxideConcentrationMeasurementBehavior,
+    nitrogenDioxideConcentrationMeasurementBehavior,
+    formaldehydeConcentrationMeasurementBehavior,
+    pm25ConcentrationMeasurementBehavior,
+    pm10ConcentrationMeasurementBehavior
 } from './endpoint-air-quality.js';
-import { createThermostatClusterServer } from './endpoint-air-thermostat.js';
+import { createThermostatClusterServer, thermostatBehavior } from './endpoint-air-thermostat.js';
 import { MaybePromise } from 'matterbridge/matter';
 import { logError } from './log-error.js';
 import { BehaviorAir, BehaviorDeviceAir } from './endpoint-air-behaviour.js';
@@ -369,7 +370,7 @@ export class EndpointsAir {
         // Install On/Off command handlers
         const setOnOff = async (command: string, newValue?: boolean): Promise<void> => {
             this.log.debug(`On/Off command: ${command}`);
-            const oldValue = endpoint.getAttribute(OnOff.Cluster.id, 'onOff', this.log) as unknown;
+            const oldValue = endpoint.getAttribute(onOffBehavior, 'onOff', this.log) as unknown;
             assertIsBoolean(oldValue);
             newValue ??= !oldValue; // (for Toggle command)
 
@@ -395,8 +396,8 @@ export class EndpointsAir {
             this.log.debug(`Thermostat SetpointRaiseLower command: ${Thermostat.SetpointRaiseLowerMode[mode]} ${amount}`);
             if ([Thermostat.SetpointRaiseLowerMode.Heat, Thermostat.SetpointRaiseLowerMode.Both].includes(mode)) {
                 // Treat the command as a write to occupiedHeatingSetpoint
-                const oldValue = endpoint.getAttribute(Thermostat.Cluster.id, 'occupiedHeatingSetpoint', this.log) as unknown;
-                assertIsNumber(oldValue);
+                const oldValue = endpoint.getAttribute(thermostatBehavior, 'occupiedHeatingSetpoint', this.log);
+                assertIsDefined(oldValue);
                 const newValue = oldValue + amount * 10;
 
                 // Call the handler and then update the attribute
@@ -411,7 +412,7 @@ export class EndpointsAir {
     // Subscribe to attribute updates
     async subscribeAttributes<T extends Record<keyof T, unknown>>(
         endpoint:   MatterbridgeEndpoint,
-        clusterId:  ClusterId,
+        cluster:    ClusterId,
         name:       string,
         handlers:   HandlerAirMap<T>,
         keys?:      (keyof T & string)[]
@@ -438,7 +439,7 @@ export class EndpointsAir {
             };
 
             // Register the handler
-            const success = await endpoint.subscribeAttribute(clusterId, key, handler, this.log);
+            const success = await endpoint.subscribeAttribute(cluster, key, handler, this.log);
             if (!success) this.log.warn(`${description} subscription failed`);
         }));
     }
@@ -485,7 +486,7 @@ export class EndpointsAir {
         this.log.info(`${AN}Fan Control${RI}: ${formatList(logParts)}`);
 
         // Perform the cluster attribute updates
-        await endpoint.updateAttribute(OnOff.Cluster.id, 'onOff', onOff, this.log);
+        await endpoint.updateAttribute(onOffBehavior, 'onOff', onOff, this.log);
         const fanAttributes = ['airflowDirection', 'fanMode', 'percentSetting', 'rockSetting',
                                'speedSetting', 'windSetting', 'percentCurrent', 'speedCurrent'] as const;
         for (const attribute of fanAttributes) {
@@ -527,7 +528,7 @@ export class EndpointsAir {
         const attributes = ['occupiedHeatingSetpoint', 'systemMode', 'localTemperature',
                             'piHeatingDemand', 'thermostatRunningState'] as const;
         for (const attribute of attributes) {
-            await endpoint.updateAttribute(Thermostat.Cluster.id, attribute, thermostat[attribute], this.log);
+            await endpoint.updateAttribute(thermostatBehavior, attribute, thermostat[attribute], this.log);
         }
     }
 
@@ -593,19 +594,23 @@ export class EndpointsAir {
         this.log.info(`${AN}Air Quality Measurements${RI}: ${formatList(logMeasurements)}`);
 
         // Perform the cluster attribute updates
-        const attributes: [MatterbridgeEndpoint[], ClusterId, string, number | null | undefined][] = [
-            [this.airQuality,  AirQuality                                           .Cluster.id, 'airQuality',    airQuality],
-            [this.temperature, TemperatureMeasurement                               .Cluster.id, 'measuredValue', temperature],
-            [this.humidity,    RelativeHumidityMeasurement                          .Cluster.id, 'measuredValue', humidity],
-            [this.airQuality,  TotalVolatileOrganicCompoundsConcentrationMeasurement.Cluster.id, 'levelValue',    voc],
-            [this.airQuality,  CarbonDioxideConcentrationMeasurement                .Cluster.id, 'measuredValue', co2],
-            [this.airQuality,  NitrogenDioxideConcentrationMeasurement              .Cluster.id, 'levelValue',    nox],
-            [this.airQuality,  FormaldehydeConcentrationMeasurement                 .Cluster.id, 'measuredValue', hcho],
-            [this.airQuality,  Pm25ConcentrationMeasurement                         .Cluster.id, 'measuredValue', pm25],
-            [this.airQuality,  Pm10ConcentrationMeasurement                         .Cluster.id, 'measuredValue', pm10]
-        ];
-        const updatePromises = attributes.flatMap(([endpoints, clusterId, attribute, value]) =>
-            value === undefined ? [] : endpoints.map(e => e.updateAttribute(clusterId, attribute, value, this.log)));
+        const updateAttribute = <T extends Behavior.Type, A extends keyof Behavior.StateOf<T>>(
+            endpoints: MatterbridgeEndpoint[], cluster: T, attribute: A, value?: Behavior.StateOf<T>[A]
+        ): Promise<boolean>[] => {
+            if (value === undefined) return [];
+            return endpoints.map(endpoint => endpoint.updateAttribute(cluster, attribute, value, this.log));
+        };
+        const updatePromises = [
+            updateAttribute(this.airQuality,  airQualityBehavior,                                            'airQuality',    airQuality),
+            updateAttribute(this.temperature, temperatureMeasurementBehavior,                                'measuredValue', temperature),
+            updateAttribute(this.humidity,    relativeHumidityMeasurementBehavior,                           'measuredValue', humidity),
+            updateAttribute(this.airQuality,  totalVolatileOrganicCompoundsConcentrationMeasurementBehavior, 'levelValue',    voc),
+            updateAttribute(this.airQuality,  carbonDioxideConcentrationMeasurementBehavior,                 'measuredValue', co2),
+            updateAttribute(this.airQuality,  nitrogenDioxideConcentrationMeasurementBehavior,               'levelValue',    nox),
+            updateAttribute(this.airQuality,  formaldehydeConcentrationMeasurementBehavior,                  'measuredValue', hcho),
+            updateAttribute(this.airQuality,  pm25ConcentrationMeasurementBehavior,                          'measuredValue', pm25),
+            updateAttribute(this.airQuality,  pm10ConcentrationMeasurementBehavior,                          'measuredValue', pm10)
+        ].flat();
         await Promise.all(updatePromises);
     }
 
@@ -615,3 +620,4 @@ export class EndpointsAir {
         this.changed.flush('updateThermostat');
     }
 }
+

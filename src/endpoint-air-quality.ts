@@ -19,21 +19,25 @@ import {
 import { Endpoint } from 'matterbridge/matter';
 
 // Create the Air Quality cluster
-export function createAirQualityClusterServer({ behaviors }: Endpoint): void {
-    behaviors.require(AirQualityServer.withFeatures(
+export const airQualityBehavior =
+    AirQualityServer.withFeatures(
         AirQuality.Feature.Fair,
         AirQuality.Feature.Moderate,
         AirQuality.Feature.VeryPoor,
         AirQuality.Feature.ExtremelyPoor
-    ), {
+    );
+export function createAirQualityClusterServer({ behaviors }: Endpoint): void {
+    behaviors.require(airQualityBehavior, {
         // Variable attributes
         airQuality: AirQuality.AirQualityEnum.Unknown
     });
 }
 
 // Create the Temperature Measurement cluster
+export const temperatureMeasurementBehavior =
+    TemperatureMeasurementServer;
 export function createTemperatureMeasurementClusterServer({ behaviors }: Endpoint): void {
-    behaviors.require(TemperatureMeasurementServer, {
+    behaviors.require(temperatureMeasurementBehavior, {
         // Constant attributes
         minMeasuredValue:   -30.15 * 100,   // centi-°C
         maxMeasuredValue:    79.85 * 100,   // centi-°C
@@ -44,8 +48,10 @@ export function createTemperatureMeasurementClusterServer({ behaviors }: Endpoin
 }
 
 // Create the Relative Humidity Measurement cluster
+export const relativeHumidityMeasurementBehavior =
+    RelativeHumidityMeasurementServer;
 export function createRelativeHumidityMeasurementClusterServer({ behaviors }: Endpoint): void {
-    behaviors.require(RelativeHumidityMeasurementServer, {
+    behaviors.require(relativeHumidityMeasurementBehavior, {
         // Constant attributes
         minMeasuredValue:     0.00 * 100,   // centi-%
         maxMeasuredValue:   100.00 * 100,   // centi-%
@@ -56,12 +62,14 @@ export function createRelativeHumidityMeasurementClusterServer({ behaviors }: En
 }
 
 // Create the Total Volatile Organic Compounds Concentration Measurement cluster
-export function createTotalVolatileOrganicCompoundsConcentrationMeasurementClusterServer({ behaviors }: Endpoint): void {
-    behaviors.require(TotalVolatileOrganicCompoundsConcentrationMeasurementServer.withFeatures(
+export const totalVolatileOrganicCompoundsConcentrationMeasurementBehavior =
+    TotalVolatileOrganicCompoundsConcentrationMeasurementServer.withFeatures(
         ConcentrationMeasurement.Feature.LevelIndication,
         ConcentrationMeasurement.Feature.MediumLevel,
         ConcentrationMeasurement.Feature.CriticalLevel
-    ), {
+    );
+export function createTotalVolatileOrganicCompoundsConcentrationMeasurementClusterServer({ behaviors }: Endpoint): void {
+    behaviors.require(totalVolatileOrganicCompoundsConcentrationMeasurementBehavior, {
         // Constant attributes
         measurementMedium:  ConcentrationMeasurement.MeasurementMedium.Air,
         // Variable attributes
@@ -70,10 +78,12 @@ export function createTotalVolatileOrganicCompoundsConcentrationMeasurementClust
 }
 
 // Create the Carbon Dioxide Concentration Measurement cluster
-export function createCarbonDioxideConcentrationMeasurementClusterServer({ behaviors }: Endpoint): void {
-    behaviors.require(CarbonDioxideConcentrationMeasurementServer.withFeatures(
+export const carbonDioxideConcentrationMeasurementBehavior =
+    CarbonDioxideConcentrationMeasurementServer.withFeatures(
         ConcentrationMeasurement.Feature.NumericMeasurement
-    ), {
+    );
+export function createCarbonDioxideConcentrationMeasurementClusterServer({ behaviors }: Endpoint): void {
+    behaviors.require(carbonDioxideConcentrationMeasurementBehavior, {
         // Constant attributes
         minMeasuredValue:      0,   // ppm
         maxMeasuredValue:   9999,   // ppm
@@ -86,12 +96,14 @@ export function createCarbonDioxideConcentrationMeasurementClusterServer({ behav
 }
 
 // Create the Nitrogen Dioxide Concentration Measurement cluster
-export function createNitrogenDioxideConcentrationMeasurementClusterServer({ behaviors }: Endpoint): void {
-    behaviors.require(NitrogenDioxideConcentrationMeasurementServer.withFeatures(
+export const nitrogenDioxideConcentrationMeasurementBehavior =
+    NitrogenDioxideConcentrationMeasurementServer.withFeatures(
         ConcentrationMeasurement.Feature.LevelIndication,
         ConcentrationMeasurement.Feature.MediumLevel,
         ConcentrationMeasurement.Feature.CriticalLevel
-    ), {
+    );
+export function createNitrogenDioxideConcentrationMeasurementClusterServer({ behaviors }: Endpoint): void {
+    behaviors.require(nitrogenDioxideConcentrationMeasurementBehavior, {
         // Constant attributes
         measurementMedium:  ConcentrationMeasurement.MeasurementMedium.Air,
         // Variable attributes
@@ -100,10 +112,12 @@ export function createNitrogenDioxideConcentrationMeasurementClusterServer({ beh
 }
 
 // Create the Formaldehyde Concentration Measurement cluster
-export function createFormaldehydeConcentrationMeasurementClusterServer({ behaviors }: Endpoint): void {
-    behaviors.require(FormaldehydeConcentrationMeasurementServer.withFeatures(
+export const formaldehydeConcentrationMeasurementBehavior =
+    FormaldehydeConcentrationMeasurementServer.withFeatures(
         ConcentrationMeasurement.Feature.NumericMeasurement
-    ), {
+    );
+export function createFormaldehydeConcentrationMeasurementClusterServer({ behaviors }: Endpoint): void {
+    behaviors.require(formaldehydeConcentrationMeasurementBehavior, {
         // Constant attributes
         minMeasuredValue:     0,    // µg/m³
         maxMeasuredValue:   999,    // µg/m³ (99 for v1 sensors)
@@ -116,10 +130,12 @@ export function createFormaldehydeConcentrationMeasurementClusterServer({ behavi
 }
 
 // Create the PM2.5 Concentration Measurement cluster
-export function createPm25ConcentrationMeasurementClusterServer({ behaviors }: Endpoint): void {
-    behaviors.require(Pm25ConcentrationMeasurementServer.withFeatures(
+export const pm25ConcentrationMeasurementBehavior =
+    Pm25ConcentrationMeasurementServer.withFeatures(
         ConcentrationMeasurement.Feature.NumericMeasurement
-    ), {
+    );
+export function createPm25ConcentrationMeasurementClusterServer({ behaviors }: Endpoint): void {
+    behaviors.require(pm25ConcentrationMeasurementBehavior, {
         // Constant attributes
         minMeasuredValue:     0,    // µg/m³
         maxMeasuredValue:   999,    // µg/m³ (149 for v1 sensors)
@@ -132,10 +148,12 @@ export function createPm25ConcentrationMeasurementClusterServer({ behaviors }: E
 }
 
 // Create the PM10 Concentration Measurement cluster
-export function createPm10ConcentrationMeasurementClusterServer({ behaviors }: Endpoint): void {
-    behaviors.require(Pm10ConcentrationMeasurementServer.withFeatures(
+export const pm10ConcentrationMeasurementBehavior =
+    Pm10ConcentrationMeasurementServer.withFeatures(
         ConcentrationMeasurement.Feature.NumericMeasurement
-    ), {
+    );
+export function createPm10ConcentrationMeasurementClusterServer({ behaviors }: Endpoint): void {
+    behaviors.require(pm10ConcentrationMeasurementBehavior, {
         // Constant attributes
         minMeasuredValue:     0,    // µg/m³
         maxMeasuredValue:   999,    // µg/m³ (149 for v1 sensors)

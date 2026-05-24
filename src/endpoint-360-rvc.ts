@@ -32,11 +32,8 @@ export interface RvcCleanModeOptions {
 }
 
 // Create the Power Source cluster for the rechargeable battery
-export function createBatteryPowerSourceClusterServer(
-    { behaviors }:          Endpoint,
-    { batteryPartNumber }:  BatteryPowerSourceOptions
-): void {
-    behaviors.require(PowerSourceServer.withFeatures(
+export const batteryPowerSourceBehavior =
+    PowerSourceServer.withFeatures(
         PowerSource.Feature.Battery,
         PowerSource.Feature.Rechargeable,
         PowerSource.Feature.Replaceable
@@ -45,7 +42,12 @@ export function createBatteryPowerSourceClusterServer(
             batFaultChange:         true,
             batChargeFaultChange:   true
         }
-    }), {
+    });
+export function createBatteryPowerSourceClusterServer(
+    { behaviors }:          Endpoint,
+    { batteryPartNumber }:  BatteryPowerSourceOptions
+): void {
+    behaviors.require(batteryPowerSourceBehavior, {
         // Constant attributes
         batApprovedChemistry:       PowerSource.BatApprovedChemistry.LithiumIon,
         batCapacity:                6600, // mAh
@@ -77,12 +79,14 @@ export function createBatteryPowerSourceClusterServer(
 }
 
 // Create the RVC Run Mode cluster
-export function createRvcRunModeClusterServer({ behaviors }: Endpoint): void {
-    behaviors.require(RvcRunModeServer360.enable({
+export const rvcRunModeBehavior =
+    RvcRunModeServer360.enable({
         commands: {
             changeToMode: true
         }
-    }), {
+    });
+export function createRvcRunModeClusterServer({ behaviors }: Endpoint): void {
+    behaviors.require(rvcRunModeBehavior, {
         // Constant attributes
         supportedModes: [{
             label:      'Idle',
@@ -103,6 +107,12 @@ export function createRvcRunModeClusterServer({ behaviors }: Endpoint): void {
 }
 
 // Create the RVC Clean Mode cluster
+export const rvcCleanModeBehavior =
+    RvcCleanModeServer360.enable({
+        commands: {
+            changeToMode: true
+        }
+    });
 export function createRvcCleanModeClusterServer(
     { behaviors }:              Endpoint,
     { labels, simpleModeTags }: RvcCleanModeOptions
@@ -145,11 +155,7 @@ export function createRvcCleanModeClusterServer(
     };
 
     // Create the cluster
-    behaviors.require(RvcCleanModeServer360.enable({
-        commands: {
-            changeToMode: true
-        }
-    }), {
+    behaviors.require(rvcCleanModeBehavior, {
         // Constant attributes
         supportedModes: labels.map(([mode, label]) => ({
             label,
@@ -162,10 +168,8 @@ export function createRvcCleanModeClusterServer(
 }
 
 // Create the RVC Operational State cluster
-export function createRvcOperationalStateClusterServer(
-    { behaviors }: Endpoint
-): void {
-    behaviors.require(RvcOperationalStateServer360.enable({
+export const rvcOperationalStateBehavior =
+    RvcOperationalStateServer360.enable({
         events: {
             operationalError:       true,
             operationCompletion:    true
@@ -174,7 +178,11 @@ export function createRvcOperationalStateClusterServer(
             resume:                 true,
             goHome:                 true
         }
-    }), {
+    });
+export function createRvcOperationalStateClusterServer(
+    { behaviors }: Endpoint
+): void {
+    behaviors.require(rvcOperationalStateBehavior, {
         // Constant attributes
         operationalStateList: [
             { operationalStateId: RvcOperationalState.OperationalState.Stopped },
@@ -196,17 +204,19 @@ export function createRvcOperationalStateClusterServer(
 }
 
 // Create the Service Area cluster
-export function createServiceAreaClusterServer(
-    { behaviors }: Endpoint
-): void {
-    behaviors.require(ServiceAreaServer360.withFeatures(
+export const serviceAreaBehavior =
+    ServiceAreaServer360.withFeatures(
         ServiceArea.Feature.Maps,
         ServiceArea.Feature.ProgressReporting
     ).enable({
         commands: {
             selectAreas:        true
         }
-    }), {
+    });
+export function createServiceAreaClusterServer(
+    { behaviors }: Endpoint
+): void {
+    behaviors.require(serviceAreaBehavior, {
         // Variable attributes (with dummy defaults)
         currentArea:            null,
         progress:               [],
