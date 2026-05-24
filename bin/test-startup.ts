@@ -7,7 +7,7 @@ import { spawn, ChildProcessWithoutNullStreams } from 'node:child_process';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { Config, DeviceConfigMock } from '../dist/config-types.js';
+import { Config, DeviceConfigMock } from '../src/config-types.js';
 import { once } from 'node:events';
 import { wr, er, ft } from 'matterbridge/logger';
 
