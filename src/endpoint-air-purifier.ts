@@ -49,7 +49,15 @@ export function createOnOffClusterServer({ behaviors }: Endpoint): void {
     });
 }
 
-// Create the Fan Control cluster
+// Create the Fan Control cluster (exported behavior with feature superset)
+export const fanControlBehavior =
+    FanControlServer.withFeatures(
+        FanControl.Feature.MultiSpeed,
+        FanControl.Feature.Auto,
+        FanControl.Feature.Rocking,
+        FanControl.Feature.Wind,
+        FanControl.Feature.AirflowDirection
+    );
 export function createFanControlClusterServer(
     { behaviors }: Endpoint, options: FanControlOptions
 ): void {
@@ -82,7 +90,13 @@ export function createFanControlClusterServer(
     });
 }
 
-// Create the HEPA Filter Monitoring cluster
+// Create the HEPA Filter Monitoring cluster (exported behavior with feature superset)
+export const hepaFilterMonitoringBehavior =
+    HepaFilterMonitoringServer.withFeatures(
+        ResourceMonitoring.Feature.Condition,
+        ResourceMonitoring.Feature.Warning,
+        ResourceMonitoring.Feature.ReplacementProductList
+    );
 export function createHepaFilterMonitoringClusterServer(
     { behaviors }: Endpoint, options: FilterMonitoringOptions
 ): void {
@@ -100,7 +114,13 @@ export function createHepaFilterMonitoringClusterServer(
     });
 }
 
-// Create the Activated Carbon Filter Monitoring cluster
+// Create the Activated Carbon Filter Monitoring cluster (exported behavior with feature superset)
+export const activatedCarbonFilterMonitoringBehavior =
+    ActivatedCarbonFilterMonitoringServer.withFeatures(
+        ResourceMonitoring.Feature.Condition,
+        ResourceMonitoring.Feature.Warning,
+        ResourceMonitoring.Feature.ReplacementProductList
+    );
 export function createActivatedCarbonFilterMonitoringClusterServer(
     { behaviors }: Endpoint, options: FilterMonitoringOptions
 ): void {

@@ -163,14 +163,18 @@ export abstract class DysonDeviceAirBase extends DysonDevice<DysonMqttAir> {
                 default:                        return this.setFanSpeed(FAN_MODE_TO_SPEED_HIGH);
                 }
             },
-            percentSetting: percentSetting =>
-                this.setFanSpeed(Math.ceil(percentSetting / 10)),
+            percentSetting: async percentSetting => {
+                assertIsDefined(percentSetting);
+                await this.setFanSpeed(Math.ceil(percentSetting / 10));
+            },
             rockSetting: async rockSetting => {
                 if (this.hasLeftRight)  await this.setOscillateLeftRight(!!rockSetting.rockLeftRight);
                 if (this.hasUpDown)     await this.setOscillateUpDown(!!rockSetting.rockUpDown);
             },
-            speedSetting: speedSetting =>
-                this.setFanSpeed(speedSetting),
+            speedSetting: async speedSetting => {
+                assertIsDefined(speedSetting);
+                await this.setFanSpeed(speedSetting);
+            },
             windSetting: async windSetting => {
                 await this.setNightMode(!!windSetting.sleepWind);
                 if (this.hasBreeze)     await this.setOscillateBreeze(!!windSetting.naturalWind);

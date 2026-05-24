@@ -18,23 +18,24 @@ import {
     EndpointOptionsBase,
     formatEnumLog
 } from './endpoint-base.js';
-import { AtLeastOne, Behavior, ClusterId } from 'matterbridge/matter';
+import { AtLeastOne, Behavior, MaybePromise } from 'matterbridge/matter';
 import {
-    ActivatedCarbonFilterMonitoring,
     AirQuality,
     ConcentrationMeasurement,
     FanControl,
-    HepaFilterMonitoring,
     ResourceMonitoring,
     Thermostat
 } from 'matterbridge/matter/clusters';
 import {
+    activatedCarbonFilterMonitoringBehavior,
     createActivatedCarbonFilterMonitoringClusterServer,
     createFanControlClusterServer,
     createHepaFilterMonitoringClusterServer,
     createOnOffClusterServer,
+    fanControlBehavior,
     FanControlOptions,
     FilterMonitoringOptions,
+    hepaFilterMonitoringBehavior,
     onOffBehavior
 } from './endpoint-air-purifier.js';
 import { Changed, ifValueChanged } from './decorator-changed.js';
@@ -65,7 +66,6 @@ import {
     pm10ConcentrationMeasurementBehavior
 } from './endpoint-air-quality.js';
 import { createThermostatClusterServer, thermostatBehavior } from './endpoint-air-thermostat.js';
-import { MaybePromise } from 'matterbridge/matter';
 import { logError } from './log-error.js';
 import { BehaviorAir, BehaviorDeviceAir } from './endpoint-air-behaviour.js';
 import { StatusResponse } from 'matterbridge/matter/types';
@@ -83,27 +83,23 @@ export interface EndpointOptionsAir extends EndpointOptionsBase {
 }
 
 // Attribute subscription and command handlers
-export type HandlerAir<T> = (newValue: T, oldValue: T) => MaybePromise;
-export type HandlerAirMap<T extends Record<string, unknown>> = {
-    [K in keyof T & string]: HandlerAir<T[K]>;
+export type HandlerAir<T extends Behavior.Type, A extends keyof Behavior.StateOf<T>> =
+    (newValue: Behavior.StateOf<T>[A], oldValue: Behavior.StateOf<T>[A]) => MaybePromise;
+export type HandlerAirMap<T extends Behavior.Type> = {
+    [A in keyof Behavior.StateOf<T>]?: HandlerAir<T, A>;
 };
+export interface HandlerAirNamed<T extends Behavior.Type, A extends keyof Behavior.StateOf<T> = keyof Behavior.StateOf<T>>{
+    attribute:                  A;
+    handler?:                   HandlerAir<T, A>;
+}
 
 // On/Off and Fan Control handlers
-export interface HandlersAirFan {
-    onOff:                      HandlerAir<boolean>;
-    airflowDirection:           HandlerAir<FanControl.AirflowDirection>;
-    fanMode:                    HandlerAir<FanControl.FanMode>;
-    percentSetting:             HandlerAir<number>;
-    rockSetting:                HandlerAir<AirFanRockSetting>;
-    speedSetting:               HandlerAir<number>;
-    windSetting:                HandlerAir<AirWindSetting>;
+export interface HandlersAirFan extends HandlerAirMap<typeof fanControlBehavior> {
+    onOff:                      (newValue: boolean, oldValue: boolean) => MaybePromise
 }
 
 // Thermostat handlers
-export interface HandlersAirThermostat {
-    occupiedHeatingSetpoint:    HandlerAir<number>;
-    systemMode:                 HandlerAir<Thermostat.SystemMode>;
-}
+export type HandlersAirThermostat = HandlerAirMap<typeof thermostatBehavior>;
 
 // Updates to the On/Off and Fan Control cluster attributes
 export interface AirFanRockSetting {
@@ -364,8 +360,8 @@ export class EndpointsAir {
         if (!endpoint) return;
 
         // Subscribe to Fan Control read/write attributes
-        const keys: (keyof HandlersAirFan)[] = ['fanMode', 'percentSetting', 'rockSetting', 'speedSetting', 'windSetting'];
-        await this.subscribeAttributes(endpoint, FanControl.Cluster.id, 'Fan Control', handlers, keys);
+        const { onOff: onOffHandler, ...otherHandlers } = handlers;
+        await this.subscribeAttributes(endpoint, fanControlBehavior, 'Fan Control', otherHandlers);
 
         // Install On/Off command handlers
         const setOnOff = async (command: string, newValue?: boolean): Promise<void> => {
@@ -374,8 +370,8 @@ export class EndpointsAir {
             assertIsBoolean(oldValue);
             newValue ??= !oldValue; // (for Toggle command)
 
-            // Call the handler and then update the attribute
-            await handlers.onOff(newValue, oldValue);
+            // Call the handler
+            await onOffHandler(newValue, oldValue);
             // (status update will set the OnOff attribute)
         };
         endpoint.addCommandHandler('on',     () => { void setOnOff('On',  true); });
@@ -389,7 +385,7 @@ export class EndpointsAir {
         if (!endpoint) return;
 
         // Subscribe to Thermostat read/write attributes
-        await this.subscribeAttributes(endpoint, Thermostat.Cluster.id, 'Thermostat', handlers);
+        await this.subscribeAttributes(endpoint, thermostatBehavior, 'Thermostat', handlers);
 
         // Install Thermostat command handler
         this.behaviorDeviceAir.setCommandHandler('SetpointRaiseLower', async ({ mode, amount }) => {
@@ -400,8 +396,8 @@ export class EndpointsAir {
                 assertIsDefined(oldValue);
                 const newValue = oldValue + amount * 10;
 
-                // Call the handler and then update the attribute
-                await handlers.occupiedHeatingSetpoint(newValue, oldValue);
+                // Call the handler
+                await handlers.occupiedHeatingSetpoint?.(newValue, oldValue);
                 // (status update will set the OccupiedHeatingSetpoint attribute)
             } else {
                 throw new StatusResponse.InvalidCommandError(`Unsupported SetpointRaiseLowerMode ${mode}`);
@@ -410,19 +406,23 @@ export class EndpointsAir {
     }
 
     // Subscribe to attribute updates
-    async subscribeAttributes<T extends Record<keyof T, unknown>>(
+    async subscribeAttributes<T extends Behavior.Type>(
         endpoint:   MatterbridgeEndpoint,
-        cluster:    ClusterId,
+        cluster:    T,
         name:       string,
-        handlers:   HandlerAirMap<T>,
-        keys?:      (keyof T & string)[]
+        handlers:   HandlerAirMap<T>
     ): Promise<void> {
-        keys ??= Object.keys(handlers) as (keyof T & string)[];
-        await Promise.all(keys.map(async key => {
-            const description = `${name} ${key}`;
+        const handlersList = Object.entries(handlers) as unknown as HandlerAirNamed<T>[];
+        for (const { attribute, handler } of handlersList) {
+            if (!handler) continue;
+            const description = `${name} ${attribute.toString()}`;
 
             // Wrapper around handler to trap errors and flush the change cache
-            const handler = (newValue: T[typeof key], oldValue: T[typeof key], context: { offline?: boolean }): void => {
+            const wrapper = (
+                newValue: Behavior.StateOf<T>[typeof attribute],
+                oldValue: Behavior.StateOf<T>[typeof attribute],
+                context: { offline?: boolean }
+            ): void => {
                 // Ignore reflected local writes (and duplicates)
                 if (context.offline === true) return;
 
@@ -430,7 +430,7 @@ export class EndpointsAir {
                 this.log.info(`${CN}${description}${RI}: ${JSON.stringify(oldValue)} → ${CV}${JSON.stringify(newValue)}${RI}`);
                 void (async () => {
                     try {
-                        await handlers[key](newValue, oldValue);
+                        await handler(newValue, oldValue);
                         this.updateNextStatus();
                     } catch (err) {
                         logError(this.log, description, err);
@@ -439,9 +439,9 @@ export class EndpointsAir {
             };
 
             // Register the handler
-            const success = await endpoint.subscribeAttribute(cluster, key, handler, this.log);
+            const success = await endpoint.subscribeAttribute(cluster, attribute, wrapper, this.log);
             if (!success) this.log.warn(`${description} subscription failed`);
-        }));
+        }
     }
 
     // Update the Bridged Device Basic Information cluster attributes
@@ -491,7 +491,7 @@ export class EndpointsAir {
                                'speedSetting', 'windSetting', 'percentCurrent', 'speedCurrent'] as const;
         for (const attribute of fanAttributes) {
             const value = fan[attribute];
-            if (value !== undefined) await endpoint.updateAttribute(FanControl.Cluster.id, attribute, value, this.log);
+            if (value !== undefined) await endpoint.updateAttribute(fanControlBehavior, attribute, value, this.log);
         }
     }
 
@@ -536,7 +536,7 @@ export class EndpointsAir {
     @ifValueChanged
     async updateFilterMonitoring(filters: UpdateAirFilterMonitoring): Promise<void> {
         const updateCluster = async (
-            clusterId: ClusterId,
+            cluster: typeof hepaFilterMonitoringBehavior | typeof activatedCarbonFilterMonitoringBehavior,
             name: string,
             { condition, changeIndication, inPlaceIndicator }: UpdateAirFilterMonitoringSingle
         ): Promise<void> => {
@@ -547,15 +547,15 @@ export class EndpointsAir {
 
             // Perform the cluster attribute updates
             const endpoint = this.purifier;
-            await endpoint?.updateAttribute(clusterId, 'condition',        condition,        this.log);
-            await endpoint?.updateAttribute(clusterId, 'changeIndication', changeIndication, this.log);
-            if (inPlaceIndicator) await endpoint?.updateAttribute(clusterId, 'inPlaceIndicator', inPlaceIndicator, this.log);
+            await endpoint?.updateAttribute(cluster, 'condition',        condition,        this.log);
+            await endpoint?.updateAttribute(cluster, 'changeIndication', changeIndication, this.log);
+            if (inPlaceIndicator) await endpoint?.updateAttribute(cluster, 'inPlaceIndicator', inPlaceIndicator, this.log);
         };
 
         // Update the status of both filters
         const { hepa, carbon } = filters;
-        if (hepa)   await updateCluster(HepaFilterMonitoring.Cluster.id, 'HEPA', hepa);
-        if (carbon) await updateCluster(ActivatedCarbonFilterMonitoring.Cluster.id, 'Activated Carbon', carbon);
+        if (hepa)   await updateCluster(hepaFilterMonitoringBehavior, 'HEPA', hepa);
+        if (carbon) await updateCluster(activatedCarbonFilterMonitoringBehavior, 'Activated Carbon', carbon);
     }
 
     // Update all of the Air Quality and Measurement cluster attributes
