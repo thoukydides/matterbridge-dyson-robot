@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v1.10.9] - 2026-06-05
+### Changed
+* Updated dependencies.
+
 ## [v1.10.8] - 2026-05-24
 ### Fixed
 * Compatibility with Matterbridge version 3.8.0.
@@ -363,7 +367,8 @@ All notable changes to this project will be documented in this file.
 
 Copyright © 2025-2026 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.10.8...HEAD
+[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.10.9...HEAD
+[v1.10.9]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.10.8...v1.10.9
 [v1.10.8]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.10.7...v1.10.8
 [v1.10.7]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.10.6...v1.10.7
 [v1.10.6]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.10.5...v1.10.6
