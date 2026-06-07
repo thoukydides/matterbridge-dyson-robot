@@ -439,8 +439,10 @@ export class EndpointsAir {
             };
 
             // Register the handler
-            const success = await endpoint.subscribeAttribute(cluster, attribute, wrapper, this.log);
-            if (!success) this.log.warn(`${description} subscription failed`);
+            // (Matterbridge 3.9.0 changes from async to sync subscription)
+            const success = await (endpoint.subscribeAttribute(cluster, attribute, wrapper, this.log) as
+                MatterbridgeEndpoint | Promise<boolean>);
+            if (typeof success === 'boolean' && !success) this.log.warn(`${description} subscription failed`);
         }
     }
 
