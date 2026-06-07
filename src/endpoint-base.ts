@@ -84,7 +84,7 @@ export class EndpointBase extends MatterbridgeEndpoint {
         this.log = log;
 
         // Matterbridge requires a unique name for each endpoint
-        this.deviceName = options.matterbridgeDeviceName;
+        this.deviceName = this.sanitisedDeviceName();
 
         // Copy of values (possibly) required by Matterbridge
         // (Do NOT use the nodeLabel for deviceName; it might not be unique)
@@ -112,6 +112,16 @@ export class EndpointBase extends MatterbridgeEndpoint {
         this.addCommandHandler('identify', () => {
             this.log.info(`${CN}Identify device${RI}`);
         });
+    }
+
+    // Create a deviceName acceptable to both Matterbridge and Matter.js
+    sanitisedDeviceName(): string {
+        // Matterbridge removes periods and spaces
+        // matter.js then replaces all non-alphanumeric characters with periods
+        // ... and throws an error if there are consecutive periods
+        const sanitise = (name: string): string =>
+            name.replaceAll(/[^A-Z0-9. ]+/gi, ' ').trim();
+        return sanitise(this.options.matterbridgeDeviceName) || sanitise(this.id);
     }
 
     // Perform any post-registration setup
