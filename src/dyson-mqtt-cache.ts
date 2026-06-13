@@ -4,6 +4,7 @@
 import EventEmitter from 'events';
 import { AnsiLogger } from 'matterbridge/logger';
 import NodePersist from 'node-persist';
+import { logError } from './log-error.js';
 
 // Cache version
 const MQTT_CACHE_VERSION = 1;
@@ -26,7 +27,7 @@ export class DysonMqttCache<S> extends EventEmitter<DysonMqttCacheEventMap<S>> {
         super({ captureRejections: true });
 
         // Attempt to restore any previously cached status
-        void this.restore();
+        this.restore();
     }
 
     // Construct a persistent storage key for the cache
@@ -35,10 +36,16 @@ export class DysonMqttCache<S> extends EventEmitter<DysonMqttCacheEventMap<S>> {
     }
 
     // Retrieve the cached status, if any
-    async restore(): Promise<void> {
-        const status = await this.persist.getItem(this.key) as S | undefined;
-        if (!status) return;
-        this.emit('restored', status);
+    restore(): void {
+        void (async () => {
+            try {
+                const status = await this.persist.getItem(this.key) as S | undefined;
+                if (!status) return;
+                this.emit('restored', status);
+            } catch (err) {
+                logError(this.log, 'MQTT Cache Restore', err);
+            }
+        })();
     }
 
     // Store the current status in the cache

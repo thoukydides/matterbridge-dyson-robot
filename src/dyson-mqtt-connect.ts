@@ -62,44 +62,48 @@ export class DysonMqttConnection {
             }
 
             // Try to (re)establish the connection again
-            void this.reconnect();
+            this.reconnect();
         });
 
         // Attempt the initial connection
-        void this.start();
+        this.start();
     }
 
     // Attempt a reconnection
-    async reconnect(): Promise<void> {
-        try {
-            // Wait for the backoff before reconnecting
-            this.log.info(`MQTT client reconnecting in ${formatMilliseconds(this.backoff)}...`);
-            const { signal } = this.terminate;
-            await setTimeout(this.backoff, undefined, { signal });
+    reconnect(): void {
+        void (async () => {
+            try {
+                // Wait for the backoff before reconnecting
+                this.log.info(`MQTT client reconnecting in ${formatMilliseconds(this.backoff)}...`);
+                const { signal } = this.terminate;
+                await setTimeout(this.backoff, undefined, { signal });
 
-            // Attempt the reconnection
-            this.log.info('MQTT client attempting reconnection...');
-            await this.mqtt.connect();
+                // Attempt the reconnection
+                this.log.info('MQTT client attempting reconnection...');
+                await this.mqtt.connect();
 
-            // Increase backoff for the next attempt
-            this.backoff = Math.min(this.backoff * BACKOFF_FACTOR, BACKOFF_MAX);
-        } catch (err) {
-            if (!(err instanceof Error && err.name === 'AbortError')) {
-                logError(this.log, 'MQTT Reconnect', err);
+                // Increase backoff for the next attempt
+                this.backoff = Math.min(this.backoff * BACKOFF_FACTOR, BACKOFF_MAX);
+            } catch (err) {
+                if (!(err instanceof Error && err.name === 'AbortError')) {
+                    logError(this.log, 'MQTT Reconnect', err);
+                }
+                // (Don't retry if failed before attempting reconnection)
             }
-            // (Don't retry if failed before attempting reconnection)
-        }
+        });
     }
 
     // Attempt the initial connection
-    async start(): Promise<void> {
-        try {
-            this.log.info('Starting MQTT client...');
-            await this.mqtt.connect();
-        } catch (err) {
-            logError(this.log, 'MQTT Start', err);
-            // (Don't retry if failed before attempting connection)
-        }
+    start(): void {
+        void (async () => {
+            try {
+                this.log.info('Starting MQTT client...');
+                await this.mqtt.connect();
+            } catch (err) {
+                logError(this.log, 'MQTT Start', err);
+                // (Don't retry if failed before attempting connection)
+            }
+        })();
     }
 
     // Stop the MQTT client

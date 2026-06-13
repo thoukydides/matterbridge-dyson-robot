@@ -13,6 +13,7 @@ import {
 import { readFile } from 'node:fs/promises';
 import { assertIsDefined, formatList, MS, plural } from './utils.js';
 import { setTimeout } from 'node:timers/promises';
+import { logError } from './log-error.js';
 
 // Interval between messages when replaying the log file
 const INITIALISE_INTERVAL   = 35 * MS;  // 35 seconds
@@ -51,20 +52,30 @@ export class DysonMqttClientMock extends DysonMqttClient {
         this.emit('connect', packet);
 
         // Start emitting messages from the log file
-        void this.emitNextMessage();
+        this.playbackMessages();
+    }
+
+    // Emit the sequence of messages from the log file
+    playbackMessages(): void {
+        void (async () => {
+            try {
+                while (await this.emitNextMessage()) { /* empty */ }
+            } catch (err) {
+                logError(this.log, 'MQTT Mock Playback', err);
+            }
+        })();
     }
 
     // Emit the next message from the log file, if any
-    async emitNextMessage(): Promise<void> {
-        // Delay between messages
-        await setTimeout(MESSAGE_INTERVAL);
-
-        // Check for more messages
+    async emitNextMessage(): Promise<boolean> {
+        // Retrieve the next message
         const line = this.lines.shift();
         if (!line) {
             this.log.debug('End of MQTT log file reached');
-            return;
+            return false;
         }
+
+        // Check for more messages
         if (line === INITIALISE_MARKER) {
             // Extra delay for initialisation after the first few messages
             this.log.debug('Pausing MQTT log file playback');
@@ -72,14 +83,13 @@ export class DysonMqttClientMock extends DysonMqttClient {
             this.log.debug('Resuming MQTT log file playback');
         } else {
             // Assume all messages come from the status topic
+            await setTimeout(MESSAGE_INTERVAL);
             const topic = this.topic;
             const payload = Buffer.from(line);
             const packet: IPublishPacket = { cmd: 'publish', topic, payload, qos: 0, dup: false, retain: false };
             this.emit('message', topic, payload, packet);
         }
-
-        // Emit the next message
-        void this.emitNextMessage();
+        return true;
     }
 
     // Ignore requests to publish messages

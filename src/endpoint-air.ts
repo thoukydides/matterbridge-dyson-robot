@@ -88,10 +88,8 @@ export type HandlerAir<T extends Behavior.Type, A extends keyof Behavior.StateOf
 export type HandlerAirMap<T extends Behavior.Type> = {
     [A in keyof Behavior.StateOf<T>]?: HandlerAir<T, A>;
 };
-export interface HandlerAirNamed<T extends Behavior.Type, A extends keyof Behavior.StateOf<T> = keyof Behavior.StateOf<T>>{
-    attribute:                  A;
-    handler?:                   HandlerAir<T, A>;
-}
+export type HandlerAirNamed<T extends Behavior.Type, A extends keyof Behavior.StateOf<T> = keyof Behavior.StateOf<T>>
+    = [A, HandlerAir<T, A> | undefined];
 
 // On/Off and Fan Control handlers
 export interface HandlersAirFan extends HandlerAirMap<typeof fanControlBehavior> {
@@ -364,19 +362,25 @@ export class EndpointsAir {
         this.subscribeAttributes(endpoint, fanControlBehavior, 'Fan Control', otherHandlers);
 
         // Install On/Off command handlers
-        const setOnOff = async (command: string, newValue?: boolean): Promise<void> => {
-            this.log.debug(`On/Off command: ${command}`);
-            const oldValue = endpoint.getAttribute(onOffBehavior, 'onOff', this.log) as unknown;
-            assertIsBoolean(oldValue);
-            newValue ??= !oldValue; // (for Toggle command)
+        const setOnOff = (command: string, newValue?: boolean): void => {
+            void (async () => {
+                try {
+                    this.log.debug(`On/Off command: ${command}`);
+                    const oldValue = endpoint.getAttribute(onOffBehavior, 'onOff', this.log) as unknown;
+                    assertIsBoolean(oldValue);
+                    newValue ??= !oldValue; // (for Toggle command)
 
-            // Call the handler
-            await onOffHandler(newValue, oldValue);
-            // (status update will set the OnOff attribute)
+                    // Call the handler
+                    await onOffHandler(newValue, oldValue);
+                    // (status update will set the OnOff attribute)
+                } catch (err) {
+                    logError(this.log, `Fan Command ${command}`, err);
+                }
+            })();
         };
-        endpoint.addCommandHandler('on',     () => { void setOnOff('On',  true); });
-        endpoint.addCommandHandler('off',    () => { void setOnOff('Off', false); });
-        endpoint.addCommandHandler('toggle', () => { void setOnOff('Toggle'); });
+        endpoint.addCommandHandler('on',     () => { setOnOff('On',  true); } );
+        endpoint.addCommandHandler('off',    () => { setOnOff('Off', false); } );
+        endpoint.addCommandHandler('toggle', () => { setOnOff('Toggle'); } );
     }
 
     // Install Thermostat cluster handlers
@@ -412,9 +416,10 @@ export class EndpointsAir {
         name:       string,
         handlers:   HandlerAirMap<T>
     ): void {
+        const attributes = new Set(this.getClusterAttributes(endpoint, cluster));
         const handlersList = Object.entries(handlers) as unknown as HandlerAirNamed<T>[];
-        for (const { attribute, handler } of handlersList) {
-            if (!handler) continue;
+        for (const [attribute, handler] of handlersList) {
+            if (!handler || !attributes.has(attribute)) continue;
             const description = `${name} ${attribute.toString()}`;
 
             // Wrapper around handler to trap errors and flush the change cache
@@ -441,6 +446,15 @@ export class EndpointsAir {
             // Register the handler
             endpoint.subscribeAttribute(cluster, attribute, wrapper, this.log);
         }
+    }
+
+    // Get the list of all attributes on a specific cluster
+    getClusterAttributes<T extends Behavior.Type>(endpoint: MatterbridgeEndpoint, cluster: T): (keyof Behavior.StateOf<T>)[] {
+        const attributes: string[] = [];
+        endpoint.forEachAttribute((clusterName, _clusterId, attributeName) => {
+            if (clusterName === cluster.id) attributes.push(attributeName);
+        });
+        return attributes as unknown as (keyof Behavior.StateOf<T>)[];
     }
 
     // Update the Bridged Device Basic Information cluster attributes

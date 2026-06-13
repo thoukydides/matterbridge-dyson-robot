@@ -42,7 +42,7 @@ export class Periodic {
         readonly log:       AnsiLogger,
         readonly config:    PeriodicConfig
     ) {
-        void this.restartWatchdog();
+        this.restartWatchdog();
         this.runPeriodicPromise = this.runPeriodic();
     }
 
@@ -61,7 +61,7 @@ export class Periodic {
     // Reset the watchdog and reschedule the next operation
     up(): void {
         // Restart the watchdog timer
-        void this.restartWatchdog();
+        this.restartWatchdog();
 
         // Reschedule the next operation
         this.lastActivityTime = Date.now();
@@ -103,22 +103,24 @@ export class Periodic {
     }
 
     // (Re)start the watchdog timer
-    private async restartWatchdog(): Promise<void> {
-        try {
-            // Abort any existing watchdog
-            this.abortWatchdog?.abort();
+    private restartWatchdog(): void {
+        void (async () => {
+            try {
+                // Abort any existing watchdog
+                this.abortWatchdog?.abort();
 
-            // Start a new watchdog
-            this.abortWatchdog = new AbortController();
-            const { signal } = this.abortWatchdog;
-            await setTimeout(this.config.watchdog, undefined, { signal });
+                // Start a new watchdog
+                this.abortWatchdog = new AbortController();
+                const { signal } = this.abortWatchdog;
+                await setTimeout(this.config.watchdog, undefined, { signal });
 
-            // The timeout has occurred, so change the status to 'Down'
-            this.setStatus(PeriodicStatus.Down);
-        } catch (err) {
-            if (!(err instanceof Error && err.name === 'AbortError')) {
-                logError(this.log, this.config.name, err);
+                // The timeout has occurred, so change the status to 'Down'
+                this.setStatus(PeriodicStatus.Down);
+            } catch (err) {
+                if (!(err instanceof Error && err.name === 'AbortError')) {
+                    logError(this.log, this.config.name, err);
+                }
             }
-        }
+        })();
     }
 }
