@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v1.10.11] - 2026-06-13
+### Changed
+* Retry failures connecting to the Dyson cloud API (instead of just for HTTP status codes).
+* Updated dependencies.
+
 ## [v1.10.10] - 2026-06-07
 ### Fixed
 * Remove non-alphanumeric characters from the `deviceName` provided to Matterbridge to workaround matter.js restrictions. (#31)
@@ -372,7 +377,8 @@ All notable changes to this project will be documented in this file.
 
 Copyright © 2025-2026 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.10.10...HEAD
+[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.10.11...HEAD
+[v1.10.11]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.10.10...v1.10.11
 [v1.10.10]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.10.9...v1.10.10
 [v1.10.9]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.10.8...v1.10.9
 [v1.10.8]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.10.7...v1.10.8
