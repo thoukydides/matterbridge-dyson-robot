@@ -149,8 +149,8 @@ export abstract class DysonDeviceAirBase extends DysonDevice<DysonMqttAir> {
     }
 
     // Install handlers
-    async installHandlers(endpoints: EndpointsAir): Promise<void> {
-        await endpoints.setFanControlHandlers({
+    installHandlers(endpoints: EndpointsAir): void {
+        endpoints.setFanControlHandlers({
             onOff: onOff => this.setPower(onOff),
             airflowDirection: airflowDirection =>
                 this.setDirection(airflowDirection === FanControl.AirflowDirection.Forward),
@@ -231,7 +231,7 @@ export abstract class DysonDeviceAirBase extends DysonDevice<DysonMqttAir> {
     override async start(): Promise<void> {
         assertIsDefined(this.endpoints);
         this.mqtt.on('status', this.mqttListener);
-        await this.installHandlers(this.endpoints);
+        this.installHandlers(this.endpoints);
         await this.updateClusterAttributes(this.mqtt.status);
     }
 

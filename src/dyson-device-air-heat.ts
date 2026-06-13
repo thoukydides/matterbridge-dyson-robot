@@ -25,9 +25,9 @@ export function DysonDeviceAirHeatMixin<TBase extends AbstractConstructor<DysonD
         }
 
         // Install handlers
-        override async installHandlers(endpoints: EndpointsAir): Promise<void> {
-            await super.installHandlers(endpoints);
-            await endpoints.setThermostatHandlers({
+        override installHandlers(endpoints: EndpointsAir): void {
+            super.installHandlers(endpoints);
+            endpoints.setThermostatHandlers({
                 occupiedHeatingSetpoint: setpoint =>
                     this.setTargetTemperature(setpoint / 100),
                 systemMode: mode => {

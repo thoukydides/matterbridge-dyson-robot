@@ -355,13 +355,13 @@ export class EndpointsAir {
     }
 
     // Install On/Off and Fan Control cluster handlers
-    async setFanControlHandlers(handlers: HandlersAirFan): Promise<void> {
+    setFanControlHandlers(handlers: HandlersAirFan): void {
         const endpoint = this.purifier;
         if (!endpoint) return;
 
         // Subscribe to Fan Control read/write attributes
         const { onOff: onOffHandler, ...otherHandlers } = handlers;
-        await this.subscribeAttributes(endpoint, fanControlBehavior, 'Fan Control', otherHandlers);
+        this.subscribeAttributes(endpoint, fanControlBehavior, 'Fan Control', otherHandlers);
 
         // Install On/Off command handlers
         const setOnOff = async (command: string, newValue?: boolean): Promise<void> => {
@@ -380,12 +380,12 @@ export class EndpointsAir {
     }
 
     // Install Thermostat cluster handlers
-    async setThermostatHandlers(handlers: HandlersAirThermostat): Promise<void> {
+    setThermostatHandlers(handlers: HandlersAirThermostat): void {
         const endpoint = this.thermostat;
         if (!endpoint) return;
 
         // Subscribe to Thermostat read/write attributes
-        await this.subscribeAttributes(endpoint, thermostatBehavior, 'Thermostat', handlers);
+        this.subscribeAttributes(endpoint, thermostatBehavior, 'Thermostat', handlers);
 
         // Install Thermostat command handler
         this.behaviorDeviceAir.setCommandHandler('SetpointRaiseLower', async ({ mode, amount }) => {
@@ -406,12 +406,12 @@ export class EndpointsAir {
     }
 
     // Subscribe to attribute updates
-    async subscribeAttributes<T extends Behavior.Type>(
+    subscribeAttributes<T extends Behavior.Type>(
         endpoint:   MatterbridgeEndpoint,
         cluster:    T,
         name:       string,
         handlers:   HandlerAirMap<T>
-    ): Promise<void> {
+    ): void {
         const handlersList = Object.entries(handlers) as unknown as HandlerAirNamed<T>[];
         for (const { attribute, handler } of handlersList) {
             if (!handler) continue;
@@ -439,10 +439,7 @@ export class EndpointsAir {
             };
 
             // Register the handler
-            // (Matterbridge 3.9.0 changes from async to sync subscription)
-            const success = await (endpoint.subscribeAttribute(cluster, attribute, wrapper, this.log) as
-                MatterbridgeEndpoint | Promise<boolean>);
-            if (typeof success === 'boolean' && !success) this.log.warn(`${description} subscription failed`);
+            endpoint.subscribeAttribute(cluster, attribute, wrapper, this.log);
         }
     }
 
