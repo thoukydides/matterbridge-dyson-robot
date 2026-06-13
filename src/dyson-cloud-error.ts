@@ -11,8 +11,19 @@ const DYSON_STATUS_CODES = new Map<number, string>([
     [429, 'Too many requests issued to the MyDyson account API. The previous response may still be valid.']
 ]);
 
+// Base for reporting all Dyson cloud API errors
+export class DysonCloudError extends Error {
+
+    // Create a new error
+    constructor(message?: string, options?: ErrorOptions) {
+        super(message, options);
+        Error.captureStackTrace(this, DysonCloudError);
+        this.name = 'DysonCloudError';
+    }
+}
+
 // A status code error
-export class DysonCloudStatusCodeError extends Error {
+export class DysonCloudStatusCodeError extends DysonCloudError {
 
     // Create a new error
     constructor(

@@ -11,7 +11,7 @@ import { INSPECT_VERBOSE } from './logger-options.js';
 import { inspect } from 'util';
 import { STATUS_CODES } from 'http';
 import { PLUGIN_NAME, PLUGIN_VERSION } from './settings.js';
-import { DysonCloudStatusCodeError } from './dyson-cloud-error.js';
+import { DysonCloudError, DysonCloudStatusCodeError } from './dyson-cloud-error.js';
 import { setTimeout } from 'node:timers/promises';
 import { MaybePromise } from 'matterbridge/matter';
 
@@ -94,7 +94,7 @@ export class DysonCloudAPIUserAgent {
         // Check that the response is empty
         if (contentLength) {
             this.logCheckerValidation(LogLevel.ERROR, request);
-            throw new Error(`Unexpected non-empty Dyson cloud API response (${contentLength} bytes)`);
+            throw new DysonCloudError(`Unexpected non-empty Dyson cloud API response (${contentLength} bytes)`);
         }
     }
 
@@ -118,7 +118,7 @@ export class DysonCloudAPIUserAgent {
         } catch (cause) {
             this.logCheckerValidation(LogLevel.ERROR, request, text);
             const message = cause instanceof Error ? cause.message : String(cause);
-            throw new Error(`Failed to parse Dyson cloud API response as JSON: ${message}`, { cause });
+            throw new DysonCloudError(`Failed to parse Dyson cloud API response as JSON: ${message}`, { cause });
         }
 
         // Check that the response has the expected fields
@@ -126,7 +126,7 @@ export class DysonCloudAPIUserAgent {
         const validation = checker.validate(json);
         if (validation) {
             this.logCheckerValidation(LogLevel.ERROR, request, json, validation);
-            throw new Error('Unexpected structure of Dyson cloud API response');
+            throw new DysonCloudError('Unexpected structure of Dyson cloud API response');
         }
         const strictValidation = checker.strictValidate(json);
         if (strictValidation) {
@@ -181,11 +181,12 @@ export class DysonCloudAPIUserAgent {
     // Decide whether a request can be retried following an error
     canRetry(err: unknown): boolean {
         // Do not retry the request unless the failure was an API error
-        if (!(err instanceof DysonCloudStatusCodeError)) return false;
+        if (!(err instanceof DysonCloudError)) return false;
 
         // Some status codes never retried
         const noRetryStatusCodes = [401, 404, 429];
-        if (noRetryStatusCodes.includes(err.statusCode)) {
+        if (err instanceof DysonCloudStatusCodeError
+            && noRetryStatusCodes.includes(err.statusCode)) {
             this.log.warn(`Request will not be retried (status code ${err.statusCode})`);
             return false;
         }
@@ -215,7 +216,7 @@ export class DysonCloudAPIUserAgent {
             } catch (cause) {
                 const message = cause instanceof Error ? cause.message : String(cause);
                 status = `ERROR: ${message}`;
-                throw new Error(`Failed to issue Dyson cloud API request: ${message}`, { cause });
+                throw new DysonCloudError(`Failed to issue Dyson cloud API request: ${message}`, { cause });
             }
 
             // Check whether the request was successful
