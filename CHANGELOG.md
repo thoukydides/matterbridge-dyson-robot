@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v1.10.14] - 2026-06-14
+### Changed
+* Dropped Node.js 20 support.
+* Updated dependencies to latest versions.
+
 ## [v1.10.13] - 2026-06-14
 ### Fixed
 * Avoid creating Thermostat endpoint for Composed Air Purifier devices without heating. (#35)
@@ -385,7 +390,8 @@ All notable changes to this project will be documented in this file.
 
 Copyright © 2025-2026 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.10.13...HEAD
+[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.10.14...HEAD
+[v1.10.14]:         https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.10.13...v1.10.14
 [v1.10.13]:         https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.10.12...v1.10.13
 [v1.10.12]:         https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.10.11...v1.10.12
 [v1.10.11]:         https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.10.10...v1.10.11
