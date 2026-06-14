@@ -58,7 +58,7 @@
     "type": "module",
     "main": "dist/index.js",
     "engines": {
-        "node": "^26.3.0 || ^24.16.0 || ^22.22.3 || ^20.20.2",
+        "node": "^26.3.0 || ^24.16.0 || ^22.22.3",
         "matterbridge": "^3.9.0"
     },
     "dependencies": {
@@ -68,16 +68,16 @@
         "pngjs": "^7.0.0",
         "semver": "^7.8.4",
         "ts-interface-checker": "^1.0.2",
-        "undici": "^7.27.2",
+        "undici": "^8.4.1",
         "ws": "^8.21.0"
     },
     "devDependencies": {
         "@actions/core": "^3.0.1",
         "@eslint/eslintrc": "^3.3.5",
         "@eslint/js": "^10.0.1",
-        "@tsconfig/node20": "^20.1.9",
+        "@tsconfig/node22": "^22.0.5",
         "@types/eslint__js": "^8.42.3",
-        "@types/node": "^20.19.43",
+        "@types/node": "^22.19.21",
         "@types/node-persist": "^3.1.8",
         "@types/semver": "^7.7.1",
         "eslint": "^10.5.0",
