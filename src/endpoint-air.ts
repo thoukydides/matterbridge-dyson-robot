@@ -77,6 +77,7 @@ export type EndpointOptionsAirSensors = {
 export interface EndpointOptionsAir extends EndpointOptionsBase {
     validatedNames:             EntityName[];
     fanControl:                 FanControlOptions;
+    thermostatSupport?:         boolean;
     hepaFilter?:                FilterMonitoringOptions;
     carbonFilter?:              FilterMonitoringOptions;
     sensors:                    EndpointOptionsAirSensors;
@@ -223,7 +224,7 @@ export class EndpointsAir {
     // Create an Air Purifier device
     createAirPurifierEndpoint(composed = false): MatterbridgeEndpoint | undefined {
         // Create the endpoint
-        if (this.purifier) return;
+        if (this.purifier) return; // (only a single air purifier is supported)
         const endpointName = composed ? 'Composed Air Purifier' : 'Air Purifier';
         const endpoint = this.createDevice(endpointName, [airPurifier]);
         if (!endpoint) return;
@@ -267,7 +268,8 @@ export class EndpointsAir {
     // Create a Thermostat device
     createThermostatEndpoint(parent?: MatterbridgeEndpoint): MatterbridgeEndpoint | undefined {
         // Create the endpoint
-        if (this.thermostat) return;
+        if (!this.options.thermostatSupport) return;
+        if (this.thermostat) return; // (only a single thermostat is supported)
         const endpoint = this.createDevice('Thermostat', [thermostatDevice], parent);
         if (!endpoint) return;
         this.thermostat = endpoint;

@@ -5,7 +5,7 @@ import { Thermostat } from 'matterbridge/matter/clusters';
 import { DysonDeviceAirBase } from './dyson-device-air-base.js';
 import { DysonMqttStatusAir } from './dyson-mqtt-air.js';
 import { DysonMqttStatus } from './dyson-mqtt.js';
-import { EndpointsAir } from './endpoint-air.js';
+import { EndpointOptionsAir, EndpointsAir } from './endpoint-air.js';
 import { AbstractConstructor, assertIsDefined } from './utils.js';
 import {
     DysonAirFanState,
@@ -14,6 +14,7 @@ import {
 } from './dyson-air-types.js';
 import { numeric } from './dyson-device-air-quality.js';
 import { DysonEntityDescription } from './dyson-device-base.js';
+import { EntityName } from './config-types.js';
 
 // Mixin to add heating to a Dyson air treatment device
 export function DysonDeviceAirHeatMixin<TBase extends AbstractConstructor<DysonDeviceAirBase>>(Base: TBase) {
@@ -22,6 +23,14 @@ export function DysonDeviceAirHeatMixin<TBase extends AbstractConstructor<DysonD
         // Mixin constructor
         constructor(...args: any[]) {
             super(...args as ConstructorParameters<TBase>);
+        }
+
+        // Determine the supported endpoints and their options
+        override getEndpointOptions(validatedNames: EntityName[]): EndpointOptionsAir {
+            return {
+                ...super.getEndpointOptions(validatedNames),
+                thermostatSupport: true
+            };
         }
 
         // Install handlers

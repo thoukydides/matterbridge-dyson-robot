@@ -105,46 +105,7 @@ export abstract class DysonDeviceAirBase extends DysonDevice<DysonMqttAir> {
 
     // Create the endpoint for this device
     makeEndpoints(validatedNames: EntityName[]): EndpointsAir {
-        // Static configuration of the air purifier clusters
-        const endpointOptions: EndpointOptionsAir = {
-            id:                     this.uniqueId,
-            matterbridgeDeviceName: this.deviceName,
-            validatedNames,
-            basicInformation: {
-                nodeLabel:          this.deviceName,
-                partNumber:         this.modelNumber,
-                productId:          this.productId,
-                productLabel:       this.modelNumber,
-                productName:        this.modelName,
-                productUrl:         PLUGIN_URL,
-                serialNumber:       this.serialNumber,
-                softwareVersion:    this.firmwareVersion ?? this.mqtt.status.version,
-                uniqueId:           this.uniqueId,
-                vendorId:           VendorId(VENDOR_ID),
-                vendorName:         VENDOR_NAME
-            },
-            fanControl: {
-                rockSupport: {
-                    rockLeftRight:  this.hasLeftRight,
-                    rockUpDown:     this.hasUpDown,
-                    rockRound:      false
-                },
-                windSupport: {
-                    sleepWind:      true, // Night mode
-                    naturalWind:    this.hasBreeze
-                },
-                directionSupport:   this.hasDirection
-            },
-            hepaFilter:             this.hasHepaFilter ? {
-                filterPartNumbers:  this.classStatic.filters.hepa
-            } : undefined,
-            carbonFilter:           this.hasCarbonFilter ? {
-                filterPartNumbers:  this.classStatic.filters.carbon
-            } : undefined,
-            sensors:                this.sensorSupport
-        };
-
-        // Create the endpoint
+        const endpointOptions = this.getEndpointOptions(validatedNames);
         return new EndpointsAir(this.log, this.config, endpointOptions);
     }
 
@@ -182,8 +143,50 @@ export abstract class DysonDeviceAirBase extends DysonDevice<DysonMqttAir> {
         });
     }
 
+    // Determine the supported endpoints and their options
+    getEndpointOptions(validatedNames: EntityName[]): EndpointOptionsAir {
+        const endpointOptions: EndpointOptionsAir = {
+            id:                     this.uniqueId,
+            matterbridgeDeviceName: this.deviceName,
+            validatedNames,
+            basicInformation: {
+                nodeLabel:          this.deviceName,
+                partNumber:         this.modelNumber,
+                productId:          this.productId,
+                productLabel:       this.modelNumber,
+                productName:        this.modelName,
+                productUrl:         PLUGIN_URL,
+                serialNumber:       this.serialNumber,
+                softwareVersion:    this.firmwareVersion ?? this.mqtt.status.version,
+                uniqueId:           this.uniqueId,
+                vendorId:           VendorId(VENDOR_ID),
+                vendorName:         VENDOR_NAME
+            },
+            fanControl: {
+                rockSupport: {
+                    rockLeftRight:  this.hasLeftRight,
+                    rockUpDown:     this.hasUpDown,
+                    rockRound:      false
+                },
+                windSupport: {
+                    sleepWind:      true, // Night mode
+                    naturalWind:    this.hasBreeze
+                },
+                directionSupport:   this.hasDirection
+            },
+            hepaFilter:             this.hasHepaFilter ? {
+                filterPartNumbers:  this.classStatic.filters.hepa
+            } : undefined,
+            carbonFilter:           this.hasCarbonFilter ? {
+                filterPartNumbers:  this.classStatic.filters.carbon
+            } : undefined,
+            sensors:                this.getSensorSupport()
+        };
+        return endpointOptions;
+    }
+
     // Determine which optional sensors are supported
-    get sensorSupport(): EndpointOptionsAirSensors {
+    getSensorSupport(): EndpointOptionsAirSensors {
         const sensors = mapDysonAirSensorStatus(this.log, this.mqtt.status);
         return {
             temperature:    sensors.temperature !== undefined,
