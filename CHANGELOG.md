@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v1.10.15] - 2026-06-17
+### Fixed
+* Corrected recovery after MQTT disconnection.
+### Changed
+* Updated dependencies to latest versions.
+
 ## [v1.10.14] - 2026-06-14
 ### Changed
 * Dropped Node.js 20 support.
@@ -390,7 +396,8 @@ All notable changes to this project will be documented in this file.
 
 Copyright © 2025-2026 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.10.14...HEAD
+[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.10.15...HEAD
+[v1.10.15]:         https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.10.14...v1.10.15
 [v1.10.14]:         https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.10.13...v1.10.14
 [v1.10.13]:         https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.10.12...v1.10.13
 [v1.10.12]:         https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.10.11...v1.10.12
