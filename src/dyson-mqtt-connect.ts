@@ -90,7 +90,7 @@ export class DysonMqttConnection {
                 }
                 // (Don't retry if failed before attempting reconnection)
             }
-        });
+        })();
     }
 
     // Attempt the initial connection
