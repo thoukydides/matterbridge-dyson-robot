@@ -297,13 +297,18 @@ export abstract class DysonDeviceAirBase extends DysonDevice<DysonMqttAir> {
     // Set horizontal oscillation (all except Big+Quiet models)
     async setOscillateLeftRight(oscillate: boolean): Promise<void> {
         // Most models use 'ON'/'OFF', but some use 'OION'/'OIOF' instead
-        const { oson } = this.mqtt.status;
+        const { oson, osal, osau, ancp } = this.mqtt.status;
         const isOI = oson === DysonAirOscillation.FixedOI
                   || oson === DysonAirOscillation.OscillatingOI;
-        const OSON_KEYS = [['Fixed', 'FixedOI'], ['Oscillating', 'OscillatingOI']] as const;
-        const key = OSON_KEYS[oscillate ? 1 : 0][isOI ? 1 : 0];
-        await this.setState(`${oscillate ? 'Enabling' : 'disabling'} left/right oscillation`,
-                            { oson: DysonAirOscillation[key] });
+        if (oscillate) {
+            // Angle-capable models require the angle set when enabling oscillation
+            await this.setState('Enabling left/right oscillation',
+                                { oson: DysonAirOscillation[isOI ? 'OscillatingOI' : 'Oscillating'], osal, osau, ancp });
+        } else {
+            // Disable oscillation
+            await this.setState('Disabling left/right oscillation',
+                                { oson: DysonAirOscillation[isOI ? 'FixedOI' : 'Fixed'] });
+        }
     }
 
     // Set vertical oscillation (Big+Quiet models only)
