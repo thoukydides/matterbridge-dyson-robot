@@ -9,7 +9,7 @@ import {
     humiditySensor,
     MatterbridgeEndpoint,
     temperatureSensor,
-    thermostatDevice
+    thermostat
 } from 'matterbridge';
 import { AnsiLogger } from 'matterbridge/logger';
 import { Config, EntityName } from './config-types.js';
@@ -270,7 +270,7 @@ export class EndpointsAir {
         // Create the endpoint
         if (!this.options.thermostatSupport) return;
         if (this.thermostat) return; // (only a single thermostat is supported)
-        const endpoint = this.createDevice('Thermostat', [thermostatDevice], parent);
+        const endpoint = this.createDevice('Thermostat', [thermostat], parent);
         if (!endpoint) return;
         this.thermostat = endpoint;
 

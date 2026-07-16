@@ -6,7 +6,7 @@ import {
     Dyson360ZoneCleanStatus,
     Dyson360ZoneIcon
 } from './dyson-360-types.js';
-import { AreaNamespaceTag } from 'matterbridge/matter';
+import { CommonAreaNamespaceTag } from 'matterbridge/matter';
 import { DysonDevice360Base } from './dyson-device-360-base.js';
 import { AbstractConstructor, assertIsDefined } from './utils.js';
 import { DysonMqttStatus } from './dyson-mqtt.js';
@@ -25,21 +25,21 @@ import { logError } from './log-error.js';
 type LocationType = number | null;
 type LocationTypeMapping = LocationType | [RegExp, LocationType][];
 const LOCATION_TYPE_MAP: Record<Dyson360ZoneIcon, LocationTypeMapping> = {
-    [Dyson360ZoneIcon.Balcony]:     AreaNamespaceTag.Balcony.tag,
-    [Dyson360ZoneIcon.Bathroom]:    AreaNamespaceTag.Bathroom.tag,
+    [Dyson360ZoneIcon.Balcony]:     CommonAreaNamespaceTag.Balcony.tag,
+    [Dyson360ZoneIcon.Bathroom]:    CommonAreaNamespaceTag.Bathroom.tag,
     [Dyson360ZoneIcon.Bedroom]: [
-        [/^Guest room$/i,           AreaNamespaceTag.GuestBedroom.tag],
-        [/^/,                       AreaNamespaceTag.Bedroom.tag]
+        [/^Guest room$/i,           CommonAreaNamespaceTag.GuestBedroom.tag],
+        [/^/,                       CommonAreaNamespaceTag.Bedroom.tag]
     ],
-    [Dyson360ZoneIcon.DiningRoom]:  AreaNamespaceTag.Dining.tag,
-    [Dyson360ZoneIcon.Hallway]:     AreaNamespaceTag.Hallway.tag,
-    [Dyson360ZoneIcon.Kitchen]:     AreaNamespaceTag.Kitchen.tag,
-    [Dyson360ZoneIcon.LivingRoom]:  AreaNamespaceTag.LivingRoom.tag,
-    [Dyson360ZoneIcon.MainBedroom]: AreaNamespaceTag.PrimaryBedroom.tag,
-    [Dyson360ZoneIcon.Study]:       AreaNamespaceTag.Study.tag,
-    [Dyson360ZoneIcon.Toilet]:      AreaNamespaceTag.Toilet.tag,
-    [Dyson360ZoneIcon.UtilityRoom]: AreaNamespaceTag.UtilityRoom.tag,
-    [Dyson360ZoneIcon.Work]:        AreaNamespaceTag.Office.tag,
+    [Dyson360ZoneIcon.DiningRoom]:  CommonAreaNamespaceTag.Dining.tag,
+    [Dyson360ZoneIcon.Hallway]:     CommonAreaNamespaceTag.Hallway.tag,
+    [Dyson360ZoneIcon.Kitchen]:     CommonAreaNamespaceTag.Kitchen.tag,
+    [Dyson360ZoneIcon.LivingRoom]:  CommonAreaNamespaceTag.LivingRoom.tag,
+    [Dyson360ZoneIcon.MainBedroom]: CommonAreaNamespaceTag.PrimaryBedroom.tag,
+    [Dyson360ZoneIcon.Study]:       CommonAreaNamespaceTag.Study.tag,
+    [Dyson360ZoneIcon.Toilet]:      CommonAreaNamespaceTag.Toilet.tag,
+    [Dyson360ZoneIcon.UtilityRoom]: CommonAreaNamespaceTag.UtilityRoom.tag,
+    [Dyson360ZoneIcon.Work]:        CommonAreaNamespaceTag.Office.tag,
     [Dyson360ZoneIcon.Custom]:      null
 };
 
