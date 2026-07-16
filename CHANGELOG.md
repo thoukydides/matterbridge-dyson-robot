@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v1.10.17] - 2026-07-16
+### Fixed
+* Compatibility with Matterbridge version 3.10.0.
+### Changed
+* Updated dependencies.
+
 ## [v1.10.16] - 2026-06-24
 ### Changed
 * Include angles when enabling oscillation on devices that support it.
@@ -401,7 +407,8 @@ All notable changes to this project will be documented in this file.
 
 Copyright © 2025-2026 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.10.16...HEAD
+[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.10.17...HEAD
+[v1.10.17]:         https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.10.16...v1.10.17
 [v1.10.16]:         https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.10.15...v1.10.16
 [v1.10.15]:         https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.10.14...v1.10.15
 [v1.10.14]:         https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.10.13...v1.10.14
