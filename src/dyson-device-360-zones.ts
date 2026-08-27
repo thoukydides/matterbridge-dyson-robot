@@ -107,6 +107,7 @@ export function DysonDevice360ZonesMixin<TBase extends AbstractConstructor<Dyson
             const selectedAreas:    number[]                = [];
             const { persistentMapId, zonesDefinitionVersion } = status;
             if (persistentMapId && await this.checkMap(persistentMapId, zonesDefinitionVersion)) {
+                // Note: Spot+Scrub Ai doesn't report zoneStatus
                 const { zoneId, zoneStatus, cleaningProgramme } = status;
 
                 // If the current zone is known then map it to a Matter area

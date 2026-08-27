@@ -98,7 +98,8 @@ const STATE_MAP: Record<Dyson360State, StateMapColumns> = {
     [Dyson360State.MappingInitiated]:       ['Mapping',     'Running',          false],
     [Dyson360State.MappingNeedsCharge]:     ['Mapping',     'SeekingCharger',   false],
     [Dyson360State.MappingPaused]:          ['Mapping',     'Paused',           false],
-    [Dyson360State.MappingRunning]:         ['Mapping',     'Running',          false]
+    [Dyson360State.MappingRunning]:         ['Mapping',     'Running',          false],
+    [Dyson360State.Aborted]:                ['Idle',        'SeekingCharger',   false]
 };
 function mapState(state: Dyson360State): {
     runMode:            RvcRunMode360,
@@ -206,13 +207,21 @@ export abstract class DysonDevice360Base
 
     // Start the device after the endpoints are active
     override async start(): Promise<void> {
-        this.mqtt.on('status',  this.mqttStatusListener);
+        this.mqtt.on('status', this.mqttStatusListener);
+        this.mqtt.on('message', tryListener(this.mqtt, async msg => {
+            switch (msg.msg) {
+            case 'MAP-UPLOAD-STATUS':
+                // Spot+Scrub Ai doesn't provide cleanId in its normal status
+                await this.logCompletedClean(msg.cleanId, this.mqtt.status.cleanDuration);
+                break;
+            }
+        }));
         await this.updateClusterAttributes(this.mqtt.status);
     }
 
     // Stop the device when Matterbridge is shutting down
     override async stop(): Promise<void> {
-        this.mqtt.off('status',  this.mqttStatusListener);
+        this.mqtt.off('status', this.mqttStatusListener);
         await super.stop();
     }
 
@@ -311,7 +320,7 @@ export abstract class DysonDevice360Base
             this.endpoint.updatePowerSource(batteryStatus)
         ]);
 
-        // Check for the end of a clean
+        // Check for the end of a clean (except for Spot+Scrub Ai)
         const prevRunMode = this.runMode;
         this.runMode = runMode;
         if (runMode === RvcRunMode360.Idle && prevRunMode === RvcRunMode360.Cleaning) {

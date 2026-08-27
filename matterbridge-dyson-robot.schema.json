@@ -71,6 +71,13 @@
             ],
             "default": "Matterbridge"
         },
+        "statusPollInterval": {
+            "description": "Interval in seconds between polling the device status. This only applies to Dyson Spot+Scrub Ai robot vacuums; all other air treatment and robot vacuums devices publish full status updates themselves.",
+            "type": "integer",
+            "minimum": 5,
+            "maximum": 3600,
+            "default": 30
+        },
         "wildcardTopic": {
             "description": "Subscribe to all MQTT topics. For direct connections via the local network this uses the '#' wildcard, which is useful for discovering new endpoints or checking that the rootTopic and serialNumber have been correctly configured. However, the AWS IoT gateway does not allow wildcard subscriptions. For AWS IoT connections, this option instead adds a subscription to the command topic. When this option is disabled only the expected status topic(s) are subscribed.",
             "type": "boolean",
@@ -274,7 +281,7 @@
                     "default": false
                 },
                 "token": {
-                    "description": "As an alternative to providing the MyDyson account configuration, a pre-authenticated token may be used instead. (If opendyson is used then this can be found in '~/.config/libdyson/config.yml'.) This value is primarily intended for automated testing, and should normally be left blank.",
+                    "description": "As an alternative to providing the MyDyson account configuration, a pre-authenticated token may be used instead. (If opendyson is used then this can be found in '~/.config/libdyson/config.yml' on Linux or '~/Library/Application Support/libdyson/config.yml' on macOS.) This value is primarily intended for automated testing, and should normally be left blank.",
                     "title": "Leave blank unless you know what you are doing",
                     "type": "string",
                     "pattern": "^[A-Z0-9]{64}-1$",

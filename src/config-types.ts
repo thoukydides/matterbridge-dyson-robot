@@ -96,6 +96,7 @@ export interface ConfigBase {
     simpleModeTagsRvc:      boolean;
     wildcardTopic:          boolean;
     logMapStyle:            LogMapStyle;
+    statusPollInterval:     number;
     debug:                  boolean;
     debugFeatures:          DebugFeatures[];
     unregisterOnShutdown:   boolean;

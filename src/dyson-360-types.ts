@@ -47,7 +47,8 @@ export enum Dyson360State {
     MappingInitiated                = 'MAPPING_INITIATED',
     MappingNeedsCharge              = 'MAPPING_NEEDS_CHARGE',
     MappingPaused                   = 'MAPPING_PAUSED',
-    MappingRunning                  = 'MAPPING_RUNNING'
+    MappingRunning                  = 'MAPPING_RUNNING',
+    Aborted                         = 'ABORTED'
 }
 
 // Fault status
@@ -88,8 +89,8 @@ export enum Dyson360FaultUserAction {
 export interface Dyson360ActiveFault {
     faultCode:                      string;         // e.g. '23.0.3',
     nextActionRequired:             Dyson360FaultNextAction;
-    present:                        Dyson360FaultPresent;
-    requiredUserAction:             Dyson360FaultUserAction;
+    present?:                       Dyson360FaultPresent;
+    requiredUserAction?:            Dyson360FaultUserAction;
 }
 
 // Dyson robot vacuum power mode
@@ -153,6 +154,11 @@ export interface Dyson360ZoneStatus {
     zoneId:                         string;         // e.g. '1'
 }
 
+// Dyson robot vacuum map upload status (Spot+Scrub Ai only)
+export enum Dyson360MapUploadStatus {
+    Complete                        = 'COMPLETE'
+}
+
 // Dyson robot vacuum cleaning strategy
 export enum Dyson360CleaningStrategy {
     Auto                            = 'auto',
@@ -163,7 +169,16 @@ export enum Dyson360CleaningStrategy {
 }
 
 // Dyson robot vacuum position
-export type Dyson360Position = [number, number];
+export type Dyson360Position360 = [number, number];
+export interface Dyson360PositionSpotScrubCoord {
+    angle:                          number;
+    id:                             number;         // Incrementing index
+    update:                         number;
+    x:                              number;
+    y:                              number;
+}
+export type Dyson360PositionSpotScrub = Dyson360PositionSpotScrubCoord[];
+export type Dyson360Position = Dyson360Position360 | Dyson360PositionSpotScrub;
 
 // Dyson map data (after base64 and gzip decoding) (360 Eye only)
 export type Dyson360MapBitmap = number[][];
@@ -232,4 +247,56 @@ export enum Dyson360DustName {
     Large                           = 'large',
     Other                           = 'other',
     Total                           = 'total'
+}
+
+// Trigger for deep cleaning of mop roller (Spot+Scrub Ai only)
+export enum Dyson360BackWashType {
+    Time                            = 'TIME'
+}
+
+// State of the dock (Spot+Scrub Ai only)
+export enum Dyson360DockState {
+    CollectingDust                  = 'COLLECTING_DUST',
+    DryingMop                       = 'DRYING_MOP',
+    Idle                            = 'IDLE',
+    WashingMop                      = 'WASHING_MOP'
+}
+
+// State of the dock commissioning (Spot+Scrub Ai only)
+export enum Dyson360DockCommissioningState {
+    Idle                            = 'IDLE'
+}
+
+// Type of cleaning to be performed (Spot+Scrub Ai only)
+export enum Dyson360FullCleanAction {
+    None                            = 'NONE',
+    VacuumingAndMopping             = 'VACUUMING_AND_MOPPING'
+}
+
+// State of the dock cleaning process (Spot+Scrub Ai only)
+export enum Dyson360CleaningState {
+    NotCleaning                     = 'NOT_CLEANING'
+}
+
+// Status of consumables (Spot+Scrub Ai only)
+export enum Dyson360ConsumableType {
+    BrushBar                        = 'brushBar',
+    CleaningSolution                = 'cleaningSolution',
+    DockFilter                      = 'dockFilter',
+    IoniserCartridge                = 'ioniserCartridge',
+    MopRoller                       = 'mopRoller',
+    RobotFilter                     = 'robotFilter',
+    SideBrushes                     = 'sideBrushes'
+}
+export interface Dyson360Consumable {
+    type:                           Dyson360ConsumableType;
+    usage?:                         number;         // Quantity or -1 if absent
+    needsRefill?:                   boolean;
+}
+
+// Do not disturb mode (Spot+Scrub Ai only)
+export interface Dyson360DoNotDisturbMode {
+    endTime:                        string;         // e.g. '8:00'
+    isOn:                           boolean;
+    startTime:                      string;         // e.g. '22:00'
 }

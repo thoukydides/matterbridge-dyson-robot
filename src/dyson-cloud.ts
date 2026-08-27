@@ -230,19 +230,19 @@ export class DysonCloudRemote extends DysonCloud<ConfigRemoteAccount> {
         const deviceConfigs: WithAPI<DeviceConfigRemoteMqtt>[] = [];
         for (const device of manifest) {
             const { serialNumber, model, type, productName, connectedConfiguration } = device;
+            const rootTopic = device.connectedConfiguration?.mqtt.mqttRootTopicLevel;
             const firmware = connectedConfiguration?.firmware.version;
             const name = device.name ?? productName;
             const deviceLog = new PrefixLogger(this.log, name);
             let status: string;
-            if (isSupportedModel(type)) {
+            if (rootTopic && isSupportedModel(rootTopic)) {
                 assertIsDefined(device.connectedConfiguration);
                 status = 'Supported';
-                const { mqttRootTopicLevel: rootTopic } = device.connectedConfiguration.mqtt;
                 const deviceApi = api.createDeviceClient(deviceLog, device);
                 const getCredentials = async () => this.getIoT(deviceApi);
                 deviceConfigs.push({ name, serialNumber, rootTopic, getCredentials, api: deviceApi });
             } else status = '(unsupported)';
-            rows.push([serialNumber, `"${name}"`, type, model, productName, firmware ?? '?', status]);
+            rows.push([serialNumber, `"${name}"`, rootTopic ?? type, model, productName, firmware ?? '?', status]);
         }
         this.log.info(`${plural(manifest.length, 'device')} in account,`
                     + ` ${plural(deviceConfigs.length, 'device')} selected:`);
@@ -318,15 +318,19 @@ export class DysonCloudLocal extends DysonCloud<ConfigLocalAccount> {
         for (const deviceConfig of this.config.devices) {
             const { serialNumber } = deviceConfig;
             const device = manifest.find(d => d.serialNumber === serialNumber);
-            if (device?.connectedConfiguration?.mqtt.localBrokerCredentials) {
+            if (!device) {
+                this.log.error(`Configured device ${serialNumber} is not in MyDyson account`);
+            } else if (!device.connectedConfiguration) {
+                this.log.error(`Configured device ${serialNumber} does not support MQTT`);
+            } else if (!device.connectedConfiguration.mqtt.localBrokerCredentials) {
+                this.log.error(`Configured device ${serialNumber} does not support a local MQTT broker`);
+            } else {
                 const { localBrokerCredentials, mqttRootTopicLevel: rootTopic } = device.connectedConfiguration.mqtt;
                 const name = device.name ?? device.productName;
                 const deviceLog = new PrefixLogger(this.log, name);
                 const deviceApi = api.createDeviceClient(deviceLog, device);
                 const password = decodeLocalBrokerCredentials(localBrokerCredentials).apPasswordHash;
                 deviceConfigs.push({ ...deviceConfig, name, password, rootTopic, api: deviceApi });
-            } else {
-                this.log.error(`Configured device ${serialNumber} is not in MyDyson account`);
             }
         }
 
@@ -334,13 +338,15 @@ export class DysonCloudLocal extends DysonCloud<ConfigLocalAccount> {
         const rows: string[][] = [['Serial Number', 'Name', 'MQTT', 'Model', 'Product Name', 'Firmware', 'Status']];
         for (const device of manifest) {
             const { serialNumber, name, model, type, productName, connectedConfiguration } = device;
-            const firmware = connectedConfiguration?.firmware.version;
             const matched = deviceConfigs.find(d => d.serialNumber === serialNumber);
+            const rootTopic = device.connectedConfiguration?.mqtt.mqttRootTopicLevel;
+            const isSupported = rootTopic && isSupportedModel(rootTopic);
+            const firmware = connectedConfiguration?.firmware.version;
             let status: string;
-            if (matched)                        status = `= ${matched.host}:${matched.port}`;
-            else if (isSupportedModel(type))    status = '(unconfigured)';
-            else                                status = '(unsupported)';
-            rows.push([serialNumber, `"${name}"`, type, model, productName, firmware ?? '?', status]);
+            if (matched)            status = `= ${matched.host}:${matched.port}`;
+            else if (isSupported)   status = '(unconfigured)';
+            else                    status = '(unsupported)';
+            rows.push([serialNumber, `"${name}"`, rootTopic ?? type, model, productName, firmware ?? '?', status]);
         }
         this.log.info(`${plural(manifest.length, 'device')} in MyDyson account,`
                     + ` ${plural(deviceConfigs.length, 'device')} selected:`);

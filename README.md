@@ -142,7 +142,7 @@ The supported `debugFeatures` are:
 
 The recommended `Remote Account` provisioning method routes all MQTT messages via the AWS IoT gateway. No per-device configuration is required with this method.
 
-The other provisioning methods enable direct local connection to the robot vacuum and air treatment devices, but are not supported by some recent products (such as the Dyson 360 Vis Nav and Dyson Purifier Big + Quiet Formaldehyde). These methods require manual configuration of the local network IP addresses or hostnames, and (for some methods) the credentials used to authorise the MQTT connection.
+The other provisioning methods enable direct local connection to the robot vacuum and air treatment devices, but are not supported by some recent products (such as the Dyson 360 Vis Nav, Dyson Spot+Scrub Ai, and Dyson Purifier Big + Quiet Formaldehyde). These methods require manual configuration of the local network IP addresses or hostnames, and (for some methods) the credentials used to authorise the MQTT connection.
 
 #### `Remote Account` (Connect via AWS IoT Gateway / Configure using MyDyson account)
 
@@ -159,7 +159,7 @@ The other provisioning methods enable direct local connection to the robot vacuu
 
 The `Remote Account` provisioning obtains all required details from the MyDyson account. Connection to the devices is via the AWS IoT gateway, with new credentials retrieved from the MyDyson account for each (re)connection. No other configuration is required.
 
-As an alternative to authorising MyDyson account access using an email, password, and OTP code, it is possible to use a previously authorised access token (e.g. if using `opendyson` it can be found in `~/.config/libdyson/config.yml`):
+As an alternative to authorising MyDyson account access using an email, password, and OTP code, it is possible to use a previously authorised access token (e.g. if using `opendyson` it can be found in `~/.config/libdyson/config.yml` on Linux or `~/Library/Application Support/libdyson/config.yml` on macOS):
 ```JSON
 {
     "provisioningMethod":       "Remote Account",
@@ -413,6 +413,7 @@ This plugin has been tested with the following devices:
 | ----------------------------------------- | :-------: | :-------------: | :---------------------: | ---
 | Dyson 360 Eye robot vacuum                | RB01      | `N223`          | `11.3.5.10`             | ✅ Developer
 | Dyson 360 Vis Nav robot vacuum            | RB03      | `277`           | `RB03PR.01.08.006.5079` | ✅ Developer
+| Dyson Spot+Scrub Ai                       | RB05      | `RB05`          | `RB05PR.01.109.6314.260713_D1.6.314-78` | 📄 MQTT logs [JupiterZen](https://github.com/JupiterZen) ([#46](https://github.com/thoukydides/matterbridge-dyson-robot/issues/46))
 | Dyson Pure Humidify+Cool                  | PH01      | `358`           |                         | 📄 MQTT logs
 | Dyson Pure Humidify+Cool Cryptomic        | PH02      | `358`           | `ECG2PF.46.00.007.0003` | 📄 MQTT logs
 | Dyson Purifier Humidify+Cool Formaldehyde | PH04      | `358E`          | `ECG2PF.47.01.000.0005` | 📄 MQTT logs
@@ -493,11 +494,11 @@ If you have discovered an issue or have an idea for how to improve this project,
 Most device-specific issues cannot be meaningfully investigated without a **debug log file**, captured with the `Log MQTT Payloads as JSON` debug option enabled. Issues related to robot vacuum devices (especially 360 Heurist, 360 Vis Nav, or Spot+Scrub Ai) also require the `Log API Bodies` debug option enabled.
 
 <details>
-<summary>Reporting Issues with Unsupported or Recently Released Products</summary>
+<summary>Reporting Issues with Unsupported or Recently Released Air Treatment Devices</summary>
 
-#### MQTT Log for All Product Types
+#### MQTT Log for Air Treatment Devices
 
-Most Dyson connected products use MQTT messages to control their basic functionality and provide status. Please use the `opendyson` tool to capture a full MQTT message log whilst exercising as much of the device's functionality as possible, e.g. adjusting every setting of an air purifier or performing a full clean with a robot vacuum:
+Most Dyson connected products use MQTT messages to control their basic functionality and provide status. Please use the `opendyson` tool to capture a full MQTT message log whilst exercising as much of the device's functionality as possible, e.g. adjusting every setting of an air purifier:
 
 - Install `opendyson`, e.g. if `Go` is installed and configured:
   `go install github.com/libdyson-wg/opendyson`
@@ -508,6 +509,18 @@ Most Dyson connected products use MQTT messages to control their basic functiona
 - Capture an MQTT message log:
   `opendyson listen SERIALNUMBER` (with the device's actual serial number substituted)
 - Paste or attach the output of `opendyson devices` and `opendyson listen` into the **Additional Information** section of the issue (as text, not a screenshot).
+
+</details>
+<details>
+<summary>Reporting Issues with Unsupported or Recently Released Robot Vacuums</summary>
+
+#### MQTT Log for Robot Vacuums
+
+Most Dyson connected products use MQTT messages to control their basic functionality and provide status. Unfortunately, the `opendyson` tools does not subscribe to the correct `<root>/<serial>/status` topic for robot vacuums, so cannot be used to collect a useful log.
+
+If the robot vacuum model is completely unsupported by this plugin then first [open a new issue](https://github.com/thoukydides/matterbridge-dyson-robot/issues/new/choose) providing the output of `opendyson devices`.
+
+Once the plugin recognises the model enable the `Log MQTT Payloads as JSON` and `Log API Bodies` debug options, and attach the resulting **debug log file** to the issue. Error and warning messages are expected.
 
 #### API HTTPS Log for Robot Vacuums
 

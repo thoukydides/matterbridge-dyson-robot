@@ -39,7 +39,9 @@ const DYSON_MQTT_CONFIG_360: DysonMqttConfig<DysonMsgMap360> = {
 };
 
 // Dyson robot vacuum status
-export type DysonMqttStatus360 = Omit<Dyson360MsgCurrentState, 'msg' | 'time'>;
+export type DysonMqttStatus360 =
+    Omit<Dyson360MsgCurrentState, 'msg' | 'time'>
+    & Required<Pick<Dyson360MsgCurrentState, 'state'>>;
 
 // Dyson robot vacuum supported commands
 export type DysonMqtt360Action = 'START' | 'PAUSE' | 'RESUME' | 'ABORT';
@@ -105,8 +107,8 @@ export class DysonMqtt360 extends DysonMqtt<DysonMsgMap360, DysonMqttStatus360> 
         const { msg: _msg, time, ...status } = msg;
         Object.assign(this.status, status);
 
-        // State is fully initialised after the first message has been received
-        this.updateInitialised();
+        // State is fully initialised after the first message with state field
+        if (msg.state !== undefined) this.updateInitialised();
     }
 
     // Publish a robot vacuum command to perform an action

@@ -50,7 +50,8 @@ const STATE_MAP: Record<Dyson360State, StateAction[]> = {
     [Dyson360State.MappingInitiated]:       ['ABORT',   'START',    undefined,  true,       'PAUSE',    undefined,  'ABORT'     ],
     [Dyson360State.MappingNeedsCharge]:     ['ABORT',   'START',    undefined,  true,       'PAUSE',    undefined,  'ABORT'     ],
     [Dyson360State.MappingPaused]:          ['ABORT',   'START',    undefined,  true,       undefined,  'RESUME',   'ABORT'     ],
-    [Dyson360State.MappingRunning]:         ['ABORT',   'START',    undefined,  true,       'PAUSE',    undefined,  'ABORT'     ]
+    [Dyson360State.MappingRunning]:         ['ABORT',   'START',    undefined,  true,       'PAUSE',    undefined,  'ABORT'     ],
+    [Dyson360State.Aborted]:                [true,      'START',    undefined,  undefined,  undefined,  undefined,  true        ]
 };
 type StateTarget = typeof STATE_COLUMNS[number];
 

@@ -64,7 +64,7 @@ export class DysonMqttSubscribe extends EventEmitter<DysonMqttSubscribeEventMap>
         this.log.debug(`MQTT subscribe: ${formatList(topics)}`);
         const grant = await this.mqtt.subscribeAsync(topics, { qos: 1 });
 
-        // Check whether
+        // Check whether the subscription was successful
         const failures = topics.filter(topic => !grant.some(g => g.topic === topic));
         if (!grant.length) {
             throw new Error(`MQTT subscribe unsuccessful: all ${plural(topics.length, 'topic')} rejected`);
