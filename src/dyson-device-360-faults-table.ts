@@ -61,6 +61,8 @@ export const DYSON_360_FAULT_CODES: [Dyson360FaultPatternOrRange, Dyson360FaultD
     ['9.0.-1',                  { msg: 'Unable to return to dock',                                  opError: 'FailedToFindChargingDock'                         }],
 
     // Dyson 360 Vis Nav fault
+    // Observed but not documented by Dyson
+    ['3.24.#',                  { msg: 'Stuck',                                                     opError: 'Stuck'                                            }],
     // https://support.dyson.com.au/supportHome/Vacuums/Robots/360visnav/304640-01/using-your-robot/fault-codes
     ['1.0.#',                   { msg: 'Airways blocked',                                           opError: 'DustBinFull'                                      }],
     ['1.2.#',                   { msg: 'Check bin level',                                           opError: 'DustBinFull'                                      }],
