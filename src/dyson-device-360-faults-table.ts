@@ -52,15 +52,15 @@ export const DYSON_360_FAULT_CATEGORIES: Record<Dyson360FaultCategory, Dyson360F
     BATTERY:                    { msg: 'Battery fault',                                             batFault: 'Unspecified', chargeFault: 'Unspecified'         }
 };
 
-// Specific faults/ranges
-export const DYSON_360_FAULT_CODES: [Dyson360FaultPatternOrRange, Dyson360FaultDetail][] = [
+// Specific faults/ranges in 360 Eye / 360 Heurist / 360 VisNav format
+export const DYSON_360_FAULT_TRIPLET_CODES: [Dyson360FaultPatternOrRange, Dyson360FaultDetail][] = [
     // Dyson 360 Eye faults (observed)
     ['1.0.-1',                  { msg: 'Bin full or airways blocked',                               opError: 'DustBinFull'                                      }],
     ['3.5.-1',                  { msg: 'Brush bar or tracks stuck',                                 opError: 'BrushJammed'                                      }],
     ['7.0.-1',                  { msg: 'Bin missing or not detected',                               opError: 'DustBinMissing'                                   }],
     ['9.0.-1',                  { msg: 'Unable to return to dock',                                  opError: 'FailedToFindChargingDock'                         }],
 
-    // Dyson 360 Vis Nav fault
+    // Dyson 360 Vis Nav faults
     // Observed but not documented by Dyson
     ['3.24.#',                  { msg: 'Stuck',                                                     opError: 'Stuck'                                            }],
     // https://support.dyson.com.au/supportHome/Vacuums/Robots/360visnav/304640-01/using-your-robot/fault-codes
@@ -188,3 +188,80 @@ export const DYSON_360_FAULT_CODES: [Dyson360FaultPatternOrRange, Dyson360FaultD
     [['23.1.#', '23.4.#'],      { msg: 'Robot cannot recover from a drop',                          opError: 'Stuck'                                            }],
     ['23.5.#',                  { msg: 'Rotated - Robot lifted',                                    opError: 'Stuck'                                            }]
 ];
+
+// Specific faults in Spot+Scrub Ai format
+export const DYSON_360_FAULT_SINGLE_CODES = new Map<number, Dyson360FaultDetail>([
+    // Dyson 360 Spot+Scrub Ai faults
+    // https://support.dyson.com.au/supportHome/Vacuums/Robots/spot-scrub-ai/218087-01/troubleshooting-your-robot/faults-456826
+    [ 500,                      { msg: 'LiDAR sensor obstructed',                                   opError: 'NavigationSensorObscured'                         }],
+    [ 501,                      { msg: 'Wheels lifted',                                             opError: 'Stuck'                                            }],
+    [ 502,                      { msg: 'Battery is low',                                            opError: 'LowBattery'                                       }],
+    [ 503,                      { msg: "Robot's bin not detected",                                  opError: 'DustBinMissing'                                   }],
+    [ 504,                      { msg: 'Gyroscopic sensor error',                                   opError: 'NavigationSensorObscured'                         }],
+    [ 507,                      { msg: 'Unable to determine position',                              opError: 'CannotReachTargetArea'                            }],
+    [ 508,                      { msg: 'Unable to climb slope',                                     opError: 'Stuck'                                            }],
+    [ 509,                      { msg: 'Drop sensor obstructed',                                    opError: 'NavigationSensorObscured'                         }],
+    [ 510,                      { msg: 'Collision sensor obstructed',                               opError: 'NavigationSensorObscured'                         }],
+    [ 511,                      { msg: 'Unable to return to dock',                                  opError: 'FailedToFindChargingDock'                         }],
+    [ 513,                      { msg: 'Robot stuck',                                               opError: 'Stuck'                                            }],
+    [ 514,                      { msg: 'Robot stuck',                                               opError: 'Stuck'                                            }],
+    [ 516,                      { msg: 'Battery temperature high',                                  batFault: 'OverTemp',   chargeFault: 'BatteryTooHot'        }],
+    [ 518,                      { msg: 'Battery is low',                                            opError: 'LowBattery'                                       }],
+    [ 521,                      { msg: "Dock's clean water tank not detected",                      opError: 'WaterTankMissing'                                 }],
+    [ 522,                      { msg: 'Wet roller not detected',                                   opError: 'MopCleaningPadMissing'                            }],
+    [ 560,                      { msg: 'Side sweeper stuck',                                        opError: 'BrushJammed'                                      }],
+    [ 561,                      { msg: 'Camera obstructed',                                         opError: 'NavigationSensorObscured'                         }],
+    [ 562,                      { msg: 'Wall follow sensor obstructed',                             opError: 'NavigationSensorObscured'                         }],
+    [ 563,                      { msg: "Robot's bin not detected",                                  opError: 'DustBinMissing'                                   }],
+    [ 566,                      { msg: "Robot's dirty water tank not detected",                     opError: 'DirtyWaterTankMissing'                            }],
+    [ 567,                      { msg: 'Brush bar error',                                           opError: 'BrushJammed'                                      }],
+    [ 568,                      { msg: 'Left wheel stuck',                                          opError: 'WheelsJammed'                                     }],
+    [ 569,                      { msg: 'Right wheel stuck',                                         opError: 'WheelsJammed'                                     }],
+    [ 570,                      { msg: 'Brush bar error',                                           opError: 'BrushJammed'                                      }],
+    [ 572,                      { msg: 'Robot stuck',                                               opError: 'Stuck'                                            }],
+    [ 581,                      { msg: "Dock's clean water tank empty",                             opError: 'WaterTankEmpty'                                   }],
+    [ 582,                      { msg: "Dock's dirty water tank full",                              opError: 'DirtyWaterTankFull'                               }],
+    [ 583,                      { msg: "Dock's clean water tank not detected",                      opError: 'WaterTankMissing'                                 }],
+    [ 584,                      { msg: "Dock's dirty water tank not detected",                      opError: 'DirtyWaterTankMissing'                            }],
+    [ 586,                      { msg: "Robot's dirty water tank full",                             opError: 'DirtyWaterTankFull'                               }],
+    [ 587,                      { msg: 'Communication failure'                                                                                                  }],
+    [ 591,                      { msg: "Dock's bin full",                                           opError: 'DustBinFull'                                      }],
+    [ 592,                      { msg: "Dock's filter error"                                                                                                    }],
+    [ 594,                      { msg: "Unable to empty robot's bin",                               opError: 'DustBinFull'                                      }],
+    [ 595,                      { msg: 'Communication failure'                                                                                                  }],
+    [ 596,                      { msg: "Unable to empty robot's bin",                               opError: 'DustBinFull'                                      }],
+    [ 597,                      { msg: "Unable to empty robot's bin",                               opError: 'DustBinFull'                                      }],
+    [ 611,                      { msg: 'Mapping failed',                                            opError: 'CannotReachTargetArea'                            }],
+    [ 612,                      { msg: 'Mapping failed',                                            opError: 'CannotReachTargetArea'                            }],
+    [ 620,                      { msg: "Dock's cleaning solution empty",                            opError: 'WaterTankEmpty'                                   }],
+    [ 627,                      { msg: 'Something went wrong'                                                                                                   }],
+    [ 629,                      { msg: 'Wet roller not detected',                                   opError: 'MopCleaningPadMissing'                            }],
+    [ 630,                      { msg: 'Wet roller stuck',                                          opError: 'BrushJammed'                                      }],
+    [ 634,                      { msg: 'Unable to return to dock',                                  opError: 'FailedToFindChargingDock'                         }],
+    [ 636,                      { msg: 'Robot stuck',                                               opError: 'Stuck'                                            }],
+    [ 637,                      { msg: "Dock's clean water tank not detected",                      opError: 'WaterTankMissing'                                 }],
+    [ 639,                      { msg: 'Wet roller not detected',                                   opError: 'MopCleaningPadMissing'                            }],
+    [ 645,                      { msg: 'Wet roller not detected',                                   opError: 'MopCleaningPadMissing'                            }],
+    [ 646,                      { msg: 'Wet roller error',                                          opError: 'BrushJammed'                                      }],
+    [ 650,                      { msg: "Robot's dirty water tank not detected",                     opError: 'DirtyWaterTankMissing'                            }],
+    [2000,                      { msg: "Dock's bin full",                                           opError: 'DustBinFull'                                      }],
+    [2003,                      { msg: 'Unable to start scheduled clean',                           opError: 'UnableToStartOrResume'                            }],
+    [2007,                      { msg: 'Mapping failed',                                            opError: 'CannotReachTargetArea'                            }],
+    [2012,                      { msg: 'Unable to reach area',                                      opError: 'CannotReachTargetArea'                            }],
+    [2119,                      { msg: 'Unable to start scheduled clean',                           opError: 'UnableToStartOrResume'                            }],
+    [2123,                      { msg: "Dock's clean water pump error"                                                                                          }],
+    [2124,                      { msg: "Dock's dirty water pump error"                                                                                          }],
+    [2125,                      { msg: 'Robot not charging',                                        chargeFault: 'Unspecified'                                  }],
+    [2126,                      { msg: 'Robot not charging',                                        chargeFault: 'Unspecified'                                  }],
+    [2131,                      { msg: 'Battery temperature too low',                               batFault: 'UnderTemp',  chargeFault: 'BatteryTooCold'       }],
+    [2132,                      { msg: 'Battery temperature too high',                              batFault: 'OverTemp',   chargeFault: 'BatteryTooHot'        }],
+    [2133,                      { msg: 'Battery temperature too low',                               batFault: 'UnderTemp',  chargeFault: 'BatteryTooCold'       }],
+    // https://github.com/thoukydides/matterbridge-dyson-robot/issues/46#issue-5250424565
+    [2100,                      { msg: 'Battery charge required'                                                                                                }],
+    [2101,                      { msg: 'Battery charging'                                                                                                       }],
+    [2103,                      { msg: 'Dock busy'                                                                                                              }],
+    [2104,                      { msg: 'Aborted'                                                                                                                }],
+    [2108,                      { msg: 'Discovery in progress'                                                                                                  }],
+    [2109,                      { msg: 'Cleaning in progress'                                                                                                   }],
+    [2110,                      { msg: 'Cleaning resumed'                                                                                                       }]
+]);

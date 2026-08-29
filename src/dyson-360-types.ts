@@ -56,7 +56,7 @@ export type Dyson360FaultStatus = {
     active:                         false;
 } | {
     active:                         true;
-    description:                    string;         // e.g. '23.0.3',
+    description:                    string;         // e.g. '23.0.3'
 }
 export interface Dyson360Faults {
     AIRWAYS:                        Dyson360FaultStatus;
@@ -74,6 +74,7 @@ export enum Dyson360FaultNextAction {
     LocalUserContinue               = 'LOCAL_USER_CONTINUE',
     LogOnly                         = 'LOG_ONLY',
     UserAck                         = 'USER_ACK',
+    UserContinue                    = 'USER_CONTINUE',
     WaitToClean                     = 'WAIT_TO_CLEAR'
 }
 export enum Dyson360FaultPresent {
@@ -87,7 +88,7 @@ export enum Dyson360FaultUserAction {
     ReplaceOnDock                   = 'REPLACE_ON_DOCK'
 }
 export interface Dyson360ActiveFault {
-    faultCode:                      string;         // e.g. '23.0.3',
+    faultCode:                      string;         // e.g. '23.0.3' or '568'
     nextActionRequired:             Dyson360FaultNextAction;
     present?:                       Dyson360FaultPresent;
     requiredUserAction?:            Dyson360FaultUserAction;
@@ -275,7 +276,8 @@ export enum Dyson360FullCleanAction {
 
 // State of the dock cleaning process (Spot+Scrub Ai only)
 export enum Dyson360CleaningState {
-    NotCleaning                     = 'NOT_CLEANING'
+    NotCleaning                     = 'NOT_CLEANING',
+    RemovingDirt                    = 'REMOVING_DIRT',
 }
 
 // Status of consumables (Spot+Scrub Ai only)

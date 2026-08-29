@@ -305,7 +305,7 @@ export abstract class DysonDevice360Base
         assertIsDefined(this.endpoint);
 
         // Map the state to cluster attribute values
-        const faults = mapDyson360Faults(this.log, status.state, status.faults);
+        const faults = mapDyson360Faults(this.log, status.state, status.faults, status.activeFaults);
         const cleanMode         = this.powerModeToCleanMode(this.getPowerLevel());
         const { runMode }       = mapState(status.state);
         const operationalState  = this.mapOperationalState(status, faults);
