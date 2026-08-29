@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v1.11.0] - 2026-08-29
+### Added
+* Extra Dyson 360 Vis Nav fault codes.
+* Experimental Dyson Spot+Scrub Ai support; excludes zone cleaning and wash/mop utilisation. (#46)
+### Changed
+* Updated dependencies.
+
 ## [v1.10.17] - 2026-07-16
 ### Fixed
 * Compatibility with Matterbridge version 3.10.0.
@@ -407,7 +414,8 @@ All notable changes to this project will be documented in this file.
 
 Copyright © 2025-2026 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.10.17...HEAD
+[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.11.0...HEAD
+[v1.11.0]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.10.17...v1.11.0
 [v1.10.17]:         https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.10.16...v1.10.17
 [v1.10.16]:         https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.10.15...v1.10.16
 [v1.10.15]:         https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.10.14...v1.10.15
