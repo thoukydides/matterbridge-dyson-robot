@@ -104,12 +104,19 @@ export class DysonDeviceAirBigQuiet extends DysonDeviceAirBase {
 }
 
 // =============================================================================
-// Dyson Cool family... (fan only; no purification)
+// Dyson (Hot)+Cool family... (fan only; no purification)
 
 // Dyson Cool
 export class DysonDeviceCool extends DysonDeviceAirBase {
     static readonly model = { type: '739', number: 'CF1/AM12', name: 'Cool' };
     static readonly filters = {};
+}
+
+// -----------------------------------------------------------------------------
+
+// Dyson Hot+Cool
+export class DysonDeviceHotCool extends DysonDeviceAirHeatMixin(DysonDeviceCool) {
+    static readonly model = { type: '635', number: 'HF1', name: 'Hot+Cool' };
 }
 
 // =============================================================================

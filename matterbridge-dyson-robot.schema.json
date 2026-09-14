@@ -546,6 +546,10 @@
                     "title": "527M = Dyson Purifier Hot+Cool (HP1/HP11)"
                 },
                 {
+                    "const": "635",
+                    "title": "635 = Dyson Hot+Cool (HF1)"
+                },
+                {
                     "const": "664",
                     "title": "664 = Dyson Purifier Big+Quiet Series (BP02, BP03, BP04, or BP06)"
                 },

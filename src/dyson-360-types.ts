@@ -271,6 +271,8 @@ export enum Dyson360DockCommissioningState {
 // Type of cleaning to be performed (Spot+Scrub Ai only)
 export enum Dyson360FullCleanAction {
     None                            = 'NONE',
+    Mopping                         = 'MOPPING',
+    Vacuuming                       = 'VACUUMING',
     VacuumingAndMopping             = 'VACUUMING_AND_MOPPING'
 }
 
