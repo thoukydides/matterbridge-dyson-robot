@@ -180,7 +180,7 @@ export class DysonCloudAPIDevice {
         return this.ua.put(path, body);
     }
 
-    // Retrieve detail for a fault code
+    // Retrieve detail for a fault code (Spot+Scrub Ai only)
     getFaultDetails360(faultCode: string, languageCode = DEFAULT_LANGUAGE, countryCode = DEFAULT_COUNTRY): Promise<Dyson360FaultResponse> {
         const path = `/v1/support/product-faults/${this.serialNumber}?locale=${languageCode}&market=${countryCode}&faultCode=${faultCode}`;
         return this.ua.getJSON(checkers360.Dyson360FaultResponse, path);

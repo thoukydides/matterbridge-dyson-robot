@@ -19,7 +19,8 @@ import {
     Dyson360FurnitureType,
     Dyson360RestrictionBehaviour,
     Dyson360ZoneCleanStatus,
-    Dyson360FaultNextAction
+    Dyson360FaultNextAction,
+    Dyson360FaultSeverity
 } from './dyson-360-types.js';
 import {
     DysonUnifiedschedulerEvent,
@@ -270,6 +271,8 @@ export interface Dyson360LiveMapCleaningResponse {
     zones:                              Dyson360PersistentMapZoneSpotScrub[];
 }
 
+// GET /v1/app/{serial}/live-maps/mapping (Spot+Scrub Ai only)
+
 // GET /v1/{serial}/clean-maps?dustMap=total (360 Vis Nav only)
 export interface Dyson360CleanMapLocation {
     x:                                  number;             // mm
@@ -346,9 +349,9 @@ export interface Dyson360FaultDescription {
     cta:                        string;         // e.g. 'dyson:///support/resolve/7VS-EU-UNA6126A/RB05_TS_FAULT_WEB_DOCK_BIN_597'
     description:                string;
     dismissable:                boolean;
-    linkRef:                    string;         // e.g. 'RB05_TS_FAULT_WEB_DOCK_BIN_597'
-    nextActionRequired:         Dyson360FaultNextAction;
-    severity:                   'warning';
+    linkRef?:                   string;         // e.g. 'RB05_TS_FAULT_WEB_DOCK_BIN_597'
+    nextActionRequired?:        Dyson360FaultNextAction;
+    severity:                   Dyson360FaultSeverity;
     title:                      string;
 }
 export type Dyson360FaultResponse = Dyson360FaultDescription[];

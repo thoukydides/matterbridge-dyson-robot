@@ -28,8 +28,8 @@ import {
     Dyson360State
 } from './dyson-360-types.js';
 import {
-    Dyson360MappedFaults,
-    mapDyson360Faults
+    Dyson360FaultMapper,
+    Dyson360MappedFaults
 } from './dyson-device-360-faults.js';
 import { assert } from 'console';
 import {
@@ -134,12 +134,18 @@ export abstract class DysonDevice360Base
     // The RVC device endpoint
     endpoint?:              Endpoint360;
 
+    // Fault code mapper
+    faultMapper:            Dyson360FaultMapper;
+
     // State used to detect the end of a clean
     runMode = RvcRunMode360.Idle;
 
     // Construct a new Dyson device instance
     constructor(...args: DysonDeviceConstructorParams<DysonMqtt360>) {
         super(...args);
+
+        // Prepare the fault code mapper
+        this.faultMapper = new Dyson360FaultMapper(this.log);
 
         // Prepare listeners for MQTT updates
         this.mqttStatusListener = tryListener(this.mqtt, () =>
@@ -305,7 +311,7 @@ export abstract class DysonDevice360Base
         assertIsDefined(this.endpoint);
 
         // Map the state to cluster attribute values
-        const faults = mapDyson360Faults(this.log, status.state, status.faults, status.activeFaults);
+        const faults = await this.faultMapper.mapFault(status.state, status.faults, status.activeFaults);
         const cleanMode         = this.powerModeToCleanMode(this.getPowerLevel());
         const { runMode }       = mapState(status.state);
         const operationalState  = this.mapOperationalState(status, faults);

@@ -25,7 +25,8 @@ import {
     Dyson360PersistentMapResponseVisNav
 } from './dyson-360-cloud-types.js';
 import { DysonMqtt360 } from './dyson-mqtt-360.js';
-import { MS } from './utils.js';
+import { assertIsDefined, formatList, MS, plural } from './utils.js';
+import { DysonDeviceConstructorParams } from './dyson-device-base.js';
 
 /* eslint-disable max-len */
 
@@ -184,6 +185,34 @@ export class DysonDevice360SpotScrub extends DysonDevice360ZonesMixin(DysonDevic
     override getPowerLevel = () => this.mqtt.status.defaultCleaningStrategy;
 
     override get compatibilityWarning() { return DYSON360_COMPATIBILITY_SPOTSCRUB; }
+
+    // Construct a new Dyson device instance
+    constructor(...args: DysonDeviceConstructorParams<DysonMqtt360>) {
+        super(...args);
+
+        // Prepare the fault code mapper
+        this.faultMapper.lookupOnline = async (faultCode) => {
+            // Retrieve the support information for this fault code from the API
+            assertIsDefined(this.api);
+            const details = await this.api.getFaultDetails360(faultCode);
+            if (!details.length) throw new Error('No online product support result');
+            if (!details.some(d => d.codes.includes(faultCode))) {
+                this.log.error('Online product support does not appear to be for the requested fault code');
+            }
+
+            // Log detailed support information
+            this.log.warn(`Online product support for fault ${faultCode}...`);
+            for (const entry of details) {
+                const codes = `${plural(entry.codes.length, 'fault code', false)} ${formatList(entry.codes)}`;
+                let description = `[${entry.severity}] "${entry.title}" (${codes})`;
+                if (entry.nextActionRequired) description += `- ${entry.nextActionRequired}`;
+                this.log.warn(`${description}: "${entry.description}"`);
+            }
+
+            // Use the combined titles as the fault description
+            return formatList(details.map(d => d.title));
+        };
+    }
 
     // Retrieve the persistent maps metadata
     override getPersistentMapMetadata(): Promise<Dyson360PersistentMapMetadataSpotScrub[]> | undefined {

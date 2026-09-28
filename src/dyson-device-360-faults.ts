@@ -27,6 +27,7 @@ import {
 } from './dyson-device-360-faults-table.js';
 import { assertIsDefined } from './utils.js';
 import { AnsiLogger } from 'matterbridge/logger';
+import { logError } from './log-error.js';
 
 // A fault code pattern triplet in numeric form
 type Dyson360FaultTriplet           = [number, number, number];
@@ -38,6 +39,137 @@ export interface Dyson360MappedFaults {
     operationalError:       RvcOperationalState.ErrorStateStruct;
     activeBatFaults:        PowerSource.BatFault[];
     activeBatChargeFaults:  PowerSource.BatChargeFault[];
+}
+
+// An optional method to lookup fault codes online
+export type Dyson360FaultLookup = (faultCode: string) => Promise<string | undefined>;
+
+// A mapper of Dyson robot vacuum fault codes to cluster attributes
+export class Dyson360FaultMapper {
+
+    // Online lookup of fault codes
+    lookupOnline?: Dyson360FaultLookup;
+    readonly lookupOnlineCache = new Map<string, Dyson360FaultDetail>();
+
+    // Construct a new fault mapper
+    constructor(readonly log: AnsiLogger) {}
+
+    // Map Dyson robot vacuum state and active faults to cluster attributes
+    async mapFault(state: Dyson360State, faults?: Dyson360Faults, activeFaults?: Dyson360ActiveFault[]): Promise<Dyson360MappedFaults> {
+        // Map the state and active faults to a list of matching fault details
+        const detailList = await this.getFaultDetails(state, faults, activeFaults);
+
+        // Construct the most relevant RVC Operational State error
+        const err = this.faultDetailsToError(detailList);
+        const operationalError = RvcOperationalStateError.toStruct(err);
+
+        // Construct a list of active battery faults
+        const batFaults = new Set(detailList.map(detail => detail.batFault).filter(detail => detail !== undefined));
+        if (batFaults.has('Unspecified') && 1 < batFaults.size) batFaults.delete('Unspecified');
+        const activeBatFaults = Array.from(batFaults, name => PowerSource.BatFault[name]);
+
+        // Construct a list of active battery charger faults
+        const chargeFaults = new Set(detailList.map(detail => detail.chargeFault).filter(detail => detail !== undefined));
+        if (chargeFaults.has('Unspecified') && 1 < chargeFaults.size) chargeFaults.delete('Unspecified');
+        const activeBatChargeFaults = Array.from(chargeFaults, name => PowerSource.BatChargeFault[name]);
+
+        // Return the resulting attribute values
+        return { operationalError, activeBatFaults, activeBatChargeFaults };
+    }
+
+    // Find the matches for a robot state in priority order
+    async getFaultDetails(
+        state:          Dyson360State,
+        faults?:        Dyson360Faults,
+        activeFaults?:  Dyson360ActiveFault[]
+    ): Promise<Dyson360FaultDetail[]> {
+        const detailList: Dyson360FaultDetail[] = [];
+
+        // Highest priority are specific matches for each active fault
+        for (const fault of activeFaults ?? []) {
+            if (fault.present !== Dyson360FaultPresent.NotPresent) {
+                const isFault = fault.nextActionRequired !== Dyson360FaultNextAction.LogOnly;
+                const detail = findFaultMatch(fault.faultCode) ?? await this.findFaultOnline(fault.faultCode);
+                const description = [fault.faultCode, fault.nextActionRequired, fault.requiredUserAction].filter(Boolean).join(' ');
+                if (detail) {
+                    this.log.debug(`Mapped ${description} to ${JSON.stringify(detail)}`);
+                    if (isFault) detailList.push(detail);
+                } else {
+                    this.log.warn(`Received unknown active fault: ${description}`);
+                }
+            }
+        }
+
+        // Next are specific matches for each legacy-format active fault
+        for (const [category, fault] of Object.entries(faults ?? {}) as [Dyson360FaultCategory, Dyson360FaultStatus][]) {
+            if (fault.active) {
+                const detail = findFaultMatch(fault.description);
+                if (detail) {
+                    this.log.debug(`Mapped ${category} fault ${fault.description} to ${JSON.stringify(detail)}`);
+                    detailList.push(detail);
+                } else {
+                    this.log.warn(`Received unknown ${category} fault: ${fault.description}`);
+                }
+            }
+        }
+
+        // Next are mappings from the legacy-format active fault categories
+        for (const [category, fault] of Object.entries(faults ?? {}) as [Dyson360FaultCategory, Dyson360FaultStatus][]) {
+            if (fault.active) {
+                const detail = DYSON_360_FAULT_CATEGORIES[category];
+                this.log.debug(`Mapped ${category} fault category to ${JSON.stringify(detail)}`);
+                detailList.push(detail);
+            }
+        }
+
+        // Lowest priority is any fault from the robot state
+        const stateDetail = DYSON_360_FAULT_STATES.get(state);
+        if (stateDetail) {
+            this.log.debug(`Mapped ${state} state to ${JSON.stringify(stateDetail)}`);
+            detailList.push(stateDetail);
+        }
+        return detailList;
+    }
+
+    // Attempt an online lookup of the fault code
+    async findFaultOnline(faultCode: string): Promise<Dyson360FaultDetail | undefined> {
+        try {
+            // Return the cached result if available
+            const cached = this.lookupOnlineCache.get(faultCode);
+            if (cached)             return cached;
+            if (!this.lookupOnline) return;
+
+            // Otherwise attempt to retrieve the fault details from the cloud API
+            const msg = await this.lookupOnline(faultCode);
+            if (!msg) return;
+
+            // Cache and return the result
+            const detail: Dyson360FaultDetail = { msg };
+            this.lookupOnlineCache.set(faultCode, detail);
+            return detail;
+        } catch (err) {
+            logError(this.log, `Online lookup of fault ${faultCode}`, err);
+        }
+    }
+
+    // Map a list of fault details to the most relevant RVC Operational State error
+    faultDetailsToError(detailList: Dyson360FaultDetail[]): Error | undefined {
+        // If there is an RVC Operational State Error then use the first
+        const opError = detailList.find(detail => detail.opError !== undefined);
+        if (opError) {
+            this.log.debug(`Selected RVC Operational State Error: ${opError.opError}("${opError.msg}")`);
+            assertIsDefined(opError.opError);
+            const constructor = RvcOperationalStateError.create(opError.opError);
+            return new constructor(opError.msg);
+        }
+
+        // Otherwise create a generic Error
+        const detail = detailList[0];
+        if (detail) {
+            this.log.debug(`Selected manufacturer-specific Error: "${detail.msg}"`);
+            return new Error(detail.msg);
+        }
+    }
 }
 
 // Parse a fault code into numeric form
@@ -93,106 +225,4 @@ function findFaultMatch(fault: string): Dyson360FaultDetail | undefined {
         }
     }
     return bestDetail;
-}
-
-// Find the matches for a robot state in priority order
-function getFaultDetails(
-    log:            AnsiLogger,
-    state:          Dyson360State,
-    faults?:        Dyson360Faults,
-    activeFaults?:  Dyson360ActiveFault[]
-): Dyson360FaultDetail[] {
-    const detailList: Dyson360FaultDetail[] = [];
-    // Highest priority are specific matches for each active fault
-    for (const fault of activeFaults ?? []) {
-        if (fault.present !== Dyson360FaultPresent.NotPresent) {
-            const detail = findFaultMatch(fault.faultCode);
-            const description = [fault.faultCode, fault.nextActionRequired, fault.requiredUserAction].filter(Boolean).join(' ');
-            if (detail) {
-                log.debug(`Mapped ${description} to ${JSON.stringify(detail)}`);
-                if (fault.nextActionRequired !== Dyson360FaultNextAction.LogOnly) {
-                    detailList.push(detail);
-                }
-            } else {
-                log.warn(`Received unknown active fault: ${description}`);
-            }
-        }
-    }
-
-    // Next are specific matches for each legacy-format active fault
-    for (const [category, fault] of Object.entries(faults ?? {}) as [Dyson360FaultCategory, Dyson360FaultStatus][]) {
-        if (fault.active) {
-            const detail = findFaultMatch(fault.description);
-            if (detail) {
-                log.debug(`Mapped ${category} fault ${fault.description} to ${JSON.stringify(detail)}`);
-                detailList.push(detail);
-            } else {
-                log.warn(`Received unknown ${category} fault: ${fault.description}`);
-            }
-        }
-    }
-
-    // Next are mappings from the legacy-format active fault categories
-    for (const [category, fault] of Object.entries(faults ?? {}) as [Dyson360FaultCategory, Dyson360FaultStatus][]) {
-        if (fault.active) {
-            const detail = DYSON_360_FAULT_CATEGORIES[category];
-            log.debug(`Mapped ${category} fault category to ${JSON.stringify(detail)}`);
-            detailList.push(detail);
-        }
-    }
-
-    // Lowest priority is any fault from the robot state
-    const stateDetail = DYSON_360_FAULT_STATES.get(state);
-    if (stateDetail) {
-        log.debug(`Mapped ${state} state to ${JSON.stringify(stateDetail)}`);
-        detailList.push(stateDetail);
-    }
-    return detailList;
-}
-
-// Map a list of fault details to the most relevant RVC Operational State error
-function dyson360FaultDetailsToError(log: AnsiLogger, detailList: Dyson360FaultDetail[]): Error | undefined {
-    // If there is an RVC Operational State Error then use the first
-    const opError = detailList.find(detail => detail.opError !== undefined);
-    if (opError) {
-        log.debug(`Selected RVC Operational State Error: ${opError.opError}("${opError.msg}")`);
-        assertIsDefined(opError.opError);
-        const constructor = RvcOperationalStateError.create(opError.opError);
-        return new constructor(opError.msg);
-    }
-
-    // Otherwise create a generic Error
-    const detail = detailList[0];
-    if (detail) {
-        log.debug(`Selected manufacturer-specific Error: "${detail.msg}"`);
-        return new Error(detail.msg);
-    }
-}
-
-// Map Dyson robot vacuum state and active faults to cluster attributes
-export function mapDyson360Faults(
-    log:            AnsiLogger,
-    state:          Dyson360State,
-    faults?:        Dyson360Faults,
-    activeFaults?:  Dyson360ActiveFault[]
-): Dyson360MappedFaults {
-    // Map the state and active faults to a list of matching fault details
-    const detailList = getFaultDetails(log, state, faults, activeFaults);
-
-    // Construct the most relevant RVC Operational State error
-    const err = dyson360FaultDetailsToError(log, detailList);
-    const operationalError = RvcOperationalStateError.toStruct(err);
-
-    // Construct a list of active battery faults
-    const batFaults = new Set(detailList.map(detail => detail.batFault).filter(detail => detail !== undefined));
-    if (batFaults.has('Unspecified') && 1 < batFaults.size) batFaults.delete('Unspecified');
-    const activeBatFaults = Array.from(batFaults, name => PowerSource.BatFault[name]);
-
-    // Construct a list of active battery charger faults
-    const chargeFaults = new Set(detailList.map(detail => detail.chargeFault).filter(detail => detail !== undefined));
-    if (chargeFaults.has('Unspecified') && 1 < chargeFaults.size) chargeFaults.delete('Unspecified');
-    const activeBatChargeFaults = Array.from(chargeFaults, name => PowerSource.BatChargeFault[name]);
-
-    // Return the resulting attribute values
-    return { operationalError, activeBatFaults, activeBatChargeFaults };
 }
