@@ -30,19 +30,19 @@ export interface DysonEmailAuthRequest {
     email:                      string;
 }
 export interface DysonEmailAuthResponse {
-    challengeId:                string; // UUID
+    challengeId:                string;         // UUID
 }
 
 // POST /v3/userregistration/email/verify
 export interface DysonEmailVerifyRequest {
-    challengeId:                string; // UUID
+    challengeId:                string;         // UUID
     email:                      string;
-    otpCode:                    string; // 6 digits from email
+    otpCode:                    string;         // 6 digits from email
     password:                   string;
 }
 export interface DysonEmailVerifyResponse {
-    account:                    string; // UUID
-    token:                      string; // 64 hex digits plus '-1'
+    account:                    string;         // UUID
+    token:                      string;         // 64 hex digits plus '-1'
     tokenType:                  'Bearer';
 }
 
@@ -104,11 +104,11 @@ export interface DysonManifestDevice {
     category:                   DysonManifestCategory;
     connectedConfiguration:     DysonManifestConnectedConfiguration | null;
     connectionCategory:         DysonManifestConnectionCategory;
-    model:                      string; // e.g. 'RB01' or 'TP02'
+    model:                      string;         // e.g. 'RB01' or 'TP02'
     name:                       string | null; // User assigned name
-    productName:                string; // e.g. 'Dyson 360 Eye' or 'Dyson Pure Cool™ Link'
-    serialNumber:               string; // e.g. 'AB1-CD-EFG2345H'
-    type:                       string; // e.g. 'N223' or '475'
+    productName:                string;         // e.g. 'Dyson 360 Eye' or 'Dyson Pure Cool™ Link'
+    serialNumber:               string;         // e.g. 'AB1-CD-EFG2345H'
+    type:                       string;         // e.g. 'N223' or '475'
     variant:                    string | null;
 }
 export type DysonManifestResponse = DysonManifestDevice[];
@@ -116,7 +116,7 @@ export type DysonManifestResponse = DysonManifestDevice[];
 // Decoded localBrokerCredentials
 export interface DysonLocalBrokerCredentials {
     serial:                     string;
-    apPasswordHash:             string; // 88 characters (64 bytes base64 encoded)
+    apPasswordHash:             string;         // 88 characters (64 bytes base64 encoded)
 }
 
 // POST /v2/authorize/iot-credentials
@@ -124,20 +124,20 @@ export interface DysonIoTCredentialsRequest {
     Serial:                     string;
 }
 export interface DysonIoTCredentials {
-    ClientId:                   string; // UUID
-    CustomAuthorizerName:       string; // e.g. 'cld-iot-credentials-lambda-authorizer'
+    ClientId:                   string;         // UUID
+    CustomAuthorizerName:       string;         // e.g. 'cld-iot-credentials-lambda-authorizer'
     TokenKey:                   'token';
-    TokenSignature:             string; // 344 characters (256 bytes base64 encoded)
-    TokenValue:                 string; // UUID (same as ClientId)
+    TokenSignature:             string;         // 344 characters (256 bytes base64 encoded)
+    TokenValue:                 string;         // UUID (same as ClientId)
 }
 export interface DysonIoTCredentialsResponse {
-    Endpoint:                   string; // e.g. 'a1u2wvl3e2lrc4-ats.iot.eu-west-1.amazonaws.com'
+    Endpoint:                   string;         // e.g. 'a1u2wvl3e2lrc4-ats.iot.eu-west-1.amazonaws.com'
     IoTCredentials:             DysonIoTCredentials;
 }
 
 // GET /v1/machine/{serial}/timezone
 export interface DysonTimezoneResponse {
-    timezone:                   string; // e.g. 'Europe/London'
+    timezone:                   string;         // e.g. 'Europe/London'
 }
 
 // GET /v1/userregistration/ownership?country={countrycode}&serial={serial}
@@ -154,11 +154,19 @@ export interface DysonUnifiedschedulerEvent {
     enabled:                    boolean;
     groupId:                    number;
     settings:                   unknown;
-    startTime:                  string; // e.g. '09:00' or '20:00:00'
+    startTime:                  string;         // e.g. '09:00' or '20:00:00'
     weeklyRepeat:               boolean;
 }
 export interface DysonUnifiedschedulerEventsResponse {
     enabled:                    boolean;
     events:                     DysonUnifiedschedulerEvent[];
     serial:                     string;
+}
+
+// GET /v1/messageprocessor/devices/{serial}/connectionstatus
+export interface DysonConnectionStatusResponse {
+    BrokerHostName:             string | null;
+    BrokerPort:                 number;
+    LastChanged:                string;         // e.g. '1970-01-01T00:00:00.001Z'
+    Status:                     'connected';
 }

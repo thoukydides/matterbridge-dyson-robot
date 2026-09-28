@@ -23,7 +23,7 @@ import { PLUGIN_URL, VENDOR_ID, VENDOR_NAME } from './settings.js';
 import { RvcCleanMode360, RvcRunMode360 } from './endpoint-360-behavior.js';
 import { PowerSource, RvcOperationalState } from 'matterbridge/matter/clusters';
 import {
-    Dyson360CleaningStrategy,
+    Dyson360VacuumMode,
     Dyson360PowerMode,
     Dyson360State
 } from './dyson-360-types.js';
@@ -115,7 +115,7 @@ function mapState(state: Dyson360State): {
 }
 
 // Mapping of robot power mode to its corresponding Matter Clean Mode and label
-export type Dyson360PowerLevel = Dyson360PowerMode | Dyson360CleaningStrategy;
+export type Dyson360PowerLevel = Dyson360PowerMode | Dyson360VacuumMode;
 export type Dyson360PowerLevelMap = [Dyson360PowerLevel, ...RvcCleanModeLabels[number]];
 
 // Thresholds for battery levels

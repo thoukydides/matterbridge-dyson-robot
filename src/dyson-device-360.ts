@@ -4,7 +4,7 @@
 import { BasicInformation } from 'matterbridge/matter/clusters';
 import { RvcCleanMode360 } from './endpoint-360-behavior.js';
 import {
-    Dyson360CleaningStrategy,
+    Dyson360VacuumMode,
     Dyson360EyePowerMode,
     Dyson360HeuristPowerMode,
     Dyson360TimelineEvent
@@ -19,7 +19,11 @@ import {
     dysonRenderMap360Eye,
     dysonRenderMap360VisNav
 } from './dyson-device-360-map.js';
-import { Dyson360PersistentMapResponse } from './dyson-360-cloud-types.js';
+import {
+    Dyson360PersistentMapMetadataSpotScrub,
+    Dyson360PersistentMapMetadataVisNav,
+    Dyson360PersistentMapResponseVisNav
+} from './dyson-360-cloud-types.js';
 import { DysonMqtt360 } from './dyson-mqtt-360.js';
 import { MS } from './utils.js';
 
@@ -122,14 +126,19 @@ export class DysonDevice360VisNav extends DysonDevice360ZonesMixin(DysonDevice36
     });
 
     override getPowerLevelMaps = (): Dyson360PowerLevelMap[] => [
-        [Dyson360CleaningStrategy.Auto,     RvcCleanMode360.Auto,       'Auto'],
-        [Dyson360CleaningStrategy.Quick,    RvcCleanMode360.Quick,      'Quick'],
-        [Dyson360CleaningStrategy.Quiet,    RvcCleanMode360.Quiet,      'Quiet'],
-        [Dyson360CleaningStrategy.Boost,    RvcCleanMode360.MaxBoost,   'Boost']
+        [Dyson360VacuumMode.Auto,     RvcCleanMode360.Auto,       'Auto'],
+        [Dyson360VacuumMode.Quick,    RvcCleanMode360.Quick,      'Quick'],
+        [Dyson360VacuumMode.Quiet,    RvcCleanMode360.Quiet,      'Quiet'],
+        [Dyson360VacuumMode.Boost,    RvcCleanMode360.MaxBoost,   'Boost']
     ];
 
-    override setPowerLevel = (powerLevel: Dyson360CleaningStrategy) => this.mqtt.commandSetCleaningStrategy(powerLevel);
+    override setPowerLevel = (powerLevel: Dyson360VacuumMode) => this.mqtt.commandSetCleaningStrategy(powerLevel);
     override getPowerLevel = () => this.mqtt.status.defaultCleaningStrategy;
+
+    // Retrieve the persistent maps metadata
+    override getPersistentMapMetadata(): Promise<Dyson360PersistentMapMetadataVisNav[]> | undefined {
+        return this.api?.getPersistentMapMetadata360VisNav();
+    }
 
     // Retrieve details of a completed clean
     override async getCompletedClean(cleanId: string): Promise<Dyson360CleanSummaryResult> {
@@ -142,16 +151,16 @@ export class DysonDevice360VisNav extends DysonDevice360ZonesMixin(DysonDevice36
         if (!clean)                             return 'Not found';
         const interim = clean.cleanTimeline.at(-1)?.eventName !== Dyson360TimelineEvent.RunEnded;
         if (interim)                            return 'Not ready';
-        let persistentMap: Dyson360PersistentMapResponse | undefined;
-        if (clean.persistentMap) persistentMap = await this.api.getPersistentMap360(clean.persistentMap.id);
+        let persistentMap: Dyson360PersistentMapResponseVisNav | undefined;
+        if (clean.persistentMap) persistentMap = await this.api.getPersistentMap360VisNav(clean.persistentMap.id);
 
         // Render the map
         return dysonRenderMap360VisNav(this.log, logMapStyle, clean, persistentMap);
     }
 }
 
-// A Dyson 360 Spot+Scrub device
-export class DysonDevice360SpotScrub extends DysonDevice360Base {
+// A Dyson 360 Spot+Scrub Ai device
+export class DysonDevice360SpotScrub extends DysonDevice360ZonesMixin(DysonDevice360Base) {
     static readonly model = { type: 'RB05', number: 'RB05', name: 'Spot+Scrub Ai' };
 
     // The MQTT client and status update listener
@@ -165,18 +174,23 @@ export class DysonDevice360SpotScrub extends DysonDevice360Base {
     });
 
     override getPowerLevelMaps = (): Dyson360PowerLevelMap[] => [
-        [Dyson360CleaningStrategy.Auto,     RvcCleanMode360.Auto,       'Auto'],
-        [Dyson360CleaningStrategy.Quick,    RvcCleanMode360.Quick,      'Quick'],
-        [Dyson360CleaningStrategy.Quiet,    RvcCleanMode360.Quiet,      'Quiet'],
-        [Dyson360CleaningStrategy.Boost,    RvcCleanMode360.MaxBoost,   'Boost']
+        [Dyson360VacuumMode.Auto,     RvcCleanMode360.Auto,       'Auto'],
+        [Dyson360VacuumMode.Quick,    RvcCleanMode360.Quick,      'Quick'],
+        [Dyson360VacuumMode.Quiet,    RvcCleanMode360.Quiet,      'Quiet'],
+        [Dyson360VacuumMode.Boost,    RvcCleanMode360.MaxBoost,   'Boost']
     ];
 
-    override setPowerLevel = (powerLevel: Dyson360CleaningStrategy) => this.mqtt.commandSetCleaningStrategy(powerLevel);
+    override setPowerLevel = (powerLevel: Dyson360VacuumMode) => this.mqtt.commandSetCleaningStrategy(powerLevel);
     override getPowerLevel = () => this.mqtt.status.defaultCleaningStrategy;
 
     override get compatibilityWarning() { return DYSON360_COMPATIBILITY_SPOTSCRUB; }
 
-    // Spot+Scrub AI does not publish status updates, so poll periodically
+    // Retrieve the persistent maps metadata
+    override getPersistentMapMetadata(): Promise<Dyson360PersistentMapMetadataSpotScrub[]> | undefined {
+        return this.api?.getPersistentMapMetadata360SpotScrub();
+    }
+
+    // Spot+Scrub Ai does not publish status updates, so poll periodically
     pollHandleTimer?: NodeJS.Timeout;
     override async start(): Promise<void> {
         await super.start();

@@ -51,7 +51,7 @@ export enum Dyson360State {
     Aborted                         = 'ABORTED'
 }
 
-// Fault status
+// Dyson robot vacuum fault status
 export type Dyson360FaultStatus = {
     active:                         false;
 } | {
@@ -142,6 +142,14 @@ export interface Dyson360CleaningProgramme {
     zonesDefinitionLastUpdatedDate: string | null;  // e.g. '2025-12-17T10:53:21.8147587Z'
 }
 
+// Dyson robot vacuum clean type (Spot+Scrub Ai only)
+export enum Dyson360CleanType {
+    Vacuum                          = 'vacuum',
+    Mop                             = 'mop',
+    VacuumAndMop                    = 'vacuumAndMop',
+    VacuumThenMop                   = 'vacuumThenMop'
+}
+
 // Dyson robot vacuum zone status (360 Heurist and 360 Vis Nav only)
 export enum Dyson360ZoneCleanStatus {
     NotRequested                    = 'CLEAN_NOT_REQUESTED',
@@ -161,12 +169,23 @@ export enum Dyson360MapUploadStatus {
 }
 
 // Dyson robot vacuum cleaning strategy
-export enum Dyson360CleaningStrategy {
+export enum Dyson360VacuumMode {
     Auto                            = 'auto',
     Quick                           = 'quick',
     Quiet                           = 'quiet',
     Boost                           = 'boost',
     Mixed                           = 'mixed'       // (360 Heurist only)
+}
+
+// Dyson robot vacuum repetitions (Spot+Scrub Ai only)
+export type Dyson360VacuumPasses    = 1;
+export type Dyson360MopPasses       = 1 | 2;
+
+// Dyson robot vacuum water level (Spot+Scrub Ai only)
+export enum Dyson360WaterLevel {
+    Low                             = 'low',
+    Medium                          = 'medium',
+    High                            = 'high'
 }
 
 // Dyson robot vacuum position
@@ -181,7 +200,7 @@ export interface Dyson360PositionSpotScrubCoord {
 export type Dyson360PositionSpotScrub = Dyson360PositionSpotScrubCoord[];
 export type Dyson360Position = Dyson360Position360 | Dyson360PositionSpotScrub;
 
-// Dyson map data (after base64 and gzip decoding) (360 Eye only)
+// Dyson robot vacuum map data (after base64 and gzip decoding) (360 Eye only)
 export type Dyson360MapBitmap = number[][];
 export type Dyson360MapPath = [number, number, number];
 export interface Dyson360MapData {
@@ -192,7 +211,7 @@ export interface Dyson360MapData {
     path:                           Dyson360MapPath[];
 }
 
-// Dyson maps only support discrete 90° multiples for most rotations
+// Dyson robot vacuum maps only support discrete 90° multiples for most rotations
 export type Dyson360Rotation        = 0 | 90 | 180 | 270;
 
 // Dyson robot vacuum initial setup state
@@ -219,6 +238,78 @@ export enum Dyson360ZoneIcon {
     UtilityRoom                     = 'utility_room',
     Work                            = 'work',           // Office
     Custom                          = 'custom'          // User defined
+}
+
+// Dyson robot vacuum zone type (Spot+Scrub Ai only)
+export enum Dyson360ZoneType {
+    Balcony                         = 'balcony',
+    Bathroom                        = 'bathroom',
+    Bedroom                         = 'bedroom',
+    Boxroom                         = 'boxroom',
+    Cloakroom                       = 'cloakroom',
+    Closet                          = 'closet',
+    Conservatory                    = 'conservatory',
+    Dining                          = 'dining',
+    Ensuite                         = 'ensuite',
+    Entrance                        = 'entrance',
+    FamilyRoom                      = 'familyRoom',
+    GuestBathroom                   = 'guestBathroom',
+    GuestBedroom                    = 'guestBedroom',
+    GuestRoom                       = 'guestRoom',
+    Hallway                         = 'hallway',
+    KidsBedroom                     = 'kidsBedroom',
+    Kitchen                         = 'kitchen',
+    LaundryRoom                     = 'laundryRoom',
+    LivingRoom                      = 'livingRoom',
+    Nursery                         = 'nursery',
+    Office                          = 'office',
+    Pantry                          = 'pantry',
+    Playroom                        = 'playRoom',
+    PrimaryBathroom                 = 'primaryBathroom',
+    PrimaryBedroom                  = 'primaryBedroom',
+    RecreationRoom                  = 'recreationRoom',
+    StorageRoom                     = 'storageRoom',
+    Study                           = 'study',
+    Toilet                          = 'toilet',
+    UtilityRoom                     = 'utilityRoom',
+    Custom                          = 'custom'          // User defined
+}
+
+// Dyson robot vacuum furniture type (Spot+Scrub Ai only)
+export enum Dyson360FurnitureType {
+    Bookshelf                       = 'bookshelf',
+    Cabinet                         = 'cabinet',
+    Closet                          = 'closet',
+    Desk                            = 'desk',
+    DiningTable                     = 'diningTableAndChairs',
+    DoubleBed                       = 'doubleBed',
+    FloorMirror                     = 'floorMirror',
+    LShapeCabinetLeft               = 'lShapedCabinetLeft',
+    LShapeCabinetRight              = 'lShapedCabinetRight',
+    LShapeSofaLeft                  = 'lShapedSofaLeft',
+    LShapeSofaRight                 = 'lShapedSofaRight',
+    Nightstand                      = 'bedsideTable',
+    OneSeaterSofa                   = 'oneSeaterSofa',
+    Plant                           = 'plant',
+    Refrigerator                    = 'refrigerator',
+    ShoeCabinet                     = 'shoeCabinet',
+    SingleBed                       = 'singleBed',
+    SmallTableRectangular           = 'squareCoffeeTable',
+    SmallTableRound                 = 'roundCoffeeTable',
+    StorageCabinet                  = 'storageCabinet',
+    Stove                           = 'stove',
+    ThreeSeaterSofa                 = 'threeSeaterSofa',
+    ToiletBowl                      = 'toiletBowl',
+    TvCabinet                       = 'tvStand',
+    TwoSeaterSofa                   = 'twoSeaterSofa',
+    UShapeCabinet                   = 'uShapeCabinet',
+    WashingMachine                  = 'washingMachine'
+}
+
+// Dyson robot vacuum restriction behaviour (Spot+Scrub Ai only)
+export enum Dyson360RestrictionBehaviour {
+    ClimbObstacle                   = 'climbObstacle',
+    NoMop                           = 'noMop'
 }
 
 // Dyson robot vacuum clean map timeline event
@@ -250,12 +341,13 @@ export enum Dyson360DustName {
     Total                           = 'total'
 }
 
-// Trigger for deep cleaning of mop roller (Spot+Scrub Ai only)
+// Dyson robot vacuum trigger for deep cleaning of mop roller (Spot+Scrub Ai only)
 export enum Dyson360BackWashType {
+    Room                            = 'ROOM',
     Time                            = 'TIME'
 }
 
-// State of the dock (Spot+Scrub Ai only)
+// Dyson robot vacuum dock state (Spot+Scrub Ai only)
 export enum Dyson360DockState {
     CollectingDust                  = 'COLLECTING_DUST',
     DryingMop                       = 'DRYING_MOP',
@@ -263,12 +355,19 @@ export enum Dyson360DockState {
     WashingMop                      = 'WASHING_MOP'
 }
 
-// State of the dock commissioning (Spot+Scrub Ai only)
+// Dyson robot vacuum dock actions (Spot+Scrub Ai only)
+export enum Dyson360DockAction {
+    CollectDust                     = 'COLLECT_DUST',
+    DryMop                          = 'DRY_MOP',
+    WashMop                         = 'WASH_MOP'
+}
+
+// Dyson robot vacuum dock commissioning state (Spot+Scrub Ai only)
 export enum Dyson360DockCommissioningState {
     Idle                            = 'IDLE'
 }
 
-// Type of cleaning to be performed (Spot+Scrub Ai only)
+// Dyson robot vacuum type of cleaning to be performed (Spot+Scrub Ai only)
 export enum Dyson360FullCleanAction {
     None                            = 'NONE',
     Mopping                         = 'MOPPING',
@@ -276,13 +375,14 @@ export enum Dyson360FullCleanAction {
     VacuumingAndMopping             = 'VACUUMING_AND_MOPPING'
 }
 
-// State of the dock cleaning process (Spot+Scrub Ai only)
+// Dyson robot vacuum cleaning process state (Spot+Scrub Ai only)
 export enum Dyson360CleaningState {
     NotCleaning                     = 'NOT_CLEANING',
     RemovingDirt                    = 'REMOVING_DIRT',
+    RemovingStain                   = 'REMOVING_STAIN'
 }
 
-// Status of consumables (Spot+Scrub Ai only)
+// Dyson robot vacuum status of consumables (Spot+Scrub Ai only)
 export enum Dyson360ConsumableType {
     BrushBar                        = 'brushBar',
     CleaningSolution                = 'cleaningSolution',
@@ -298,7 +398,7 @@ export interface Dyson360Consumable {
     needsRefill?:                   boolean;
 }
 
-// Do not disturb mode (Spot+Scrub Ai only)
+// Dyson robot vacuum do not disturb mode (Spot+Scrub Ai only)
 export interface Dyson360DoNotDisturbMode {
     endTime:                        string;         // e.g. '8:00'
     isOn:                           boolean;

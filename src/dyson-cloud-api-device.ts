@@ -4,6 +4,7 @@
 import { AnsiLogger } from 'matterbridge/logger';
 import { DysonCloudAPIUserAgent } from './dyson-cloud-api-ua.js';
 import {
+    DysonConnectionStatusResponse,
     DysonIoTCredentialsRequest,
     DysonIoTCredentialsResponse,
     DysonManifestConnectedConfiguration,
@@ -14,10 +15,17 @@ import {
 } from './dyson-cloud-types.js';
 import { CheckerT } from 'ts-interface-checker';
 import {
+    Dyson360CleanEstimationRequest,
+    Dyson360CleanEstimationResponse,
+    Dyson360CleanEstimationZone,
     Dyson360CleanHistoryResponse,
     Dyson360CleanMap,
-    Dyson360PersistentMapMetadata,
-    Dyson360PersistentMapResponse,
+    Dyson360FaultResponse,
+    Dyson360LiveMapCleaningResponse,
+    Dyson360PersistentMapMetadataResponseSpotScrub,
+    Dyson360PersistentMapMetadataResponseVisNav,
+    Dyson360PersistentMapResponseSpotScrub,
+    Dyson360PersistentMapResponseVisNav,
     Dyson360RecommendedCleansResponse,
     Dyson360UnifiedschedulerEventsResponse,
     Dyson360ZoneBehavioursRequest
@@ -31,7 +39,7 @@ import { checkers } from './ti/dyson-cloud-types.js';
 import { checkers as checkers360 } from './ti/dyson-360-cloud-types.js';
 import { checkers as checkersAir } from './ti/dyson-air-cloud-types.js';
 import { Config } from './config-types.js';
-import { Dyson360CleaningStrategy } from './dyson-360-types.js';
+import { Dyson360VacuumMode } from './dyson-360-types.js';
 import { assertIsDefined } from './utils.js';
 
 // Default locale
@@ -96,6 +104,12 @@ export class DysonCloudAPIDevice {
         return this.ua.getJSON(checker, path);
     }
 
+    // Check the device's connection status
+    getConnectionStatus(): Promise<DysonConnectionStatusResponse> {
+        const path = `/v1/messageprocessor/devices/${this.serialNumber}/connectionstatus`;
+        return this.ua.getJSON(checkers.DysonConnectionStatusResponse, path);
+    }
+
     // =========================================================================
     // Dyson robot vacuum device API methods...
 
@@ -116,16 +130,35 @@ export class DysonCloudAPIDevice {
         return this.ua.getBinary(path, 'image/png');
     }
 
-    // Retrieve the zone definitions for all persistent maps (360 Vis Nav only)
-    getPersistentMapMetadata360(): Promise<Dyson360PersistentMapMetadata[]> {
+    // Retrieve the zone definitions for all persistent maps (360 Vis Nav version)
+    getPersistentMapMetadata360VisNav(): Promise<Dyson360PersistentMapMetadataResponseVisNav> {
         const path = `/v1/app/${this.serialNumber}/persistent-map-metadata`;
-        return this.ua.getJSON(checkers360.Dyson360PersistentMapMetadataResponse, path);
+        return this.ua.getJSON(checkers360.Dyson360PersistentMapMetadataResponseVisNav, path);
     }
 
-    // Retrieve the full details of a specific persistent map (360 Vis Nav only)
-    getPersistentMap360(mapId: string): Promise<Dyson360PersistentMapResponse> {
+    // Retrieve the zone definitions for all persistent maps (Spot+Scrub Ai version)
+    getPersistentMapMetadata360SpotScrub(): Promise<Dyson360PersistentMapMetadataResponseSpotScrub> {
+        const path = `/v1/app/${this.serialNumber}/persistent-map-metadata`;
+        return this.ua.getJSON(checkers360.Dyson360PersistentMapMetadataResponseSpotScrub, path);
+    }
+
+    // Retrieve the full details of a specific persistent map (360 Vis Nav version)
+    getPersistentMap360VisNav(mapId: string): Promise<Dyson360PersistentMapResponseVisNav> {
         const path = `/v1/app/${this.serialNumber}/persistent-maps/${mapId}`;
-        return this.ua.getJSON(checkers360.Dyson360PersistentMapResponse, path);
+        return this.ua.getJSON(checkers360.Dyson360PersistentMapResponseVisNav, path);
+    }
+
+    // Retrieve the full details of a specific persistent map (Spot+Scrub Ai version)
+    getPersistentMap360SpotScrub(mapId: string): Promise<Dyson360PersistentMapResponseSpotScrub> {
+        const path = `/v1/app/${this.serialNumber}/persistent-maps/${mapId}`;
+        return this.ua.getJSON(checkers360.Dyson360PersistentMapResponseSpotScrub, path);
+    }
+
+    // Obtain an estimate of the charges and duration for a clean (Spot+Scrub Ai only)
+    getCleanEstimation(mapId: string, zones: Dyson360CleanEstimationZone[]): Promise<Dyson360CleanEstimationResponse> {
+        const body: Dyson360CleanEstimationRequest = { zones };
+        const path = `/v1/app/${this.serialNumber}/persistent-maps/${mapId}/clean-estimation`;
+        return this.ua.postJSON(checkers360.Dyson360CleanEstimationResponse, path, body);
     }
 
     // Retrieve details of recent cleaning sessions (360 Vis Nav only)
@@ -141,10 +174,22 @@ export class DysonCloudAPIDevice {
     }
 
     // Set the cleaning strategy for a single zone (360 Vis Nav only)
-    setZoneBehaviour360(mapId: string, zoneId: string, cleaningStrategy: Dyson360CleaningStrategy): Promise<void> {
+    setZoneBehaviour360(mapId: string, zoneId: string, cleaningStrategy: Dyson360VacuumMode): Promise<void> {
         const body: Dyson360ZoneBehavioursRequest = { cleaningStrategy };
         const path = `/v1/app/${this.serialNumber}/persistent-maps/${mapId}/zones/${zoneId}/behaviour`;
         return this.ua.put(path, body);
+    }
+
+    // Retrieve detail for a fault code
+    getFaultDetails360(faultCode: string, languageCode = DEFAULT_LANGUAGE, countryCode = DEFAULT_COUNTRY): Promise<Dyson360FaultResponse> {
+        const path = `/v1/support/product-faults/${this.serialNumber}?locale=${languageCode}&market=${countryCode}&faultCode=${faultCode}`;
+        return this.ua.getJSON(checkers360.Dyson360FaultResponse, path);
+    }
+
+    // Retrieve the live cleaning map (Spot+Scrub Ai only)
+    getLiveMapsCleaning360(): Promise<Dyson360LiveMapCleaningResponse> {
+        const path = `/v1/app/${this.serialNumber}/live-maps/cleaning`;
+        return this.ua.getJSON(checkers360.Dyson360LiveMapCleaningResponse, path);
     }
 
     // =========================================================================

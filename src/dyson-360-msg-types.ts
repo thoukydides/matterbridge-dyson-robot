@@ -7,9 +7,10 @@ import {
     Dyson360CleaningMode,
     Dyson360CleaningProgramme,
     Dyson360CleaningState,
-    Dyson360CleaningStrategy,
+    Dyson360VacuumMode,
     Dyson360CleaningType,
     Dyson360Consumable,
+    Dyson360DockAction,
     Dyson360DockCommissioningState,
     Dyson360DockState,
     Dyson360DoNotDisturbMode,
@@ -97,10 +98,10 @@ export interface Dyson360MsgCurrentState extends DysonMsg {
     collectDustOnSelfClean?:            boolean;
     consumables?:                       Dyson360Consumable[];
     currentCleaningMode?:               Dyson360CleaningMode;
-    currentCleaningStrategy?:           Dyson360CleaningStrategy,
+    currentCleaningStrategy?:           Dyson360VacuumMode,
     currentVacuumPowerMode?:            Dyson360PowerMode;
     defaultCleaningMode?:               Dyson360CleaningMode;
-    defaultCleaningStrategy?:           Dyson360CleaningStrategy,
+    defaultCleaningStrategy?:           Dyson360VacuumMode,
     defaultVacuumPowerMode?:            Dyson360PowerMode;
     detergent?:                         boolean;
     dockCommissioningState?:            Dyson360DockCommissioningState;
@@ -137,10 +138,10 @@ export interface Dyson360MsgStateChange extends DysonMsg {
     cleanId?:                           string; // UUID
     cleaningProgramme?:                 Dyson360CleaningProgramme;
     currentCleaningMode?:               Dyson360CleaningMode;
-    currentCleaningStrategy?:           Dyson360CleaningStrategy,
+    currentCleaningStrategy?:           Dyson360VacuumMode,
     currentVacuumPowerMode?:            Dyson360PowerMode;
     defaultCleaningMode?:               Dyson360CleaningMode;
-    defaultCleaningStrategy?:           Dyson360CleaningStrategy,
+    defaultCleaningStrategy?:           Dyson360VacuumMode,
     defaultVacuumPowerMode?:            Dyson360PowerMode;
     endOfClean?:                        boolean;
     faults?:                            Dyson360Faults;
@@ -160,6 +161,12 @@ export interface Dyson360MsgStateChange extends DysonMsg {
     traverseTargetId?:                  string; // e.g. '1'
     zonesDefinitionVersion?:            string; // e.g. '2024-09-17T23:08:23.9939605Z'
     zoneStatus?:                        Dyson360ZoneStatus[];
+}
+
+export interface Dyson360MsgMapUploadStatus extends DysonMsg {
+    msg:                                'MAP-UPLOAD-STATUS';
+    cleanId:                            string; // UUID
+    status:                             Dyson360MapUploadStatus;
 }
 
 export interface Dyson360MsgMapData extends DysonMsg {
@@ -215,7 +222,7 @@ export interface Dyson360MsgStateSet extends DysonMsg {
         defaultVacuumPowerMode: Dyson360PowerMode;
     }
     defaults?: {
-        defaultCleaningStrategy: Dyson360CleaningStrategy
+        defaultCleaningStrategy: Dyson360VacuumMode
     }
 }
 
@@ -225,7 +232,7 @@ export interface Dyson360MsgStart extends DysonMsg {
     fullCleanType:                      Dyson360CleaningType;
     cleaningMode?:                      Dyson360CleaningMode;
     cleaningProgramme?:                 Dyson360CleaningProgramme;
-    cleaningStrategy?:                  Dyson360CleaningStrategy;
+    cleaningStrategy?:                  Dyson360VacuumMode;
     vacuumPowerMode?:                   Dyson360PowerMode;
     cleanId?:                           string; // UUID
 }
@@ -233,6 +240,7 @@ export interface Dyson360MsgStart extends DysonMsg {
 export interface Dyson360MsgPause extends DysonMsg {
     msg:                                'PAUSE';
     'mode-reason':                      DysonModeReason;
+    cleaningMode?:                      Dyson360CleaningMode;
 }
 
 export interface Dyson360MsgResume extends DysonMsg {
@@ -243,11 +251,26 @@ export interface Dyson360MsgResume extends DysonMsg {
 export interface Dyson360MsgAbort extends DysonMsg {
     msg:                                'ABORT'; // GoHome
     'mode-reason':                      DysonModeReason;
+    cleaningMode?:                      Dyson360CleaningMode;
+    state?:                             Dyson360State;
+}
+
+export interface Dyson360MsgAbortDockAction extends DysonMsg {
+    msg:                                'ABORT-DOCK-ACTION';
+    'mode-reason':                      DysonModeReason;
+    action:                             Dyson360DockAction;
+    delay?:                             number;
 }
 
 export interface Dyson360MsgSkipCurrentZone extends DysonMsg {
     msg:                                'SKIP-CURRENT-ZONE';
     'mode-reason':                      DysonModeReason;
+}
+
+export interface Dyson360MsgStartDockAction extends DysonMsg {
+    msg:                                'START-DOCK-ACTION';
+    'mode-reason':                      DysonModeReason;
+    action:                             Dyson360DockAction;
 }
 
 export interface Dyson360MsgStartMapping extends DysonMsg {
@@ -257,12 +280,6 @@ export interface Dyson360MsgStartMapping extends DysonMsg {
 
 export interface Dyson360MsgPersistentMapManifestUpdated extends DysonMsg {
     msg:                                'PERSISTENT-MAP-MANIFEST-UPDATED'
-}
-
-export interface Dyson360MsgMapUploadStatus extends DysonMsg {
-    msg:                                'MAP-UPLOAD-STATUS';
-    cleanId:                            string; // UUID
-    status:                             Dyson360MapUploadStatus;
 }
 
 export interface Dyson360MsgAcknowledgeFault extends DysonMsg {

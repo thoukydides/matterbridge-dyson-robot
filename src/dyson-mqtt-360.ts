@@ -16,7 +16,7 @@ import {
 import {
     Dyson360CleaningMode,
     Dyson360CleaningProgramme,
-    Dyson360CleaningStrategy,
+    Dyson360VacuumMode,
     Dyson360CleaningType,
     Dyson360PowerMode
 } from './dyson-360-types.js';
@@ -126,7 +126,7 @@ export class DysonMqtt360 extends DysonMqtt<DysonMsgMap360, DysonMqttStatus360> 
                 'mode-reason':      DysonModeReason.LocalApp,
                 fullCleanType:      Dyson360CleaningType.Immediate,
                 cleaningMode:       this.status.defaultCleaningMode     && Dyson360CleaningMode.Global,
-                cleaningStrategy:   this.status.defaultCleaningStrategy && Dyson360CleaningStrategy.Auto
+                cleaningStrategy:   this.status.defaultCleaningStrategy && Dyson360VacuumMode.Auto
             });
         case 'PAUSE':
         case 'RESUME':
@@ -146,7 +146,7 @@ export class DysonMqtt360 extends DysonMqtt<DysonMsgMap360, DysonMqttStatus360> 
     }
 
     // Publish a robot vacuum command to set the default power level (360 Vis Nav)
-    commandSetCleaningStrategy(defaultCleaningStrategy: Dyson360CleaningStrategy): Promise<void> {
+    commandSetCleaningStrategy(defaultCleaningStrategy: Dyson360VacuumMode): Promise<void> {
         return this.publish('STATE-SET', {
             'mode-reason':  DysonModeReason.LocalApp,
             defaults:       { defaultCleaningStrategy }

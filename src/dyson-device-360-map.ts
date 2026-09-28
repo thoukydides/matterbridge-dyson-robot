@@ -8,7 +8,7 @@ import { DysonAnsiChar, DysonBitmapAnsi } from './dyson-bitmap-ansi.js';
 import {
     Dyson360CleanHistoryEntry,
     Dyson360CleanMap,
-    Dyson360PersistentMapResponse
+    Dyson360PersistentMapResponseVisNav
 } from './dyson-360-cloud-types.js';
 import { inflateSync } from 'zlib';
 import { Dyson360TimelineEvent } from './dyson-360-types.js';
@@ -116,7 +116,7 @@ export function dysonRenderMap360VisNav(
     log:    AnsiLogger,
     style:  Dyson360MapStyle,
     clean:  Dyson360CleanMap,
-    map?:   Dyson360PersistentMapResponse
+    map?:   Dyson360PersistentMapResponseVisNav
 ): Dyson360CleanSummary {
     // Check that the bitmaps are all the same resolution
     const resolutions = new Set<number>([

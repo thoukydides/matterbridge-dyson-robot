@@ -4,27 +4,26 @@
 import {
     Dyson360CleaningProgramme,
     Dyson360ZoneCleanStatus,
-    Dyson360ZoneIcon
+    Dyson360ZoneIcon,
+    Dyson360ZoneType
 } from './dyson-360-types.js';
 import { CommonAreaNamespaceTag } from 'matterbridge/matter';
 import { DysonDevice360Base } from './dyson-device-360-base.js';
-import { AbstractConstructor, assertIsDefined } from './utils.js';
+import { AbstractConstructor, assertIsDefined, MS } from './utils.js';
 import { DysonMqttStatus } from './dyson-mqtt.js';
 import { DysonMqttStatus360 } from './dyson-mqtt-360.js';
-import {
-    Dyson360PersistentMapMetadata,
-    Dyson360PersistentMapMetadataZone
-} from './dyson-360-cloud-types.js';
+import { Dyson360PersistentMapMetadata } from './dyson-360-cloud-types.js';
 import { ServiceArea } from 'matterbridge/matter/clusters';
 import { SelectAreaError } from './error-360.js';
 import { Endpoint360, formatAreaName } from './endpoint-360.js';
 import { Device360CommandHandlers } from './dyson-device-360-commands.js';
 import { logError } from './log-error.js';
+import { isDeepStrictEqual } from 'node:util';
 
 // Mapping of Dyson area icons/names to Matter common areas
 type LocationType = number | null;
 type LocationTypeMapping = LocationType | [RegExp, LocationType][];
-const LOCATION_TYPE_MAP: Record<Dyson360ZoneIcon, LocationTypeMapping> = {
+const LOCATION_ICON_MAP: Record<Dyson360ZoneIcon, LocationTypeMapping> = {
     [Dyson360ZoneIcon.Balcony]:     CommonAreaNamespaceTag.Balcony.tag,
     [Dyson360ZoneIcon.Bathroom]:    CommonAreaNamespaceTag.Bathroom.tag,
     [Dyson360ZoneIcon.Bedroom]: [
@@ -52,6 +51,12 @@ const PROGRESS_MAP: Record<Dyson360ZoneCleanStatus, ServiceArea.OperationalStatu
     [Dyson360ZoneCleanStatus.Complete]:     ServiceArea.OperationalStatus.Completed
 };
 
+// Zone type within the persistent map metadata
+type PersistentMapMetadataZone = Dyson360PersistentMapMetadata['zones'][number];
+
+// Interval between map update checks without zonesDefinitionLastUpdatedDate
+const MAP_REFRESH_INTERVAL_MS = 5 * 60 * MS; // 5 minutes
+
 // Mixin to add zone cleaning to a Dyson robot vacuum device
 export function DysonDevice360ZonesMixin<TBase extends AbstractConstructor<DysonDevice360Base>>(Base: TBase) {
     abstract class DysonDevice360WithZones extends Base {
@@ -62,15 +67,18 @@ export function DysonDevice360ZonesMixin<TBase extends AbstractConstructor<Dyson
 
         // Map of current Matter identifiers to latest Dyson maps and zones
         mapFromMatter   = new Map<number, Dyson360PersistentMapMetadata>();
-        zoneFromMatter  = new Map<number, [Dyson360PersistentMapMetadata, Dyson360PersistentMapMetadataZone]>();
+        zoneFromMatter  = new Map<number, [Dyson360PersistentMapMetadata, PersistentMapMetadataZone]>();
 
         // Map of Dyson maps and zones to Matter identifiers (inc. obsolete)
         mapToMatter     = new Map<string, number>();
         zoneToMatter    = new Map<string, number>();
 
         // The next map and area identifiers to allocate
-        nextMapId = 1;
-        nextAreaId = 1;
+        nextMapId       = 1;
+        nextAreaId      = 1;
+
+        // When were the maps last updated (in milliseconds since the epoch)
+        lastMapFetch    = 0;
 
         // Mixin constructor
         constructor(...args: any[]) {
@@ -107,7 +115,7 @@ export function DysonDevice360ZonesMixin<TBase extends AbstractConstructor<Dyson
             const selectedAreas:    number[]                = [];
             const { persistentMapId, zonesDefinitionVersion } = status;
             if (persistentMapId && await this.checkMap(persistentMapId, zonesDefinitionVersion)) {
-                // Note: Spot+Scrub Ai doesn't report zoneStatus
+                // HERE - Spot+Scrub Ai doesn't report zoneStatus
                 const { zoneId, zoneStatus, cleaningProgramme } = status;
 
                 // If the current zone is known then map it to a Matter area
@@ -176,29 +184,37 @@ export function DysonDevice360ZonesMixin<TBase extends AbstractConstructor<Dyson
             if (maps.size !== 1) throw new SelectAreaError.InvalidSet('Areas must all be from the same map');
             const [map] = maps;
             assertIsDefined(map);
-            const {id, zonesDefinitionLastUpdatedDate } = map;
 
             // Build the cleaning programme
             return {
-                orderedZones:       [],
-                persistentMapId:    id,
+                orderedZones:                   [],
+                persistentMapId:                map.id,
                 unorderedZones,
-                zonesDefinitionLastUpdatedDate
+                zonesDefinitionLastUpdatedDate: 'zonesDefinitionLastUpdatedDate' in map
+                                                ? map.zonesDefinitionLastUpdatedDate : null
             };
         }
 
         // Check whether the persistent maps have changed and update if necessary
         async checkMap(persistentMapId: string, rvcVersion?: string): Promise<boolean> {
-            const getMyVersion = (): string | undefined => {
-                const map = [...this.mapFromMatter.values()].find(({ id }) => id === persistentMapId);
-                const myVersion = map?.zonesDefinitionLastUpdatedDate;
-                return myVersion === null ? '' /* sorts before all dates */ : myVersion;
+            const findMap = (): Dyson360PersistentMapMetadata | undefined =>
+                [...this.mapFromMatter.values()].find(({ id }) => id === persistentMapId);
+            const getMapVersion = (map: Dyson360PersistentMapMetadata): string | undefined => {
+                if (!('zonesDefinitionLastUpdatedDate' in map)) return undefined;
+                return map.zonesDefinitionLastUpdatedDate ?? ''; // sorts before all dates
+            };
+            const isFreshEnough = (map: Dyson360PersistentMapMetadata): boolean => {
+                const myVersion = getMapVersion(map);
+                return myVersion === undefined
+                    ? Date.now() - this.lastMapFetch < MAP_REFRESH_INTERVAL_MS
+                    : !rvcVersion || rvcVersion <= myVersion;
             };
 
             // First check whether the matching map and version is already known
-            let myVersion = getMyVersion();
-            if (myVersion && (!rvcVersion || rvcVersion <= myVersion)) {
-                if (rvcVersion && rvcVersion < myVersion) {
+            let map = findMap();
+            if (map && isFreshEnough(map)) {
+                const myVersion = getMapVersion(map);
+                if (myVersion !== undefined && rvcVersion && rvcVersion < myVersion) {
                     this.log.info(`RVC map ${persistentMapId} is out of date (${rvcVersion} < ${myVersion})`);
                 }
                 return true;
@@ -206,13 +222,16 @@ export function DysonDevice360ZonesMixin<TBase extends AbstractConstructor<Dyson
 
             // Retrieve the latest maps and then check again
             await this.updateMaps();
-            myVersion = getMyVersion();
-            if (myVersion) {
+            map = findMap();
+            if (map) {
                 // Tolerate but warn of version mismatches
-                if (rvcVersion && rvcVersion < myVersion) {
-                    this.log.info(`RVC map ${persistentMapId} is out of date (${rvcVersion} < ${myVersion})`);
-                } else if (rvcVersion && myVersion < rvcVersion) {
-                    this.log.warn(`RVC map ${persistentMapId} is more recent than cloud (${rvcVersion} > ${myVersion})`);
+                const myVersion = getMapVersion(map);
+                if (myVersion !== undefined && rvcVersion) {
+                    if (rvcVersion < myVersion) {
+                        this.log.info(`RVC map ${persistentMapId} is out of date (${rvcVersion} < ${myVersion})`);
+                    } else if (myVersion < rvcVersion) {
+                        this.log.warn(`RVC map ${persistentMapId} is more recent than cloud (${rvcVersion} > ${myVersion})`);
+                    }
                 }
                 return true;
             }
@@ -223,27 +242,45 @@ export function DysonDevice360ZonesMixin<TBase extends AbstractConstructor<Dyson
         // Retrieve the latest persistent maps
         async updateMaps(): Promise<boolean> {
             // Retrieve the latest persistent map metadata
-            if (!this.api) return false;
-            const metadata = await this.api.getPersistentMapMetadata360();
+            const metadata = await this.getPersistentMapMetadata();
+            if (!metadata) return false;
+            this.lastMapFetch = Date.now();
 
             // Check for any changes
             let changed = false;
             const oldMetadata = [...this.mapFromMatter.values()];
-            for (const { id, zonesDefinitionLastUpdatedDate } of metadata) {
-                const prevUpdateDate = oldMetadata.find(map => map.id === id)?.zonesDefinitionLastUpdatedDate;
-                if (prevUpdateDate === zonesDefinitionLastUpdatedDate) continue;
-                changed = true;
-                this.log.info(`Map ${id} ${prevUpdateDate ? 'updated' : 'added'}`);
+            for (const map of metadata) {
+                const oldMap = oldMetadata.find(({ id }) => id === map.id);
+                if (this.hasMapChanged(map, oldMap)) {
+                    changed = true;
+                    this.log.info(`Map ${map.id} ${oldMap ? 'updated' : 'added'}`);
+                }
             }
-            for (const { id } of oldMetadata) {
-                if (metadata.some(map => map.id === id)) continue;
-                changed = true;
-                this.log.info(`Map ${id} deleted`);
+            for (const map of oldMetadata) {
+                if (!metadata.some(({ id }) => id === map.id)) {
+                    changed = true;
+                    this.log.info(`Map ${map.id} deleted`);
+                }
             }
 
+            // Rebuild the Matter maps and areas if changed
             if (changed) this.rebuildMatterMaps(metadata);
             return changed;
         }
+
+        // Check whether there are Matter-relevant changes to a map
+        hasMapChanged(a: Dyson360PersistentMapMetadata, b?: Dyson360PersistentMapMetadata): boolean {
+            const signature = (map: Dyson360PersistentMapMetadata) => {
+                // Sort zones by their ID to ensure consistent comparison
+                const { name, id } = map;
+                const zones = [...map.zones].sort((a, b) => a.id.localeCompare(b.id));
+                return 'zoneProperties' in map ? { id, name, zones, zoneProperties: map.zoneProperties } : { id, name, zones };
+            };
+            return !b || !isDeepStrictEqual(signature(a), signature(b));
+        }
+
+        // Retrieve the persistent maps metadata
+        abstract getPersistentMapMetadata(): Promise<Dyson360PersistentMapMetadata[]> | undefined;
 
         // Rebuild the Matter mapping for maps and zones
         rebuildMatterMaps(maps: Dyson360PersistentMapMetadata[]): void {
@@ -294,10 +331,13 @@ export function DysonDevice360ZonesMixin<TBase extends AbstractConstructor<Dyson
         }
 
         // Lookup or create a Matter area identifier for a Dyson zone
-        makeAreaId(map: Dyson360PersistentMapMetadata, zone: Dyson360PersistentMapMetadataZone): number {
+        makeAreaId(map: Dyson360PersistentMapMetadata, zone: PersistentMapMetadataZone): number {
             let zoneKey = `${map.id}|${zone.name}`;
             // Custom zones might not be unique, so distinguish by area too
-            if (zone.icon === Dyson360ZoneIcon.Custom) zoneKey += `|${zone.area}`;
+            const isCustom = 'type' in zone
+                ? zone.type === Dyson360ZoneType.Custom
+                : zone.icon === Dyson360ZoneIcon.Custom;
+            if (isCustom) zoneKey += `|${zone.area}`;
             const areaId = this.zoneToMatter.get(zoneKey) ?? this.nextAreaId++;
             this.zoneToMatter.set(zoneKey, areaId);
             return areaId;
@@ -314,11 +354,19 @@ export function DysonDevice360ZonesMixin<TBase extends AbstractConstructor<Dyson
         }
 
         // Map a Dyson zone to a Matter common area tag
-        makeLocationAreaType(zone: Dyson360PersistentMapMetadataZone): LocationType {
-            const mapping = LOCATION_TYPE_MAP[zone.icon];
-            if (!Array.isArray(mapping)) return mapping;
-            const match = mapping.find(([re]) => re.test(zone.name));
-            return match ? match[1] : null;
+        makeLocationAreaType(zone: PersistentMapMetadataZone): LocationType {
+            if ('type' in zone) {
+                // Spot+Scrub Ai zone types match Matter location types
+                const type = zone.type.toLowerCase();
+                const key = Object.keys(CommonAreaNamespaceTag).find(k => k.toLowerCase() === type);
+                return key ? CommonAreaNamespaceTag[key as keyof typeof CommonAreaNamespaceTag].tag : null;
+            } else {
+                // Use an explicit mapping table for 360 Vis Nav zone icons
+                const mapping = LOCATION_ICON_MAP[zone.icon];
+                if (!Array.isArray(mapping)) return mapping;
+                const match = mapping.find(([re]) => re.test(zone.name));
+                return match ? match[1] : null;
+            }
         }
     }
     return DysonDevice360WithZones;

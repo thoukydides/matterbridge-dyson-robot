@@ -162,3 +162,18 @@ export function tryListener<T extends unknown[]>(
         })();
     };
 }
+
+// Convert a string enum to a string literal type
+type EnumToUnion<T> = T extends string ? `${T}` : T;
+
+// Recursive mapped type handling objects, arrays, and tuples
+export type DeepMapEnumsToUnions<T> =
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-function-type
+    T extends Function ? T
+    : T extends readonly (infer U)[]
+      ? T extends [infer Head, ...infer Tail]
+        ? [DeepMapEnumsToUnions<Head>, ...DeepMapEnumsToUnions<Tail>]
+        : DeepMapEnumsToUnions<U>[]
+      : T extends object
+    ? { [K in keyof T]: DeepMapEnumsToUnions<T[K]> }
+    : EnumToUnion<T>;
