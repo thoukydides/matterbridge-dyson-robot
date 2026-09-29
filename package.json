@@ -68,8 +68,7 @@
         "pngjs": "^7.0.0",
         "semver": "^7.8.5",
         "ts-interface-checker": "^1.0.2",
-        "undici": "^8.11.2",
-        "ws": "^8.22.0"
+        "undici": "^8.11.2"
     },
     "devDependencies": {
         "@actions/core": "^3.0.1",
