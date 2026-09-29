@@ -423,6 +423,7 @@ This plugin has been tested with the following devices:
 | Dyson Pure Cool                           | TP04      | `438`           | `ECG2PF.02.06.003.0002`                 | ✅ [smuteau](https://github.com/smuteau) ([#1](https://github.com/thoukydides/matterbridge-dyson-robot/issues/1))
 | Dyson HEPA Purifier Cool Formaldehyde     | TP09      | `438E`          |                                         | ✅ [Nagromdark](https://github.com/Nagromdark) ([#2](https://github.com/thoukydides/matterbridge-dyson-robot/issues/2))
 | Dyson Pure Cool                           | TP11/PC1  | `438M`          |                                         | 📄 MQTT logs
+| Dyson  Pure Find+Follow Purifier Cool     | TP14/PC3  | `438N`          |                                         | 📄 MQTT logs
 | Dyson Pure Hot+Cool Link                  | HP02      | `455`           | `21.04.03`                              | ✅ Developer
 | Dyson Pure Cool Link Desk                 | DP01      | `469`           |                                         | 📄 MQTT logs
 | Dyson Pure Cool Link                      | TP02      | `475`           | `21.04.03`                              | ✅ Developer

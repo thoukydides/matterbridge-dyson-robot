@@ -57,6 +57,10 @@ export class DysonDeviceAirCoolK extends DysonDeviceAirCool {
 export class DysonDeviceAirCoolM extends DysonDeviceAirCool {
     static readonly model = { type: '438M', number: 'TP11/PC1', name: 'Pure Cool' };
 }
+export class DysonDeviceAirCoolN extends DysonDeviceAirCool {
+    static readonly model = { type: '438N', number: 'TP14/PC3', name: 'Pure Find+Follow Purifier Cool' };
+    static readonly filters = { hepa: ['974527-01'] };
+}
 export class DysonDeviceAirCoolDesk extends DysonDeviceAirCool {
     static readonly model = { type: '520', number: 'DP04', name: 'Pure Cool Desk' };
 }
@@ -137,6 +141,7 @@ export const DYSON_DEVICE_TYPES_AIR = [
     DysonDeviceAirCoolE,
     DysonDeviceAirCoolK,
     DysonDeviceAirCoolM,
+    DysonDeviceAirCoolN,
     DysonDeviceAirCoolLink,
     DysonDeviceAirCoolLinkDesk,
     DysonDeviceAirHotCool,

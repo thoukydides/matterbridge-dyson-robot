@@ -36,7 +36,9 @@ import {
     DysonAirOscillationStatus,
     DysonAirTiltOscillationStatus,
     DysonAirSelectiveCatalyticOxidisationFilterType,
-    DysonAirSleepTimer
+    DysonAirSleepTimer,
+    DysonAirFindFollowMode,
+    DysonAirFindFollowState
 } from './dyson-air-types.js';
 
 // Dyson air treatment product state
@@ -110,6 +112,12 @@ export interface DysonAirProductState {
     rect?:  string;                     // Auto humidity target:    '0030'~'0070' %
     wath?:  DysonAirWaterHardness;
 
+    // Find+Follow models only
+    soal?:  string;                     // Scan range lower angle: '0000'~'0240' °
+    soau?:  string;                     // Scan range upper angle: '0000'~'0240' °
+    soon?:  DysonAirFindFollowMode;
+    sost?:  DysonAirFindFollowState;
+
     // Others values that sometimes exist
     bril?:  DysonAirBrightness;         // Display brightness
     ctll?:  'OFF';                      // Always 'OFF'?
@@ -171,6 +179,10 @@ export interface DysonAirProductStateChange {
     psta?:  [DysonAirHumidificationProcess,                     DysonAirHumidificationProcess];
     rect?:  [string,                                            string];
     wath?:  [DysonAirWaterHardness,                             DysonAirWaterHardness];
+    soal?:  [string,                                            string];
+    soau?:  [string,                                            string];
+    soon?:  [DysonAirFindFollowMode,                            DysonAirFindFollowMode];
+    sost?:  [DysonAirFindFollowState,                           DysonAirFindFollowState];
     bril?:  [DysonAirBrightness,                                DysonAirBrightness];
     ctll?:  ['OFF',                                             'OFF']
     fqhp?:  [string,                                            string];

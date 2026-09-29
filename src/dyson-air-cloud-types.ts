@@ -4,19 +4,19 @@
 import { DysonAirProductState } from './dyson-air-state-types.js';
 import {
     DysonUnifiedschedulerEvent,
-    DysonUnifiedschedulerEventsResponse
+    DysonUnifiedschedulerEventsResponseV1
 } from './dyson-cloud-types.js';
 
 // GET /v1/unifiedscheduler/{serial}/events?productType={mqttroottopic}
 export interface DysonAirUnifiedschedulerEvent extends DysonUnifiedschedulerEvent {
     settings:               DysonAirProductState;
 }
-export interface DysonAirUnifiedschedulerEventsResponse extends DysonUnifiedschedulerEventsResponse{
+export interface DysonAirUnifiedschedulerEventsResponseV1 extends DysonUnifiedschedulerEventsResponseV1{
     events:                 DysonAirUnifiedschedulerEvent[];
 }
 
 // GET /v1/environment/devices/{serial}/data?language={languagecode}
-export interface DysonAirEnvironmentResponse {
+export interface DysonAirEnvironmentResponseV1 {
     DateTime:               string; // e.g. '2025-12-18T09:00:00Z'
     AqiState:               number;
     AqiValue:               number;
@@ -39,7 +39,7 @@ export interface DysonAirEnvironmentResponse {
 }
 
 // GET /v1/messageprocessor/devices/{serial}/environmentdata/daily
-export interface DysonAirEnvironmentDataDailyResponse {
+export interface DysonAirEnvironmentDataDailyResponseV1 {
     start_time:             string; // e.g. '2025-12-12T00:00:00Z'
     resolution:             string; // e.g. 'PT15M'
     aqlm:                   number[];

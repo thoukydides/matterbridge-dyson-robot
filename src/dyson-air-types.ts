@@ -269,7 +269,8 @@ export enum DysonAirAnemometerControlProfile {
     Degrees180              = '0180',
     Degrees350              = '0350',
     Breeze                  = 'BRZE',
-    Custom                  = 'CUST'
+    Custom                  = 'CUST',
+    FindFollow              = 'SMRT'
 }
 
 // Dyson air treatment tilt oscillation
@@ -290,6 +291,18 @@ export enum DysonAirTiltAngle {
 export enum DysonAirAnemometerControlTilt {
     Breeze                  = 'BRZE',
     Custom                  = 'CUST'
+}
+
+// Dyson air treatment Find+Follow
+export enum DysonAirFindFollowMode {
+    Disabled                = 'OFF',
+    Enabled                 = 'ON',
+    ManualScan              = 'SCAN'
+}
+export enum DysonAirFindFollowState {
+    Off                     = 'OFF',
+    Scanning                = 'SCAN',
+    Sleeping                = 'NOD'
 }
 
 // Dyson air treatment humidifier
@@ -375,9 +388,10 @@ export enum DysonAirDaylightSaving {
 
 // Dyson air treatment HEPA filter
 export enum DysonAirHEPAFilterType {
-    Combination             = 'GCOM',
-    HEPAG                   = 'GHEP',
-    HEPAP                   = 'PHEP'
+    GCOK                    = 'GCOK',
+    GCOM                    = 'GCOM',
+    GHEP                    = 'GHEP',
+    PHEP                    = 'PHEP',
 }
 export enum DysonAirResetFilterLife {
     Reset                   = 'RSTF'

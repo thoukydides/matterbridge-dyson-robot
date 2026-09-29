@@ -13,6 +13,7 @@ import {
 import {
     DysonAirFaultChange,
     DysonAirFaultStatus,
+    DysonAirFindFollowMode,
     DysonAirGoodbyeReason,
     DysonAirResetFilterLife,
     DysonAirResetHEPAFilterLife,
@@ -173,6 +174,7 @@ export interface DysonAirMsgStateSet extends DysonMsg {
         rstf?:              DysonAirResetFilterLife;
         rhtf?:              DysonAirResetHEPAFilterLife;
         sltm?:              DysonAirSleepTimer;
+        soon?:              DysonAirFindFollowMode;
     }
 }
 
