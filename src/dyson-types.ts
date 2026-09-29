@@ -25,3 +25,31 @@ export enum DysonStateReason {
     Mode                    = 'MODE',
     None                    = 'NONE'
 }
+
+// Dyson app platform
+export enum DysonAppPlatform {
+    iOS                     = 'ios',
+    Android                 = 'Android'
+}
+
+// Dyson account registration status
+export enum DysonAccountStatus {
+    Unregistered            = 'UNREGISTERED',
+    Active                  = 'ACTIVE'
+};
+
+// Dyson device registration status
+export enum DysonOwnershipStatus {
+    Registered              = 'REGISTERED_TO_THIS_ACCOUNT'
+}
+
+// Country codes (as returned by GET /v1/supportedmarket)
+export type DysonCountryCode =
+    'AE' | 'AT' | 'AU' | 'BA' | 'BE' | 'BG' | 'BH' | 'BR' | 'CA' | 'CH' | 'CL'
+  | 'CN' | 'CO' | 'CY' | 'CZ' | 'DE' | 'DK' | 'DZ' | 'EE' | 'EG' | 'ES' | 'FI'
+  | 'FR' | 'GB' | 'GE' | 'GR' | 'HK' | 'HR' | 'HU' | 'ID' | 'IE' | 'IL' | 'IN'
+  | 'IT' | 'JP' | 'KR' | 'KW' | 'KZ' | 'LB' | 'LT' | 'LV' | 'MA' | 'MT' | 'MX'
+  | 'MY' | 'NL' | 'NO' | 'NZ' | 'OM' | 'PE' | 'PH' | 'PL' | 'PT' | 'QA' | 'RO'
+  | 'RS' | 'SA' | 'SE' | 'SG' | 'SI' | 'SK' | 'TH' | 'TN' | 'TR' | 'TW' | 'US'
+  | 'VN' | 'ZA';
+export type DysonCountryCodeExpanded = DysonCountryCode | 'UK' | 'EU';

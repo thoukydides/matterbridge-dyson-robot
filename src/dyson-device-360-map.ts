@@ -8,7 +8,7 @@ import { DysonAnsiChar, DysonBitmapAnsi } from './dyson-bitmap-ansi.js';
 import {
     Dyson360CleanHistoryEntry,
     Dyson360CleanMap,
-    Dyson360PersistentMapResponseVisNav
+    Dyson360PersistentMapResponseV1
 } from './dyson-360-cloud-types.js';
 import { inflateSync } from 'zlib';
 import { Dyson360TimelineEvent } from './dyson-360-types.js';
@@ -116,7 +116,7 @@ export function dysonRenderMap360VisNav(
     log:    AnsiLogger,
     style:  Dyson360MapStyle,
     clean:  Dyson360CleanMap,
-    map?:   Dyson360PersistentMapResponseVisNav
+    map?:   Dyson360PersistentMapResponseV1
 ): Dyson360CleanSummary {
     // Check that the bitmaps are all the same resolution
     const resolutions = new Set<number>([
@@ -140,12 +140,11 @@ export function dysonRenderMap360VisNav(
     let presentationBitmap: DysonBitmapOctet;
     let presentationOrigin: { x: number, y: number } | undefined;
     if (clean.persistentMap && map) {
-        // Parse the presentation map image and add any dock locations
+        // Parse the presentation map image and add most recent dock location
         const presentationPNG = Buffer.from(map.presentationMap.data, 'base64');
         presentationBitmap = DysonBitmapOctet.fromPNGMapped(presentationPNG, RGBA_VIS_NAV_PRESENTATION);
-        for (const dock of map.dockLocations) {
-            setPixel(presentationBitmap, dock, Dyson360VisNavPresentationOctet.Dock);
-        }
+        const dock = map.dockLocations.at(-1);
+        if (dock) setPixel(presentationBitmap, dock, Dyson360VisNavPresentationOctet.Dock);
         const { cleanMapPosition } = clean.persistentMap;
         const { offset } = map;
         presentationOrigin = {

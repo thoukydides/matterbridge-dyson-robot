@@ -42,7 +42,6 @@ export const DEFAULT_CONFIG: Readonly<Partial<Config>> = {
     enableServerRvc:        true,
     simpleModeTagsRvc:      true,
     logMapStyle:            'Matterbridge',
-    statusPollInterval:     30,
     debug:                  false,
     debugFeatures:          [],
     unregisterOnShutdown:   false

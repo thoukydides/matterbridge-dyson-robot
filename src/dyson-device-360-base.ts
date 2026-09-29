@@ -54,8 +54,9 @@ export type Dyson360CleanSummaryUnavailable =
 export type Dyson360CleanSummaryResult = Dyson360CleanSummary | Dyson360CleanSummaryUnavailable;
 
 // Retry configuration for retrieving details of a completed clean
-const CLEAN_RETRY_AFTER     =      5 * MS;  // 5 second minimum backoff
-const CLEAN_RETRY_LIMIT     = 5 * 60 * MS;  // Give up after 1 minute
+const CLEAN_RETRY_MIN       =       5 * MS; // 5 second minimum backoff
+const CLEAN_RETRY_MAX       =      60 * MS; // 1 minute maximum backoff
+const CLEAN_RETRY_LIMIT     = 30 * 60 * MS; // Give up after 30 minutes
 const CLEAN_RETRY_FACTOR    = 2;            // Double backoff on each failure
 
 // Mapping of robot vacuum state to Matter equivalents
@@ -244,7 +245,7 @@ export abstract class DysonDevice360Base
     // Retrieve details of a completed clean
     async getCompletedCleanWithRetries(cleanId: string): Promise<Dyson360CleanSummary> {
         const giveUpAt = Date.now() + CLEAN_RETRY_LIMIT;
-        let backoff = CLEAN_RETRY_AFTER;
+        let backoff = CLEAN_RETRY_MIN;
         for (;;) {
             const result = await this.getCompletedClean(cleanId);
             switch (result) {
@@ -257,7 +258,7 @@ export abstract class DysonDevice360Base
                 } else {
                     this.log.debug(`Failed to retrieve clean ${cleanId}: ${result}; retrying in ${formatMilliseconds(backoff)}...`);
                     await setTimeout(backoff);
-                    backoff *= CLEAN_RETRY_FACTOR;
+                    backoff = Math.min(backoff * CLEAN_RETRY_FACTOR, CLEAN_RETRY_MAX);
                 }
                 break;
             case 'Unavailable':

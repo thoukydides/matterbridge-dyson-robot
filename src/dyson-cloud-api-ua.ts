@@ -184,7 +184,7 @@ export class DysonCloudAPIUserAgent {
         if (!(err instanceof DysonCloudError)) return false;
 
         // Some status codes never retried
-        const noRetryStatusCodes = [401, 404, 429];
+        const noRetryStatusCodes = [400, 401, 403, 404, 405, 406, 409, 415, 422, 429];
         if (err instanceof DysonCloudStatusCodeError
             && noRetryStatusCodes.includes(err.statusCode)) {
             this.log.warn(`Request will not be retried (status code ${err.statusCode})`);

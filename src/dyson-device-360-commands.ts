@@ -129,6 +129,7 @@ export class Device360CommandHandlers {
                 // Publish a command to start the zone configured cleaning
                 this.log.info(`${description} → ${CV}ZoneClean${RI}`);
                 const cleaningProgramme = await makeCleaningProgramme(newAreas);
+                // HERE - For Spot+Scrub need to use setPersistentMapMetadata360V2 instead
                 await this.issueCommandAndWaitForUpdate(
                     'perform action ZoneClean', () => this.mqtt.commandAction('START', cleaningProgramme), () => true);
             }

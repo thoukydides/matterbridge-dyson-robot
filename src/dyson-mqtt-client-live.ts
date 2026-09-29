@@ -10,7 +10,7 @@ import {
 import { AnsiLogger } from 'matterbridge/logger';
 import { MaybePromise } from 'matterbridge/matter';
 import { isDeepStrictEqual } from 'util';
-import { DysonIoTCredentialsResponse } from './dyson-cloud-types.js';
+import { DysonIoTCredentialsResponseV2 } from './dyson-cloud-types.js';
 import { DysonMqttClient } from './dyson-mqtt-client-base.js';
 
 // Internally generated device configuration for Remote Account
@@ -18,7 +18,7 @@ export interface DeviceConfigRemoteMqtt {
     name:           string;
     serialNumber:   string;
     rootTopic:      string;
-    getCredentials: () => Promise<DysonIoTCredentialsResponse>;
+    getCredentials: () => Promise<DysonIoTCredentialsResponseV2>;
 }
 export type DeviceConfigMqtt = DeviceConfigLocalMqtt | DeviceConfigRemoteMqtt | DeviceConfigMock;
 

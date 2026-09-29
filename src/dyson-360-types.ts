@@ -168,6 +168,13 @@ export interface Dyson360ZoneStatus {
     zoneId:                         string;         // e.g. '1'
 }
 
+// Dyson robot vacuum planned trajectory (Spot+Scrub Ai only)
+export enum Dyson360PresentationType {
+    Perimeter                       = 0,
+    Sweep                           = 1,
+    Turn                            = 2
+}
+
 // Dyson robot vacuum map upload status (Spot+Scrub Ai only)
 export enum Dyson360MapUploadStatus {
     Complete                        = 'COMPLETE'
@@ -314,6 +321,7 @@ export enum Dyson360FurnitureType {
 // Dyson robot vacuum restriction behaviour (Spot+Scrub Ai only)
 export enum Dyson360RestrictionBehaviour {
     ClimbObstacle                   = 'climbObstacle',
+    KeepOut                         = 'keepOut',
     NoMop                           = 'noMop'
 }
 

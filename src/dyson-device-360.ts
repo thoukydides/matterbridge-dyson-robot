@@ -7,7 +7,9 @@ import {
     Dyson360VacuumMode,
     Dyson360EyePowerMode,
     Dyson360HeuristPowerMode,
-    Dyson360TimelineEvent
+    Dyson360TimelineEvent,
+    Dyson360ZoneCleanStatus,
+    Dyson360CleaningProgramme
 } from './dyson-360-types.js';
 import {
     DysonDevice360Base,
@@ -20,13 +22,15 @@ import {
     dysonRenderMap360VisNav
 } from './dyson-device-360-map.js';
 import {
-    Dyson360PersistentMapMetadataSpotScrub,
-    Dyson360PersistentMapMetadataVisNav,
-    Dyson360PersistentMapResponseVisNav
+    Dyson360PersistentMapMetadataResponseV1,
+    Dyson360PersistentMapMetadataResponseV2,
+    Dyson360PersistentMapResponseV1
 } from './dyson-360-cloud-types.js';
-import { DysonMqtt360 } from './dyson-mqtt-360.js';
+import { DysonMqtt360, DysonMqttStatus360 } from './dyson-mqtt-360.js';
 import { assertIsDefined, formatList, MS, plural } from './utils.js';
 import { DysonDeviceConstructorParams } from './dyson-device-base.js';
+import { DysonMqttStatus } from './dyson-mqtt.js';
+import { SimplePoll } from './simple-poll.js';
 
 /* eslint-disable max-len */
 
@@ -50,11 +54,16 @@ const DYSON360_COMPATIBILITY_SPOTSCRUB =
 Experimental support has been added based on the details provided in issue #46:
     https://github.com/thoukydides/matterbridge-dyson-robot/issues/46
 
-There is a high likelihood of warnings, errors, or missing functionality. Mapping and zone cleaning are not currently supported.
+There is a high likelihood of warnings, errors, or missing functionality.
 
 ${DYSON360_COMPATIBILITY_COMMON}`;
 
 /* eslint-enable max-len */
+
+// Spot+Scrub Ai status polling behaviour
+const SPOTSCRUB_POLL_STATUS_MS              = 30  * MS; // 30 seconds
+const SPOTSCRUB_POLL_LIVE_MAPS_CLEANING_MS  =  3 * MS;  //  3 seconds
+const SPOTSCRUB_POLL_LIVE_MAPS_MAPPING_MS   = 60 * MS;  //  1 minute
 
 // A Dyson 360 Eye device
 export class DysonDevice360Eye extends DysonDevice360Base {
@@ -81,11 +90,11 @@ export class DysonDevice360Eye extends DysonDevice360Base {
         if (!this.api || logMapStyle === 'Off') return 'Unavailable';
 
         // Retrieve details of the specified (or most recent) clean
-        const history = await this.api.getCleaningHistory360();
+        const history = await this.api.getCleaningHistory360V1();
         const clean = history.Entries.find(entry => entry.Clean === cleanId);
         if (!clean)                             return 'Not found';
         if (clean.IsInterim)                    return 'Not ready';
-        const map = await this.api.getMapImage360(cleanId);
+        const map = await this.api.getMapImage360V1(cleanId);
 
         // Render the Map
         return dysonRenderMap360Eye(this.log, logMapStyle, clean, map);
@@ -136,9 +145,21 @@ export class DysonDevice360VisNav extends DysonDevice360ZonesMixin(DysonDevice36
     override setPowerLevel = (powerLevel: Dyson360VacuumMode) => this.mqtt.commandSetCleaningStrategy(powerLevel);
     override getPowerLevel = () => this.mqtt.status.defaultCleaningStrategy;
 
-    // Retrieve the persistent maps metadata
-    override getPersistentMapMetadata(): Promise<Dyson360PersistentMapMetadataVisNav[]> | undefined {
-        return this.api?.getPersistentMapMetadata360VisNav();
+    // Update cluster attributes when the MQTT status is updated
+    override async updateClusterAttributes(
+        status: DysonMqttStatus<DysonMqttStatus360>
+    ): Promise<void> {
+        await super.updateClusterAttributes(status);
+
+        // Update the Service Area cluster when the zone status changes
+        const { persistentMapId, zonesDefinitionVersion, zoneId, zoneStatus, cleaningProgramme } = status;
+        const zoneCleanStatus = (zoneStatus ?? []).map(({ zoneId, cleanStatus }) => ({ id: zoneId, cleanStatus }));
+        await this.updateZoneStatus(persistentMapId, zonesDefinitionVersion, zoneId, zoneCleanStatus, cleaningProgramme);
+    }
+
+    // Retrieve the latest persistent map metadata
+    override getPersistentMapMetadata(): Promise<Dyson360PersistentMapMetadataResponseV1> | undefined {
+        return this.api?.getPersistentMapMetadata360V1();
     }
 
     // Retrieve details of a completed clean
@@ -147,13 +168,13 @@ export class DysonDevice360VisNav extends DysonDevice360ZonesMixin(DysonDevice36
         if (!this.api || logMapStyle === 'Off') return 'Unavailable';
 
         // Retrieve details of the specified (or most recent) clean
-        const history = await this.api.getCleanMaps360();
+        const history = await this.api.getCleanMaps360V1();
         const clean = history.find(entry => entry.cleanId === cleanId);
         if (!clean)                             return 'Not found';
         const interim = clean.cleanTimeline.at(-1)?.eventName !== Dyson360TimelineEvent.RunEnded;
         if (interim)                            return 'Not ready';
-        let persistentMap: Dyson360PersistentMapResponseVisNav | undefined;
-        if (clean.persistentMap) persistentMap = await this.api.getPersistentMap360VisNav(clean.persistentMap.id);
+        let persistentMap: Dyson360PersistentMapResponseV1 | undefined;
+        if (clean.persistentMap) persistentMap = await this.api.getPersistentMap360V1(clean.persistentMap.id);
 
         // Render the map
         return dysonRenderMap360VisNav(this.log, logMapStyle, clean, persistentMap);
@@ -186,54 +207,89 @@ export class DysonDevice360SpotScrub extends DysonDevice360ZonesMixin(DysonDevic
 
     override get compatibilityWarning() { return DYSON360_COMPATIBILITY_SPOTSCRUB; }
 
+    // Polled updates
+    pollStatus:             SimplePoll;
+    pollCleaning:           SimplePoll;
+    pollMapping:            SimplePoll;
+    lastCleaningProgramme?: Dyson360CleaningProgramme;
+
     // Construct a new Dyson device instance
     constructor(...args: DysonDeviceConstructorParams<DysonMqtt360>) {
         super(...args);
 
-        // Prepare the fault code mapper
-        this.faultMapper.lookupOnline = async (faultCode) => {
-            // Retrieve the support information for this fault code from the API
-            assertIsDefined(this.api);
-            const details = await this.api.getFaultDetails360(faultCode);
-            if (!details.length) throw new Error('No online product support result');
-            if (!details.some(d => d.codes.includes(faultCode))) {
-                this.log.error('Online product support does not appear to be for the requested fault code');
-            }
+        // Enable online fault code lookup
+        this.faultMapper.lookupOnline = faultCode => this.findFaultOnline(faultCode);
 
-            // Log detailed support information
-            this.log.warn(`Online product support for fault ${faultCode}...`);
-            for (const entry of details) {
-                const codes = `${plural(entry.codes.length, 'fault code', false)} ${formatList(entry.codes)}`;
-                let description = `[${entry.severity}] "${entry.title}" (${codes})`;
-                if (entry.nextActionRequired) description += `- ${entry.nextActionRequired}`;
-                this.log.warn(`${description}: "${entry.description}"`);
-            }
-
-            // Use the combined titles as the fault description
-            return formatList(details.map(d => d.title));
-        };
-    }
-
-    // Retrieve the persistent maps metadata
-    override getPersistentMapMetadata(): Promise<Dyson360PersistentMapMetadataSpotScrub[]> | undefined {
-        return this.api?.getPersistentMapMetadata360SpotScrub();
-    }
-
-    // Spot+Scrub Ai does not publish status updates, so poll periodically
-    pollHandleTimer?: NodeJS.Timeout;
-    override async start(): Promise<void> {
-        await super.start();
-        this.pollHandleTimer = setInterval(() => {
+        // Poll device status via MQTT
+        this.pollStatus = new SimplePoll(this.log, 'Current status poll', SPOTSCRUB_POLL_STATUS_MS, () => {
             if (this.mqtt.status.reachable) void (async () => {
                 await this.mqtt.publish('REQUEST-CURRENT-STATE', {});
             })();
-        }, this.config.statusPollInterval * MS);
+        });
+
+        // Use the live map to update the zone status
+        this.pollCleaning = new SimplePoll(this.log, 'Live cleaning maps poll', SPOTSCRUB_POLL_LIVE_MAPS_CLEANING_MS, async () => {
+            assertIsDefined(this.api);
+            const live = await this.api.getLiveMapsCleaning360V1();
+            const currentZoneId = live.zones.find(z => z.cleanStatus === Dyson360ZoneCleanStatus.InProgress)?.id;
+            await this.updateZoneStatus(live.id, undefined, currentZoneId, live.zones, this.lastCleaningProgramme);
+        });
+        this.pollMapping = new SimplePoll(this.log, 'Live mapping maps poll', SPOTSCRUB_POLL_LIVE_MAPS_MAPPING_MS, async () => {
+            assertIsDefined(this.api);
+            const _live = await this.api.getLiveMapsMapping360V1();
+        });
+    }
+
+    // Update cluster attributes when the MQTT status is updated
+    override async updateClusterAttributes(
+        status: DysonMqttStatus<DysonMqttStatus360>
+    ): Promise<void> {
+        await super.updateClusterAttributes(status);
+
+        // Start or stop live map polling when cleaning
+        this.lastCleaningProgramme = status.cleaningProgramme;
+        if (status.state.startsWith('FullClean')) this.pollCleaning.start(); else this.pollCleaning.stop();
+        if (status.state.startsWith('Mapping'))   this.pollMapping .start(); else this.pollMapping .stop();
+    }
+
+    // Retrieve the latest persistent map metadata
+    override getPersistentMapMetadata(): Promise<Dyson360PersistentMapMetadataResponseV2> | undefined {
+        return this.api?.getPersistentMapMetadata360V2();
+    }
+
+    // Spot+Scrub Ai does not publish status updates, so poll periodically
+    override async start(): Promise<void> {
+        await super.start();
+        this.pollStatus.start();
     }
 
     // Stop the device when Matterbridge is shutting down
     override async stop(): Promise<void> {
-        clearInterval(this.pollHandleTimer);
+        this.pollStatus.stop();
         await super.stop();
+    }
+
+    // Attempt an online lookup of a fault code
+    async findFaultOnline(faultCode: string): Promise<string | undefined> {
+        // Retrieve the support information for this fault code from the API
+        assertIsDefined(this.api);
+        const details = await this.api.getFaultDetails360V1(faultCode);
+        if (!details.length) throw new Error('No online product support result');
+        if (!details.some(d => d.codes.includes(faultCode))) {
+            this.log.error('Online product support does not appear to be for the requested fault code');
+        }
+
+        // Log detailed support information
+        this.log.warn(`Online product support for fault ${faultCode}...`);
+        for (const entry of details) {
+            const codes = `${plural(entry.codes.length, 'fault code', false)} ${formatList(entry.codes)}`;
+            let description = `[${entry.severity}] "${entry.title}" (${codes})`;
+            if (entry.nextActionRequired) description += `- ${entry.nextActionRequired}`;
+            this.log.warn(`${description}: "${entry.description}"`);
+        }
+
+        // Use the combined titles as the fault description
+        return formatList(details.map(d => d.title));
     }
 }
 
