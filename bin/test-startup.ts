@@ -55,7 +55,7 @@ const IGNORED_WARNINGS: RegExp[] = [
 /* eslint-enable max-len */
 
 // Length of time to wait
-const TIMEOUT_MATTERBRIDGE_MS = 60 * 1000; // 60 seconds
+const TIMEOUT_MATTERBRIDGE_MS = 2 * 60 * 1000; // 2 minutes
 
 // Process command line arguments
 const [ logsDirectory ] = process.argv.slice(2);
