@@ -63,7 +63,6 @@ ${DYSON360_COMPATIBILITY_COMMON}`;
 // Spot+Scrub Ai status polling behaviour
 const SPOTSCRUB_POLL_STATUS_MS              = 30  * MS; // 30 seconds
 const SPOTSCRUB_POLL_LIVE_MAPS_CLEANING_MS  =  3 * MS;  //  3 seconds
-const SPOTSCRUB_POLL_LIVE_MAPS_MAPPING_MS   = 60 * MS;  //  1 minute
 
 // A Dyson 360 Eye device
 export class DysonDevice360Eye extends DysonDevice360Base {
@@ -210,7 +209,6 @@ export class DysonDevice360SpotScrub extends DysonDevice360ZonesMixin(DysonDevic
     // Polled updates
     pollStatus:             SimplePoll;
     pollCleaning:           SimplePoll;
-    pollMapping:            SimplePoll;
     lastCleaningProgramme?: Dyson360CleaningProgramme;
 
     // Construct a new Dyson device instance
@@ -234,10 +232,6 @@ export class DysonDevice360SpotScrub extends DysonDevice360ZonesMixin(DysonDevic
             const currentZoneId = live.zones.find(z => z.cleanStatus === Dyson360ZoneCleanStatus.InProgress)?.id;
             await this.updateZoneStatus(live.id, undefined, currentZoneId, live.zones, this.lastCleaningProgramme);
         });
-        this.pollMapping = new SimplePoll(this.log, 'Live mapping maps poll', SPOTSCRUB_POLL_LIVE_MAPS_MAPPING_MS, async () => {
-            assertIsDefined(this.api);
-            const _live = await this.api.getLiveMapsMapping360V1();
-        });
     }
 
     // Update cluster attributes when the MQTT status is updated
@@ -249,7 +243,6 @@ export class DysonDevice360SpotScrub extends DysonDevice360ZonesMixin(DysonDevic
         // Start or stop live map polling when cleaning
         this.lastCleaningProgramme = status.cleaningProgramme;
         if (status.state.startsWith('FullClean')) this.pollCleaning.start(); else this.pollCleaning.stop();
-        if (status.state.startsWith('Mapping'))   this.pollMapping .start(); else this.pollMapping .stop();
     }
 
     // Retrieve the latest persistent map metadata

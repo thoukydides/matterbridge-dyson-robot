@@ -99,7 +99,7 @@ export interface Dyson360PersistentMapMetadataZoneV2 extends Dyson360PersistentM
     nameLocation:                       Dyson360PersistentMapLocation;
     order:                              number;             // Cleaning sequence (1 is first)
     settings:                           Dyson360ZoneSettingsV2;
-    type:                               Dyson360ZoneType
+    type:                               Dyson360ZoneType | '';
 }
 export interface Dyson360PersistentMapMetadataV2 {
     id:                                 string;             // e.g. '1788021937'
@@ -206,7 +206,7 @@ export interface Dyson360PersistentMapZoneV2 extends Dyson360PersistentMapMetada
     cleanStatus:                        Dyson360ZoneCleanStatus;
     nameLocation:                       Dyson360PersistentMapLocation;
     presentation:                       Dyson360PersistentMapZonePresentation[]
-    type:                               Dyson360ZoneType;
+    type?:                              Dyson360ZoneType;
     visited:                            Dyson360PersistentMapLocation[];
 }
 export interface Dyson360PersistentMapRestrictionV2 {
@@ -263,14 +263,18 @@ export interface Dyson360LiveMapCleaningResponseV1 {
     robotLocation:                      Dyson360LiveMapRobotLocation;
     spotZones:                          [];
     swingDoors:                         [];
-    taskBeginTime:                      number;             // Seconds since epoch
+    taskBeginTime:                      number;             // seconds since epoch
     zones:                              Dyson360PersistentMapZoneV2[];
 }
 
 // GET /v1/app/{serial}/live-maps/mapping (Spot+Scrub Ai only)
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface Dyson360LiveMapMappingResponseV1 {
-    // (Placeholder type until examples inspected)
+    dimensions:                         Dyson360PersistentMapDimensions;
+    dockLocation:                       Dyson360PersistentMapLocationRotated;
+    mapData:                            number[];
+    orientation:                        number;
+    robotLocation:                      Dyson360LiveMapRobotLocation;
+    taskBeginTime:                      number;             // milliseconds since epoch
 }
 
 // GET /v1/{serial}/clean-maps?dustMap=total (360 Vis Nav only)
