@@ -11,7 +11,7 @@ import { INSPECT_VERBOSE } from './logger-options.js';
 import { inspect } from 'util';
 import { STATUS_CODES } from 'http';
 import { PLUGIN_NAME, PLUGIN_VERSION } from './settings.js';
-import { DysonCloudError, DysonCloudStatusCodeError } from './dyson-cloud-error.js';
+import { DysonCloudError, DysonCloudStatusCodeError, RETRY_BEHAVIOUR_NON_API } from './dyson-cloud-error.js';
 import { setTimeout } from 'node:timers/promises';
 import { MaybePromise } from 'matterbridge/matter';
 
@@ -35,8 +35,7 @@ const USER_AGENT            = `${PLUGIN_NAME}/${PLUGIN_VERSION}`;
 // Timeout for all requests
 const TIMEOUT               = 10 * MS;      // 10 seconds
 
-// Delays between retries
-const RETRY_DELAY_MIN       = 1 * MS;       // 1 second
+// Exponential backoff for retries
 const RETRY_DELAY_MAX       = 5 * 60 * MS;  // 5 minutes
 const RETRY_DELAY_FACTOR    = 2;
 
@@ -156,9 +155,7 @@ export class DysonCloudAPIUserAgent {
     async requestWithRetries<Type>(request: Request<Type>): Promise<Type> {
         // Request counters
         let requestCount: number | undefined;
-        let retryCount = 0;
-        let retryDelay = RETRY_DELAY_MIN;
-
+        let retryCount = 0, retryDelay = 0;
         for (;;) {
             try {
                 // Attempt the request
@@ -168,31 +165,21 @@ export class DysonCloudAPIUserAgent {
 
             } catch (err) {
                 // Request failed, so check whether it can be retried
-                if (!this.canRetry(err)) throw err;
                 ++retryCount;
+                const retryBehaviour = err instanceof DysonCloudError ? err.getRetryBehaviour(retryCount) : RETRY_BEHAVIOUR_NON_API;
+                if (!retryBehaviour.canRetry) {
+                    this.log.warn(`Request will not be retried: ${retryBehaviour.reason}`);
+                    throw err;
+                }
 
-                // Delay before trying again
+                // Delay before trying again, with exponential backoff
+                retryDelay = Math.max(
+                    retryBehaviour.minDelay,
+                    Math.min(retryDelay * RETRY_DELAY_FACTOR, RETRY_DELAY_MAX)
+                );
                 await setTimeout(retryDelay);
-                retryDelay = Math.min(retryDelay * RETRY_DELAY_FACTOR, RETRY_DELAY_MAX);
             }
         }
-    }
-
-    // Decide whether a request can be retried following an error
-    canRetry(err: unknown): boolean {
-        // Do not retry the request unless the failure was an API error
-        if (!(err instanceof DysonCloudError)) return false;
-
-        // Some status codes never retried
-        const noRetryStatusCodes = [400, 401, 403, 404, 405, 406, 409, 415, 422, 429];
-        if (err instanceof DysonCloudStatusCodeError
-            && noRetryStatusCodes.includes(err.statusCode)) {
-            this.log.warn(`Request will not be retried (status code ${err.statusCode})`);
-            return false;
-        }
-
-        // The request can be retried
-        return true;
     }
 
     // Perform the request and return the response body
@@ -223,7 +210,7 @@ export class DysonCloudAPIUserAgent {
             const statusCode = response.statusCode;
             status = `${statusCode} ${STATUS_CODES[statusCode]}`;
             if (statusCode < 200 || 300 <= statusCode) {
-                throw new DysonCloudStatusCodeError(statusCode);
+                throw new DysonCloudStatusCodeError(statusCode, body);
             }
 
             // Return the response body
