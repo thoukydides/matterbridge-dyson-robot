@@ -2,7 +2,7 @@
 // Copyright © 2025-2026 Alexander Thoukydides
 
 import { DysonAirProductState } from './dyson-air-state-types.js';
-import { DysonAirPollenLevel } from './dyson-air-types.js';
+import { DysonAirCTAType, DysonAirFaultSeverity } from './dyson-air-types.js';
 import {
     DysonUnifiedschedulerEvent,
     DysonUnifiedschedulerEventsResponseV1
@@ -35,35 +35,41 @@ export interface DysonAirEnvironmentResponseV1 {
     Icon:                   null,
     Measure:                string; // e.g. 'AQI',
     PollenState:            number,
-    DominantPollen:         DysonAirPollenLevel | null,
-    Pollens:                { [key: string]: DysonAirPollenLevel } | null;
+    DominantPollen:         string | null,
+    Pollens:                { [key: string]: string } | null;
 }
 
 // GET /v1/messageprocessor/devices/{serial}/environmentdata/daily
 export interface DysonAirEnvironmentDataDailyResponseV1 {
     start_time:             string; // e.g. '2025-12-12T00:00:00Z'
     resolution:             string; // e.g. 'PT15M'
-    aqlm:                   number[];
-    fnsp:                   number[];
-    volm:                   number[];
-    p25m:                   number[];
-    hchm:                   number[];
-    p10m:                   number[];
-    no2m:                   number[];
-    tmpm:                   number[];
-    humm:                   number[];
-    usage:                  number[];
-    tmpm_min:               number;
-    tmpm_max:               number;
-    humm_min:               number;
-    humm_max:               number;
+    aqlm:                   (number | null)[];
+    fnsp:                   (number | null)[];
+    volm?:                  (number | null)[];
+    p25m:                   (number | null)[];
+    hchm?:                  (number | null)[];
+    p10m:                   (number | null)[];
+    no2m?:                  (number | null)[];
+    tmpm?:                  (number | null)[];
+    humm?:                  (number | null)[];
+    usage:                  (number | null)[];
+    tmpm_min?:              number;
+    tmpm_max?:              number;
+    humm_min?:              number;
+    humm_max?:              number;
 }
 
-
-////////
-export interface DysonAirPersonalizedContentV2 {
-    content: {
-        title: string;
-        [key: string]: unknown;
-    }[];
+// GET /v1/support/product-faults/{serial}?locale={languagecode}&market={countrycode}&faultCode=<code>
+export interface DysonAirFaultDescription {
+    codes:                      string[];       // e.g. ['sen1.FAIL']
+    cta:                        string;         // e.g. 'dyson:///support/resolve/{serial}/008-01-01-4'
+    ctaType:                    DysonAirCTAType;
+    description:                string;
+    dismissable:                boolean;
+    id?:                        string;         // e.g. 'fault_settings'
+    linkRef?:                   string;         // e.g. '007-02-01-2'
+    priority?:                  number;
+    severity:                   DysonAirFaultSeverity;
+    title:                      string;
 }
+export type DysonAirFaultResponseV1 = DysonAirFaultDescription[];

@@ -68,7 +68,7 @@ export interface Dyson360Faults {
     OPTICS:                         Dyson360FaultStatus;
 }
 
-// Details of an active fault (360 Vis Nav only)
+// Dyson robot vacuum active fault (360 Vis Nav and Spot+Scrub only)
 export enum Dyson360FaultNextAction {
     LocalUserAck                    = 'LOCAL_USER_ACK',
     LocalUserContinue               = 'LOCAL_USER_CONTINUE',
@@ -97,7 +97,8 @@ export interface Dyson360ActiveFault {
 // Dyson robot vacuum fault severity
 export enum Dyson360FaultSeverity {
     Info                            = 'info',
-    Warning                         = 'warning'
+    Warning                         = 'warning',
+    Critical                        = 'critical'
 }
 
 // Dyson robot vacuum power mode

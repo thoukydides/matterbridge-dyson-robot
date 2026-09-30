@@ -10,7 +10,8 @@ import {
     DysonEmailVerifyRequestV3,
     DysonEmailVerifyResponseV3,
     DysonManifestDeviceV3,
-    DysonManifestResponseV3
+    DysonManifestResponseV3,
+    DysonProductAttributesResponseV1
 } from './dyson-cloud-types.js';
 import { checkers } from './ti/dyson-cloud-types.js';
 import { DysonCloudAPIUserAgent } from './dyson-cloud-api-ua.js';
@@ -81,6 +82,12 @@ export class DysonCloudAPI {
     getManifestV3(): Promise<DysonManifestResponseV3> {
         const path = '/v3/manifest';
         return this.ua.getJSON(checkers.DysonManifestResponseV3, path);
+    }
+
+    // Request list of all Dyson products
+    getProductAttributesV1(): Promise<DysonProductAttributesResponseV1> {
+        const path = '/v1/pats';
+        return this.ua.getJSON(checkers.DysonProductAttributesResponseV1, path);
     }
 
     // Create a device-specific cloud API client

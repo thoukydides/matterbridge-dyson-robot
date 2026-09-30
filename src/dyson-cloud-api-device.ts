@@ -35,6 +35,7 @@ import {
 import {
     DysonAirEnvironmentDataDailyResponseV1,
     DysonAirEnvironmentResponseV1,
+    DysonAirFaultResponseV1,
     DysonAirUnifiedschedulerEventsResponseV1
 } from './dyson-air-cloud-types.js';
 import { checkers } from './ti/dyson-cloud-types.js';
@@ -200,8 +201,8 @@ export class DysonCloudAPIDevice {
         return this.ua.put(path, body);
     }
 
-    // Retrieve detail for a fault code (Spot+Scrub Ai only)
-    getFaultDetails360V1(faultCode: string): Promise<Dyson360FaultResponseV1> {
+    // Retrieve detail for a fault code or all codes (Spot+Scrub Ai only)
+    getFaultDetails360V1(faultCode = ''): Promise<Dyson360FaultResponseV1> {
         const path = `/v1/support/product-faults/${this.serialNumber}?locale=${this.locale}&market=${this.country}&faultCode=${faultCode}`;
         return this.ua.getJSON(checkers360.Dyson360FaultResponseV1, path);
     }
@@ -236,5 +237,11 @@ export class DysonCloudAPIDevice {
     getEnvironmentalDataDailyAirV1(): Promise<DysonAirEnvironmentDataDailyResponseV1> {
         const path = `/v1/messageprocessor/devices/${this.serialNumber}/environmentdata/daily`;
         return this.ua.getJSON(checkersAir.DysonAirEnvironmentDataDailyResponseV1, path);
+    }
+
+    // Retrieve detail for a fault code or all codes
+    getFaultDetailsAirV1(faultCode = ''): Promise<DysonAirFaultResponseV1> {
+        const path = `/v1/support/product-faults/${this.serialNumber}?locale=${this.locale}&market=${this.country}&faultCode=${faultCode}`;
+        return this.ua.getJSON(checkersAir.DysonAirFaultResponseV1, path);
     }
 }

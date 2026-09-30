@@ -346,7 +346,7 @@ export interface Dyson360ZoneBehavioursRequestV1 {
 // GET /v1/support/product-faults/{serial}?locale={languagecode}&market={countrycode}&faultCode=<code> (Spot+Scrub Ai only)
 export interface Dyson360FaultDescription {
     codes:                      string[];       // e.g. ['597']
-    cta:                        string;         // e.g. 'dyson:///support/resolve/7VS-EU-UNA6126A/RB05_TS_FAULT_WEB_DOCK_BIN_597'
+    cta:                        string;         // e.g. 'dyson:///support/resolve/{serial}/RB05_TS_FAULT_WEB_DOCK_BIN_597'
     description:                string;
     dismissable:                boolean;
     linkRef?:                   string;         // e.g. 'RB05_TS_FAULT_WEB_DOCK_BIN_597'

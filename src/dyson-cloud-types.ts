@@ -3,7 +3,7 @@
 
 import {
     DysonAccountStatus,
-    DysonCountryCodeExpanded,
+    DysonProductCountryCode,
     DysonCountryCode,
     DysonOwnershipStatus
 } from './dyson-types.js';
@@ -75,8 +75,11 @@ export interface DysonEmailVerifyResponseV3 {
 export enum DysonManifestCategory {
     AirTreatment                = 'ec',
     FloorCare                   = 'flrc',
+    Formulation                 = 'formulation',
     HairCare                    = 'hc',
+    ConnectedHairCare           = 'kc',
     Light                       = 'light',
+    OralCare                    = 'oc',
     RobotVacuum                 = 'robot',
     Wearable                    = 'wearable'
 }
@@ -116,8 +119,8 @@ export interface DysonManifestFirmware {
     version:                    string;
 }
 export interface DysonManifestMQTT {
-    localBrokerCredentials:     string | null; // 192 characters (144 bytes base64 encoded)
-    mqttRootTopicLevel:         string; // e.g. 'N223' or '475'
+    localBrokerCredentials:     string | null;      // 192 characters (144 bytes base64 encoded)
+    mqttRootTopicLevel:         string;             // e.g. 'N223' or '475'
     remoteBrokerType:           'wss';
 }
 export interface DysonManifestConnectedConfiguration {
@@ -134,7 +137,7 @@ export interface DysonManifestDeviceV3 {
     category:                   DysonManifestCategory;
     connectedConfiguration:     DysonManifestConnectedConfiguration | null;
     connectionCategory:         DysonManifestConnectionCategory;
-    countryCode?:               DysonCountryCodeExpanded;
+    countryCode?:               DysonProductCountryCode;
     model:                      string;             // e.g. 'RB01' or 'TP02'
     name:                       string | null;      // User assigned name
     productName:                string;             // e.g. 'Dyson 360 Eye' or 'Dyson Pure Cool™ Link'
@@ -197,4 +200,23 @@ export interface DysonConnectionStatusResponseV1 {
     BrokerPort:                 number;
     LastChanged:                string;             // e.g. '1970-01-01T00:00:00.001Z'
     Status:                     'connected';
+}
+
+// GET /v1/pats?locale={locale}
+export interface DysonProductAttributes {
+    connectionCategory:         DysonManifestConnectionCategory;
+    countryCode:                DysonProductCountryCode | '';
+    deviceCategory:             DysonManifestCategory;
+    generation?:                number;
+    model:                      string;             // e.g. 'RB01' or 'TP02'
+    mqttRootTopicLevel?:        string;             // e.g. 'N223' or '475'
+    productName:                string;             // e.g. 'Dyson 360 Eye' or 'Dyson Pure Cool™ Link'
+    productNameByMarket: {
+        [countryCode: string]:  string;             // Indexed by e.g. 'US' or 'ZH-TW'
+    }
+    productType:                string;             // e.g. 'N223' or '475'
+    variant:                    string;
+}
+export interface DysonProductAttributesResponseV1 {
+    [model: string]:            DysonProductAttributes;
 }

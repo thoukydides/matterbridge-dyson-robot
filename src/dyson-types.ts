@@ -40,16 +40,30 @@ export enum DysonAccountStatus {
 
 // Dyson device registration status
 export enum DysonOwnershipStatus {
-    Registered              = 'REGISTERED_TO_THIS_ACCOUNT'
+    Registered              = 'REGISTERED_TO_THIS_ACCOUNT',
+    Unregistered            = 'DEVICE_UNREGISTERED'
 }
 
 // Country codes (as returned by GET /v1/supportedmarket)
+// (Subset of ISO 3166-1)
 export type DysonCountryCode =
     'AE' | 'AT' | 'AU' | 'BA' | 'BE' | 'BG' | 'BH' | 'BR' | 'CA' | 'CH' | 'CL'
   | 'CN' | 'CO' | 'CY' | 'CZ' | 'DE' | 'DK' | 'DZ' | 'EE' | 'EG' | 'ES' | 'FI'
   | 'FR' | 'GB' | 'GE' | 'GR' | 'HK' | 'HR' | 'HU' | 'ID' | 'IE' | 'IL' | 'IN'
   | 'IT' | 'JP' | 'KR' | 'KW' | 'KZ' | 'LB' | 'LT' | 'LV' | 'MA' | 'MT' | 'MX'
   | 'MY' | 'NL' | 'NO' | 'NZ' | 'OM' | 'PE' | 'PH' | 'PL' | 'PT' | 'QA' | 'RO'
-  | 'RS' | 'SA' | 'SE' | 'SG' | 'SI' | 'SK' | 'TH' | 'TN' | 'TR' | 'TW' | 'US'
-  | 'VN' | 'ZA';
-export type DysonCountryCodeExpanded = DysonCountryCode | 'UK' | 'EU';
+  | 'RS' | 'RU' | 'SA' | 'SE' | 'SG' | 'SI' | 'SK' | 'TH' | 'TN' | 'TR' | 'TW'
+  | 'US' | 'VN' | 'ZA';
+
+// Country codes associated with Dyson products
+export type DysonCountryCodeExceptionallyReserved =
+    // (ISO 3166-1 also reserves: AC CP CQ DG EA EZ FX IC SU TA UN)
+    'UK' | 'EU';
+export type DysonCountryCodeUserAssigned =
+    // (only XB XC XD XE XF XG XH XJ XK XX currently used)
+    'AA' | 'QM' | 'QN' | 'QO' | 'QP' | 'QQ' | 'QR' | 'QS' | 'QT' | 'QU' | 'QV'
+  | 'QW' | 'QX' | 'QY' | 'QZ' | 'XA' | 'XB' | 'XC' | 'XD' | 'XE' | 'XF' | 'XG'
+  | 'XH' | 'XI' | 'XJ' | 'XK' | 'XL' | 'XM' | 'XN' | 'XO' | 'XP' | 'XQ' | 'XR'
+  | 'XS' | 'XT' | 'XU' | 'XV' | 'XW' | 'XX' | 'XY' | 'XZ' | 'ZZ';
+export type DysonProductCountryCode =
+    DysonCountryCode | DysonCountryCodeExceptionallyReserved | DysonCountryCodeUserAssigned;

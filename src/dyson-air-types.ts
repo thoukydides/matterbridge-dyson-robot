@@ -7,11 +7,31 @@ export enum DysonAirGoodbyeReason {
     Unknown                 = 'UNKNOWN'
 }
 
-// Air treatment reset source
+// Dyson air treatment reset source
 export enum DysonAirResetSource {
     ConnectionJourney       = 'CONJRNY',
     PowerUp                 = 'PWUP',
     Hibernate               = 'HIB'
+}
+
+// Dyson air treatment fault severity
+export enum DysonAirFaultSeverity {
+    Info                            = 'info',
+    Warning                         = 'warning',
+    Critical                        = 'critical',
+    Success                         = 'success'
+}
+
+// Dyson air treatment call to action type
+export enum DysonAirCTAType {
+    None                            = '',
+    ContactUs                       = 'contact_Us',
+    FeatureActivateCM               = 'feature_activate_CM',
+    FilterManagement                = 'filter_management',
+    HeatingDisabled                 = 'heating_disabled',
+    InitialisingSensors             = 'initialising_sensors',
+    FirmwareUpdateAvailable         = 'ota_available',
+    FirmwareUpdateInProgress        = 'ota_inprogress'
 }
 
 // Dyson air treatment error and warning codes
@@ -439,10 +459,3 @@ export enum DysonAirSensorValueEnum {
     Unavailable             = 'NONE'
 }
 export type DysonAirSensorValue = DysonAirSensorValueEnum | string;
-
-// Dyson air treatment pollen level
-export enum DysonAirPollenLevel {
-    Low                     = 'Low',
-    Medium                  = 'Medium',
-    High                    = 'High'
-}

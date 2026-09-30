@@ -1,7 +1,10 @@
 // Matterbridge plugin for Dyson robot vacuum and air treatment devices
 // Copyright © 2026 Alexander Thoukydides
 
-import { DysonCountryCode, DysonCountryCodeExpanded } from './dyson-types.js';
+import {
+    DysonCountryCode,
+    DysonCountryCodeExceptionallyReserved
+} from './dyson-types.js';
 
 // Country codes
 export type CountryCode = Uppercase<string>;
@@ -11,7 +14,7 @@ export type LocaleCode<C extends CountryCode = CountryCode> = `${Lowercase<strin
 const COUNTRY_CODE_REMAP: Record<CountryCode, CountryCode | undefined> = {
     UK: 'GB',       // Use Great Britain to represent the United Kingdom
     EU: 'IE'        // Use Ireland to represent the European Union
-} satisfies Record<Exclude<DysonCountryCodeExpanded, DysonCountryCode>, CountryCode>;
+} satisfies Record<DysonCountryCodeExceptionallyReserved, CountryCode>;
 
 // Locale (culture) to use for each country returned by GET /v1/supportedmarket
 const COUNTRY_LOCALE_MAP: Record<CountryCode, LocaleCode | undefined> = {
@@ -45,6 +48,7 @@ const COUNTRY_LOCALE_MAP: Record<CountryCode, LocaleCode | undefined> = {
     PT: 'pt-PT',    // Portugal                     Portuguese
     RO: 'ro-RO',    // Romania                      Romanian
     RS: 'sr-RS',    // Serbia                       Serbian
+    RU: 'ru-RU',    // Russia                       Russian
     SE: 'sv-SE',    // Sweden                       Swedish
     SI: 'sl-SI',    // Slovenia                     Slovenian
     SK: 'sk-SK',    // Slovakia                     Slovak
