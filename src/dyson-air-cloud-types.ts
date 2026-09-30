@@ -2,6 +2,7 @@
 // Copyright © 2025-2026 Alexander Thoukydides
 
 import { DysonAirProductState } from './dyson-air-state-types.js';
+import { DysonAirPollenLevel } from './dyson-air-types.js';
 import {
     DysonUnifiedschedulerEvent,
     DysonUnifiedschedulerEventsResponseV1
@@ -34,8 +35,8 @@ export interface DysonAirEnvironmentResponseV1 {
     Icon:                   null,
     Measure:                string; // e.g. 'AQI',
     PollenState:            number,
-    DominantPollen:         null,
-    Pollens:                null
+    DominantPollen:         DysonAirPollenLevel | null,
+    Pollens:                { [key: string]: DysonAirPollenLevel } | null;
 }
 
 // GET /v1/messageprocessor/devices/{serial}/environmentdata/daily
@@ -56,4 +57,13 @@ export interface DysonAirEnvironmentDataDailyResponseV1 {
     tmpm_max:               number;
     humm_min:               number;
     humm_max:               number;
+}
+
+
+////////
+export interface DysonAirPersonalizedContentV2 {
+    content: {
+        title: string;
+        [key: string]: unknown;
+    }[];
 }

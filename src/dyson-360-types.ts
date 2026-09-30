@@ -96,6 +96,7 @@ export interface Dyson360ActiveFault {
 
 // Dyson robot vacuum fault severity
 export enum Dyson360FaultSeverity {
+    Info                            = 'info',
     Warning                         = 'warning'
 }
 

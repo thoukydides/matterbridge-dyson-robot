@@ -439,3 +439,10 @@ export enum DysonAirSensorValueEnum {
     Unavailable             = 'NONE'
 }
 export type DysonAirSensorValue = DysonAirSensorValueEnum | string;
+
+// Dyson air treatment pollen level
+export enum DysonAirPollenLevel {
+    Low                     = 'Low',
+    Medium                  = 'Medium',
+    High                    = 'High'
+}

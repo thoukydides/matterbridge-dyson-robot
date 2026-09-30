@@ -1,99 +1,114 @@
 // Matterbridge plugin for Dyson robot vacuum and air treatment devices
 // Copyright © 2026 Alexander Thoukydides
 
-import { DysonCountryCode } from './dyson-types.js';
+import { DysonCountryCode, DysonCountryCodeExpanded } from './dyson-types.js';
 
 // Country codes
 export type CountryCode = Uppercase<string>;
 export type LocaleCode<C extends CountryCode = CountryCode> = `${Lowercase<string>}-${C}`;
 
+// Mapping of known non country codes to valid codes
+const COUNTRY_CODE_REMAP: Record<CountryCode, CountryCode | undefined> = {
+    UK: 'GB',       // Use Great Britain to represent the United Kingdom
+    EU: 'IE'        // Use Ireland to represent the European Union
+} satisfies Record<Exclude<DysonCountryCodeExpanded, DysonCountryCode>, CountryCode>;
+
 // Locale (culture) to use for each country returned by GET /v1/supportedmarket
-const COUNTRY_LOCALE_MAP: Partial<Record<CountryCode, LocaleCode>> = {
+const COUNTRY_LOCALE_MAP: Record<CountryCode, LocaleCode | undefined> = {
     // Europe
-    AT: 'de-AT',    // Austria
-    BA: 'bs-BA',    // Bosnia and Herzegovina
-    BE: 'nl-BE',    // Belgium (Dutch) - alternatively fr-BE (French)
-    BG: 'bg-BG',    // Bulgaria
-    CH: 'de-CH',    // Switzerland (German) - alternatively fr-CH (French) or it-CH (Italian)
-    CY: 'el-CY',    // Cyprus
-    CZ: 'cs-CZ',    // Czech Republic
-    DE: 'de-DE',    // Germany
-    DK: 'da-DK',    // Denmark
-    EE: 'et-EE',    // Estonia
-    ES: 'es-ES',    // Spain
-    FI: 'fi-FI',    // Finland
-    FR: 'fr-FR',    // France
-    GB: 'en-GB',    // United Kingdom
-    GE: 'ka-GE',    // Georgia
-    GR: 'el-GR',    // Greece
-    HR: 'hr-HR',    // Croatia
-    HU: 'hu-HU',    // Hungary
-    IE: 'en-IE',    // Ireland
-    IT: 'it-IT',    // Italy
-    LT: 'lt-LT',    // Lithuania
-    LV: 'lv-LV',    // Latvia
-    MT: 'mt-MT',    // Malta
-    NL: 'nl-NL',    // Netherlands
-    NO: 'no-NO',    // Norway (Norwegian) - alternatively nb-NO (Bokmål)
-    PL: 'pl-PL',    // Poland
-    PT: 'pt-PT',    // Portugal
-    RO: 'ro-RO',    // Romania
-    RS: 'sr-RS',    // Serbia
-    SE: 'sv-SE',    // Sweden
-    SI: 'sl-SI',    // Slovenia
-    SK: 'sk-SK',    // Slovakia
-    TR: 'tr-TR',    // Turkey
+    AT: 'de-AT',    // Austria                      German
+    BA: 'bs-BA',    // Bosnia and Herzegovina       Bosnian
+    BE: 'nl-BE',    // Belgium                      Dutch
+    BG: 'bg-BG',    // Bulgaria                     Bulgarian
+    CH: 'de-CH',    // Switzerland                  German          [or fr-CH/it-CH]
+    CY: 'el-CY',    // Cyprus                       Greek
+    CZ: 'cs-CZ',    // Czech Republic               Czech
+    DE: 'de-DE',    // Germany                      German
+    DK: 'da-DK',    // Denmark                      Danish
+    EE: 'et-EE',    // Estonia                      Estonian
+    ES: 'es-ES',    // Spain                        Spanish
+    FI: 'fi-FI',    // Finland                      Finnish
+    FR: 'fr-FR',    // France                       French
+    GB: 'en-GB',    // United Kingdom               English
+    GE: 'ka-GE',    // Georgia                      Georgian
+    GR: 'el-GR',    // Greece                       Greek
+    HR: 'hr-HR',    // Croatia                      Croatian
+    HU: 'hu-HU',    // Hungary                      Hungarian
+    IE: 'en-IE',    // Ireland                      English
+    IT: 'it-IT',    // Italy                        Italian
+    LT: 'lt-LT',    // Lithuania                    Lithuanian
+    LV: 'lv-LV',    // Latvia                       Latvian
+    MT: 'mt-MT',    // Malta                        Maltese
+    NL: 'nl-NL',    // Netherlands                  Dutch
+    NO: 'no-NO',    // Norway                       Norwegian       [or nn-NO/nb-NO]
+    PL: 'pl-PL',    // Poland                       Polish
+    PT: 'pt-PT',    // Portugal                     Portuguese
+    RO: 'ro-RO',    // Romania                      Romanian
+    RS: 'sr-RS',    // Serbia                       Serbian
+    SE: 'sv-SE',    // Sweden                       Swedish
+    SI: 'sl-SI',    // Slovenia                     Slovenian
+    SK: 'sk-SK',    // Slovakia                     Slovak
+    TR: 'tr-TR',    // Turkey                       Turkish
     // Americas
-    BR: 'pt-BR',    // Brazil
-    CA: 'en-CA',    // Canada (English) - alternatively fr-CA (French)
-    CL: 'es-CL',    // Chile
-    CO: 'es-CO',    // Colombia
-    MX: 'es-MX',    // Mexico
-    PE: 'es-PE',    // Peru
-    US: 'en-US',    // United States
+    BR: 'pt-BR',    // Brazil                       Portuguese
+    CA: 'en-CA',    // Canada                       English         [or fr-CA]
+    CL: 'es-CL',    // Chile                        Spanish
+    CO: 'es-CO',    // Colombia                     Spanish
+    MX: 'es-MX',    // Mexico                       Spanish
+    PE: 'es-PE',    // Peru                         Spanish
+    US: 'en-US',    // United States                English
     // Asia & Pacific
-    AU: 'en-AU',    // Australia
-    CN: 'zh-CN',    // China
-    HK: 'zh-HK',    // Hong Kong
-    ID: 'id-ID',    // Indonesia
-    IN: 'hi-IN',    // India (Hindi)
-    JP: 'ja-JP',    // Japan
-    KR: 'ko-KR',    // South Korea
-    MY: 'ms-MY',    // Malaysia
-    NZ: 'en-NZ',    // New Zealand
-    PH: 'fil-PH',   // Philippines (Filipino/Tagalog)
-    SG: 'en-SG',    // Singapore
-    TH: 'th-TH',    // Thailand
-    TW: 'zh-TW',    // Taiwan
-    VN: 'vi-VN',    // Vietnam
+    AU: 'en-AU',    // Australia                    English
+    CN: 'zh-CN',    // People's Republic of China   Chinese (Simplified)
+    HK: 'zh-HK',    // Hong Kong                    Chinese (Simplified)
+    ID: 'id-ID',    // Indonesia                    Indonesian
+    IN: 'hi-IN',    // India                        Hindi
+    JP: 'ja-JP',    // Japan                        Japanese
+    KR: 'ko-KR',    // South Korea                  Korean
+    MY: 'ms-MY',    // Malaysia                     Malay
+    NZ: 'en-NZ',    // New Zealand                  English
+    PH: 'fil-PH',   // Philippines                  Filipino
+    SG: 'en-SG',    // Singapore                    English
+    TH: 'th-TH',    // Thailand                     Thai
+    TW: 'zh-TW',    // Taiwan                       Chinese (Simplified)
+    VN: 'vi-VN',    // Vietnam                      Vietnamese
     // Middle East & Africa
-    AE: 'ar-AE',    // United Arab Emirates
-    BH: 'ar-BH',    // Bahrain
-    DZ: 'ar-DZ',    // Algeria
-    EG: 'ar-EG',    // Egypt
-    IL: 'he-IL',    // Israel
-    KW: 'ar-KW',    // Kuwait
-    LB: 'ar-LB',    // Lebanon
-    MA: 'ar-MA',    // Morocco
-    OM: 'ar-OM',    // Oman
-    QA: 'ar-QA',    // Qatar
-    SA: 'ar-SA',    // Saudi Arabia
-    TN: 'ar-TN',    // Tunisia
-    ZA: 'en-ZA',    // South Africa
+    AE: 'ar-AE',    // United Arab Emirates         Arabic
+    BH: 'ar-BH',    // Bahrain                      Arabic
+    DZ: 'ar-DZ',    // Algeria                      Arabic
+    EG: 'ar-EG',    // Egypt                        Arabic
+    IL: 'he-IL',    // Israel                       Hebrew
+    KW: 'ar-KW',    // Kuwait                       Arabic
+    LB: 'ar-LB',    // Lebanon                      Arabic
+    MA: 'ar-MA',    // Morocco                      Arabic
+    OM: 'ar-OM',    // Oman                         Arabic
+    QA: 'ar-QA',    // Qatar                        Arabic
+    SA: 'ar-SA',    // Saudi Arabia                 Arabic
+    TN: 'ar-TN',    // Tunisia                      Arabic
+    ZA: 'en-ZA',    // South Africa                 English
     // Central Asia
-    KZ: 'kk-KZ'     // Kazakhstan (Kazakh)
+    KZ: 'kk-KZ'     // Kazakhstan                   Kazakh
 } satisfies { [key in DysonCountryCode]: LocaleCode<key>; };
 
 // Normalise a country code
 export function dysonNormaliseCountry(country?: string, china?: boolean): CountryCode {
-    country ??= china ? 'CN' : 'GB';
+    // Use server location if no country specified
+    if (!country || !isCountryCode(country)) return china ? 'CN' : 'GB';
 
-    // HERE - Also need to do something with 'EU'...
-    if (country.length !== 2 || country === 'UK') country = 'GB';
-    return country.toUpperCase() as CountryCode;
+    // Fix known invalid country codes
+    const remapped = COUNTRY_CODE_REMAP[country];
+    if (remapped) return remapped;
+
+    // Anything else resembling a country code is used as-is
+    return country;
 }
 
 // Map a country code to a suitable locale
 export function dysonCountryToLocale(country: CountryCode): LocaleCode {
-    return COUNTRY_LOCALE_MAP[country] ?? 'en-GB';
+    return COUNTRY_LOCALE_MAP[country] ?? `en-${country}`;
+}
+
+// Is a string a valid country code
+function isCountryCode(country: string): country is CountryCode {
+    return /^[A-Z][A-Z]$/.test(country);
 }
