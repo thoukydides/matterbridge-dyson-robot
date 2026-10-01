@@ -77,7 +77,9 @@ export type DebugFeatures =
   | 'Log MQTT Payloads'
   | 'Log MQTT Payloads as JSON'
   | 'Log Serial Numbers'
-  | 'Log Debug as Info';
+  | 'Log Debug as Info'
+  | 'Scrape MQTT Topics'
+  | 'Scrape Fault Codes';
 
 // The user plugin configuration
 export interface ConfigBase {

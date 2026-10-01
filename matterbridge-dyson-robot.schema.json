@@ -155,7 +155,9 @@
                     "Log MQTT Payloads",
                     "Log MQTT Payloads as JSON",
                     "Log Serial Numbers",
-                    "Log Debug as Info"
+                    "Log Debug as Info",
+                    "List MQTT Topics",
+                    "List Fault Codes"
                 ]
             },
             "default": []

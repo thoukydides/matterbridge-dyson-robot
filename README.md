@@ -125,6 +125,8 @@ The supported `debugFeatures` are:
 | `Log MQTT Payloads as JSON` | Similar to `Log MQTT Payloads` except that payloads are logged in raw JSON format, without any truncation or special formatting. (Requires *Debug* level logging.)
 | `Log Serial Numbers`        | By default product serial numbers (a.k.a. MQTT usernames) and passwords are automatically redacted in the log. This setting logs serial numbers verbatim.
 | `Log Debug as Info`         | Redirect *Debug* level logging to *Info* level. This makes it visible in the Matterbridge frontend.
+| `Scrape MQTT Topics`        | At plugin startup retrieve details of all current products from the MyDyson API and log a list of all the robot vacuum and air treatment devices grouped by MQTT root topic. Devices that are currently unsupported by this plugin are logged at *Warning* level, and supported devices at *Info* level.
+| `Scrape Fault Codes`        | At plugin startup attempt to retrieve a list of all fault codes for the enabled devices, and log a list of those codes that have descriptions.
 
 </details>
 <a name="provisioning-methods"></a>

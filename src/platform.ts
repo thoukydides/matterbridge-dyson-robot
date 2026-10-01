@@ -27,6 +27,7 @@ import {
 } from './dyson-cloud.js';
 import { getDeviceConfigMqtt } from './dyson-mqtt-config.js';
 import { logError } from './log-error.js';
+import { dysonCloudScrape } from './dyson-cloud-scrape.js';
 
 // A Dyson devices platform
 export class PlatformDyson extends MatterbridgeDynamicPlatform {
@@ -125,17 +126,18 @@ export class PlatformDyson extends MatterbridgeDynamicPlatform {
         this.log.configure(this.config.debugFeatures);
 
         // Convert the configuration to usable device details
+        let api: DysonCloudRemote | DysonCloudLocal | undefined;
         let mappedDevices: DeviceConfigMqttWithApi[];
         switch (this.config.provisioningMethod) {
         case 'Remote Account': {
             // Obtain list of details from the MyDyson account
-            const api = new DysonCloudRemote(this.log, this.config, this.persist);
+            api = new DysonCloudRemote(this.log, this.config, this.persist);
             mappedDevices = await api.getDevices();
             break;
         }
         case 'Local Account': {
             // Cross-reference the configured devices with the MyDyson account
-            const api = new DysonCloudLocal(this.log, this.config, this.persist);
+            api = new DysonCloudLocal(this.log, this.config, this.persist);
             mappedDevices = await api.getDevices();
             break;
         }
@@ -148,6 +150,11 @@ export class PlatformDyson extends MatterbridgeDynamicPlatform {
             // Configuration is already in the required format
             mappedDevices = this.config.devices;
             break;
+        }
+
+        // Scrape the Dyson API for any unsupported products or fault codes
+        if (api) {
+            await dysonCloudScrape(this.log, this.config, api, mappedDevices);
         }
 
         // Wait for the platform to start

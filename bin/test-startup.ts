@@ -19,7 +19,7 @@ const SPAWN_ARGS = ['node_modules/.bin/matterbridge'];
 const PLUGIN_CONFIG_FILE = '.matterbridge/matterbridge-dyson-robot.config.json';
 const PLUGIN_CONFIG_CONTENT: Partial<Config> = {
     debug: true,
-    debugFeatures: []
+    debugFeatures: ['Scrape MQTT Topics']
 };
 
 // Log messages indicating success or failure
