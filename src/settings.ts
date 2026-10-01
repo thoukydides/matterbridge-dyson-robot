@@ -1,21 +1,8 @@
 // Matterbridge plugin for Dyson robot vacuum and air treatment devices
 // Copyright © 2025-2026 Alexander Thoukydides
 
-import { readFileSync } from 'fs';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
 import { Config } from './config-types.js';
-
-// Read the package.json file
-interface PackageJson {
-    engines:        Record<string, string>;
-    name:           string;
-    displayName:    string;
-    version:        string;
-    homepage:       string;
-}
-const PACKAGE_JSON = join(dirname(fileURLToPath(import.meta.url)), '..', 'package.json');
-const PACKAGE = JSON.parse(readFileSync(PACKAGE_JSON, 'utf-8')) as PackageJson;
+import PACKAGE from '../package.json' with { type: 'json' };
 
 // Platform identifiers
 export const ENGINES        = PACKAGE.engines;

@@ -6,11 +6,15 @@ import { DYSON_DEVICE_TYPES_360 } from './dyson-device-360.js';
 import { DYSON_DEVICE_TYPES_AIR } from './dyson-device-air.js';
 import { Config } from './config-types.js';
 import { AnsiLogger } from 'matterbridge/logger';
-import { MS, UnionToIntersection } from './utils.js';
+import { MS, UnionToIntersection, formatList, plural } from './utils.js';
 import { DeviceConfigMqtt } from './dyson-mqtt-client-live.js';
 import { logError } from './log-error.js';
 import NodePersist from 'node-persist';
 import { DysonCloudAPIDevice } from './dyson-cloud-api-device.js';
+import CONFIG_SCHEMA from '../matterbridge-dyson-robot.schema.json' with { type: 'json' };
+
+// Root MQTT topics defined in the configuration schema
+const SCHEMA_ROOT_TOPICS = CONFIG_SCHEMA.definitions.deviceRootTopic.oneOf;
 
 // List of constructors for Dyson devices
 const DYSON_DEVICE_TYPES = [
@@ -30,6 +34,9 @@ export async function createDysonDevice(
     device:     DeviceConfigMqtt,
     api?:       DysonCloudAPIDevice
 ): Promise<DysonDevice> {
+    // One-off check that the implementation and schema are consistent
+    checkDysonDeviceSchemaConsistency(log);
+
     // Select the appropriate class for this device
     const { rootTopic } = device;
     const deviceClass = DYSON_DEVICE_TYPES.find((device) => device.model.type === rootTopic);
@@ -47,4 +54,25 @@ export async function createDysonDevice(
 // Test whether a specific model is supported
 export function isSupportedModel(rootTopic: string): boolean {
     return DYSON_DEVICE_TYPES.some((device) => device.model.type === rootTopic);
+}
+
+// Check whether the implementation and schema are consistent
+let schemaChecked = false;
+function checkDysonDeviceSchemaConsistency(log: AnsiLogger): void {
+    // Only perform the check once
+    if (schemaChecked) return;
+    schemaChecked = true;
+
+    // Sets of known topics
+    const schemaTopics  = new Set(SCHEMA_ROOT_TOPICS.map(entry   => entry.const));
+    const codeTopics    = new Set(DYSON_DEVICE_TYPES.map(device  => device.model.type));
+
+    // Warn about any discrepancies
+    const warnIfDifference = (a: Set<string>, b: Set<string>, description: string) => {
+        const difference = [...a.difference(b)].sort();
+        if (!difference.length) return;
+        log.warn(`${plural(difference.length, 'MQTT root topic')} ${description} (${formatList(difference)})`);
+    };
+    warnIfDifference(schemaTopics, codeTopics, 'in configuration schema but without any implementation');
+    warnIfDifference(codeTopics, schemaTopics, 'implemented but not listed in configuration schema');
 }

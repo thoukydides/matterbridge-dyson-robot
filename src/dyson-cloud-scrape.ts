@@ -6,7 +6,7 @@ import { DysonManifestCategory } from './dyson-cloud-types.js';
 import { DysonCloud } from './dyson-cloud.js';
 import { DysonCloudAPI } from './dyson-cloud-api.js';
 import { DysonCloudAPIDevice } from './dyson-cloud-api-device.js';
-import { assertIsDefined, columns, formatList, plural } from './utils.js';
+import { assertIsDefined, columns, plural } from './utils.js';
 import { logError } from './log-error.js';
 import { Dyson360FaultResponseV1 } from './dyson-360-cloud-types.js';
 import { DysonAirFaultResponseV1 } from './dyson-air-cloud-types.js';
@@ -72,9 +72,9 @@ async function dysonCloudScrapeProducts(log: AnsiLogger, api: DysonCloudAPI): Pr
             const isSupported = isSupportedModel(rootTopic);
             if (isSupported)    log.info(` ✔️  ${rootTopic}:`);
             else                log.warn (` ❌  ${rootTopic}:`);
-            for (const [name, models] of nameMap.entries()) {
-                log.log(isSupported ? LogLevel.INFO : LogLevel.WARN,
-                        `      ${name} (${formatList([...models])})`);
+            const nameList = [...nameMap.entries()].map<[string, string]>(([name, models]) => [name, [...models].sort().join('/')]);
+            for (const [name, models] of nameList.sort(([, a], [, b]) => a.localeCompare(b))) {
+                log.log(isSupported ? LogLevel.INFO : LogLevel.WARN, `      ${name} (${models})`);
             }
         }
     } catch (err) {

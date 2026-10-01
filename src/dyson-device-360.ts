@@ -48,13 +48,20 @@ The device is currently treated similarly to a Dyson 360 Eye, with partial updat
 
 ${DYSON360_COMPATIBILITY_COMMON}`;
 
-const DYSON360_COMPATIBILITY_SPOTSCRUB =
-`Support for Dyson Spot+Scrub Ai (RB05) is incomplete.
+const DYSON360_COMPATIBILITY_NUROVI_R3_SPOTSCRUB =
+`Support for Dyson Spot+Scrub Ai / R3 Nurovi Spot+Scrub UV (RB05) is incomplete.
 
 Experimental support has been added based on the details provided in issue #46:
     https://github.com/thoukydides/matterbridge-dyson-robot/issues/46
 
 There is a high likelihood of warnings, errors, or missing functionality.
+
+${DYSON360_COMPATIBILITY_COMMON}`;
+
+const DYSON360_COMPATIBILITY_NUROVI_R1_R2 =
+`Support for Dyson R1 Nurovi Dry / R2 Nurovi Wash+Dry (RB07) is incomplete.
+
+The device is currently treated similarly to a Dyson Spot+Scrub Ai. There is a high likelihood of warnings, errors, or missing functionality.
 
 ${DYSON360_COMPATIBILITY_COMMON}`;
 
@@ -180,19 +187,11 @@ export class DysonDevice360VisNav extends DysonDevice360ZonesMixin(DysonDevice36
     }
 }
 
-// A Dyson 360 Spot+Scrub Ai device
-export class DysonDevice360SpotScrub extends DysonDevice360ZonesMixin(DysonDevice360Base) {
-    static readonly model = { type: 'RB05', number: 'RB05', name: 'Spot+Scrub Ai' };
+// Dyson Nurovi family of devices (including Spot+Scrub Ai)
+abstract class DysonDevice360NuroviBase extends DysonDevice360ZonesMixin(DysonDevice360Base) {
 
     // The MQTT client and status update listener
     static readonly mqttConstructor = DysonMqtt360;
-
-    override getBatteryPartNumber = () => '975571-01';
-
-    override getProductAppearance = () => ({
-        finish:         BasicInformation.ProductFinish.Matte,
-        primaryColor:   BasicInformation.Color.Black
-    });
 
     override getPowerLevelMaps = (): Dyson360PowerLevelMap[] => [
         [Dyson360VacuumMode.Auto,     RvcCleanMode360.Auto,       'Auto'],
@@ -203,8 +202,6 @@ export class DysonDevice360SpotScrub extends DysonDevice360ZonesMixin(DysonDevic
 
     override setPowerLevel = (powerLevel: Dyson360VacuumMode) => this.mqtt.commandSetCleaningStrategy(powerLevel);
     override getPowerLevel = () => this.mqtt.status.defaultCleaningStrategy;
-
-    override get compatibilityWarning() { return DYSON360_COMPATIBILITY_SPOTSCRUB; }
 
     // Polled updates
     pollStatus:             SimplePoll;
@@ -286,10 +283,39 @@ export class DysonDevice360SpotScrub extends DysonDevice360ZonesMixin(DysonDevic
     }
 }
 
+// A Dyson Spot+Scrub Ai or R3 Nurovi Spot+Scrub UV device
+export class DysonDevice360NuroviR3SpotScrub extends DysonDevice360NuroviBase {
+    static readonly model = { type: 'RB05', number: 'RB05', name: 'Spot+Scrub Ai / R3 Nurovi Spot+Scrub UV' };
+
+    override getBatteryPartNumber = () => '975571-01';
+
+    override getProductAppearance = () => ({
+        finish:         BasicInformation.ProductFinish.Matte,
+        primaryColor:   BasicInformation.Color.Black
+    });
+
+    override get compatibilityWarning() { return DYSON360_COMPATIBILITY_NUROVI_R3_SPOTSCRUB; }
+}
+
+// A Dyson R1 Nurovi Dry / R2 Nurovi Wash+Dry device
+export class DysonDevice360NuroviR1R2 extends DysonDevice360NuroviBase {
+    static readonly model = { type: 'RB07', number: 'RB07', name: 'R1 Nurovi Dry / R2 Nurovi Wash+Dry' };
+
+    override getBatteryPartNumber = () => '976331-01';
+
+    override getProductAppearance = () => ({
+        finish:         BasicInformation.ProductFinish.Matte,
+        primaryColor:   BasicInformation.Color.White
+    });
+
+    override get compatibilityWarning() { return DYSON360_COMPATIBILITY_NUROVI_R1_R2; }
+}
+
 // List of constructors for Dyson robot vacuum devices
 export const DYSON_DEVICE_TYPES_360 = [
     DysonDevice360Eye,
     DysonDevice360Heurist,
     DysonDevice360VisNav,
-    DysonDevice360SpotScrub
+    DysonDevice360NuroviR3SpotScrub,
+    DysonDevice360NuroviR1R2
 ] as const;

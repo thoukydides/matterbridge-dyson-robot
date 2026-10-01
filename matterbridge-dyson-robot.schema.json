@@ -474,91 +474,107 @@
                 },
                 {
                     "const": "RB05",
-                    "title": "RB05 = Dyson Spot+Scrub Ai (RB05)"
+                    "title": "RB05 = Dyson Spot+Scrub Ai / R3 Nurovi Spot+Scrub UV (RB05)"
+                },
+                {
+                    "const": "RB07",
+                    "title": "RB07 = Dyson R1 Nurovi Dry / R2 Nurovi Wash+Dry (RB07)"
                 },
                 {
                     "const": "358",
-                    "title": "358 = Dyson Pure Humidify+Cool (PH01 or PH02)"
+                    "title": "358 = Dyson Pure Humidify+Cool (PH01) / Cryptomic (PH02)"
                 },
                 {
                     "const": "358E",
-                    "title": "358E = Dyson Pure Humidify+Cool (PH03 or PH04)"
+                    "title": "358E = Dyson Purifier Humidify+Cool (PH03) / Formaldehyde (PH04)"
                 },
                 {
                     "const": "358K",
-                    "title": "358K = Dyson Pure Humidify+Cool Formaldehyde (PH04 or PH05)"
+                    "title": "358K = Dyson Purifier Humidify+Cool (PH03) / Formaldehyde (PH04) / PH2 De-NOx (PH05)"
                 },
                 {
                     "const": "438",
-                    "title": "438 = Dyson Pure Cool (TP04 or TP06)"
+                    "title": "438 = Dyson Pure Cool (TP04) / Cryptomic (TP06)"
                 },
                 {
                     "const": "438E",
-                    "title": "438E = Dyson Pure Cool Formaldehyde (TP07 or TP09)"
+                    "title": "438E = Dyson Purifier Cool (TP07) / Formaldehyde (TP09)"
                 },
                 {
                     "const": "438K",
-                    "title": "438K = Dyson Pure Cool Formaldehyde (TP07, TP09, TP12, or PC2)"
+                    "title": "438K = Dyson Purifier Cool (TP07/TP7C) / Formaldehyde (TP09) / PC2 De-NOx (TP12)"
                 },
                 {
                     "const": "438M",
-                    "title": "438M = Dyson Pure Cool (TP11 or PC1)"
+                    "title": "438M = Dyson Purifier Cool PC1 (TP11)"
                 },
                 {
                     "const": "438N",
-                    "title": "438N = Dyson Find+Follow Purifier Cool (TP14 or PC3)"
+                    "title": "438N = Dyson Find+Follow Purifier Cool PC3 (TP14)"
                 },
                 {
                     "const": "455",
-                    "title": "455 = Dyson Pure Hot+Cool Link (HP02)"
-                },
-                {
-                    "const": "455A",
-                    "title": "455A = Dyson Pure Hot+Cool Link (HP02)"
+                    "title": "455 = Dyson Pure Hot+Cool Link (HP02/HP03)"
                 },
                 {
                     "const": "469",
-                    "title": "469 = Dyson Pure Cool Link Desk (DP01)"
+                    "title": "469 = Dyson Pure Cool Link (DP01/DP02/DP03)"
                 },
                 {
                     "const": "475",
-                    "title": "475 = Dyson Pure Cool Link (TP02)"
+                    "title": "475 = Dyson Pure Cool Link (TP02/TP03)"
                 },
                 {
                     "const": "520",
-                    "title": "520 = Dyson Pure Cool Desk (DP04)"
+                    "title": "520 = Dyson Pure Cool (DP04)"
                 },
                 {
                     "const": "527",
-                    "title": "527 = Dyson Pure Hot+Cool (HP04 or HP06)"
+                    "title": "527 = Dyson Pure Hot+Cool (HP04) / Cryptomic (HP06)"
                 },
                 {
                     "const": "527E",
-                    "title": "527E = Dyson Purifier Hot+Cool (HP07)"
+                    "title": "527E = Dyson Purifier Hot+Cool (HP07) / Formaldehyde (HP09)"
                 },
                 {
                     "const": "527K",
-                    "title": "527K = Dyson Purifier Hot+Cool Formaldehyde (HP09)"
+                    "title": "527K = Dyson Purifier Hot+Cool (HP07/HP7C) / Formaldehyde (HP09/HP4B) / HP2 De-NOx (HP12)"
                 },
                 {
                     "const": "527M",
-                    "title": "527M = Dyson Purifier Hot+Cool (HP1/HP11)"
+                    "title": "527M = Dyson Purifier Hot+Cool HP1 (HP11)"
+                },
+                {
+                    "const": "527N",
+                    "title": "527N = Dyson Purifier Hot+Cool (HP14)"
                 },
                 {
                     "const": "635",
-                    "title": "635 = Dyson Hot+Cool (HF1)"
+                    "title": "635 = Dyson Hot+Cool HF1 (AM15)"
                 },
                 {
                     "const": "664",
-                    "title": "664 = Dyson Purifier Big+Quiet Series (BP02, BP03, BP04, or BP06)"
+                    "title": "664 = Dyson Purifier Big+Quiet (BP02) / Formaldehyde (BP03/BP04)"
                 },
                 {
                     "const": "739",
-                    "title": "739 = Dyson Cool (CF1 or AM12)"
+                    "title": "739 = Dyson Cool CF1 (AM12)"
+                },
+                {
+                    "const": "831",
+                    "title": "831 = Dyson HushJet Big+Quiet Purifier (BP10)"
                 },
                 {
                     "const": "897",
-                    "title": "897 = Dyson HushJet Purifier Compact (HJ10)"
+                    "title": "897 = Dyson HushJet Purifier Compact HJ10 (SP01)"
+                },
+                {
+                    "const": "918",
+                    "title": "918 = Dyson HushJet Hot Cool Pure+ (JH01)"
+                },
+                {
+                    "const": "994",
+                    "title": "994 = Dyson HushJet Cool Pure+ Formaldehyde / Ioniser+UV (MP01)"
                 }
             ]
         }
