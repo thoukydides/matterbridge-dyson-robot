@@ -84,6 +84,7 @@ async function dysonCloudScrapeProducts(log: AnsiLogger, api: DysonCloudAPI): Pr
 
 // Attempt to retrieve the list of known fault codes for a device
 async function dysonCloudScrapeFaults(log: AnsiLogger, api: DysonCloudAPIDevice): Promise<void> {
+    const deviceName = `${api.manifest.productName} (${api.manifest.model})`;
     try {
         // Attempt to retrieve the fault codes
         let allFaultCodes: Dyson360FaultResponseV1 | DysonAirFaultResponseV1;
@@ -98,18 +99,18 @@ async function dysonCloudScrapeFaults(log: AnsiLogger, api: DysonCloudAPIDevice)
         for (const { codes, title, description, severity } of allFaultCodes) {
             if (!title) continue;
             for (const code of codes) {
-                if (faultMap.has(code)) log.warn(`Fault code ${code} duplicated`);
+                if (faultMap.has(code)) log.warn(`Fault code ${code} duplicated for ${deviceName}`);
                 faultMap.set(code, [code, `[${severity}]`, title, description]);
             }
         }
         const faultCodes = [...faultMap.keys()].sort();
 
         // Display a summary of the fault codes
-        log.info(`${faultCodes.length} of ${plural(allFaultCodes.length, 'reported fault code')} for this device:`);
+        log.info(`${faultCodes.length} of ${plural(allFaultCodes.length, 'reported fault code')} for ${deviceName}:`);
         const rows = faultCodes.map(code => faultMap.get(code) ?? []);
         columns(rows).forEach(line => { log.info(`    ${line}`); });
     } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
-        log.info(`Unable to retrieve fault codes for this device: ${message}`);
+        log.info(`Unable to retrieve fault codes for ${deviceName}: ${message}`);
     }
 }

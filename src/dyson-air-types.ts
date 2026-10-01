@@ -200,6 +200,8 @@ export enum DysonAirProductFault {
     IUH2                    = 'iuh2',  // Software update failed
     IUW0                    = 'iuw0',  // Software update failed
     IUW2                    = 'iuw2',  // Software update failed
+    UID1                    = 'uid1',  // User interface module fault
+    UID2                    = 'uid2',  // User interface module fault
     WFCP                    = 'wfcp',  // Wi-Fi communications protocol fault
     WFHB                    = 'wfhb',  // Wi-Fi heartbeat lost
 }
