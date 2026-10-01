@@ -11,8 +11,8 @@ import {
     DysonAirProductStateChange
 } from './dyson-air-state-types.js';
 import {
-    DysonAirFaultChange,
-    DysonAirFaultStatus,
+    DysonAirFaultsList,
+    DysonAirFaultsChangeList,
     DysonAirFindFollowMode,
     DysonAirGoodbyeReason,
     DysonAirResetFilterLife,
@@ -105,42 +105,18 @@ export interface DysonAirMsgLocation extends DysonMsg {
 
 export interface DysonAirMsgCurrentFaults extends DysonMsg {
     msg:                    'CURRENT-FAULTS';
-    productErrors: {
-        // Should be Record<DysonAirProductError, DysonAirFaultStatus>
-        [fault: string]:    DysonAirFaultStatus;
-    }
-    productWarnings: {
-        // Should be Record<DysonAirProductWarning, DysonAirFaultStatus>
-        [fault: string]:    DysonAirFaultStatus;
-    }
-    moduleErrors: {
-        // Should be Record<DysonAirModuleError, DysonAirFaultStatus>
-        [fault: string]:    DysonAirFaultStatus;
-    }
-    moduleWarnings: {
-        // Should be Record<DysonAirModuleWarning, DysonAirFaultStatus>
-        [fault: string]:    DysonAirFaultStatus;
-    }
+    productErrors:          DysonAirFaultsList
+    productWarnings:        DysonAirFaultsList;
+    moduleErrors:           DysonAirFaultsList;
+    moduleWarnings:         DysonAirFaultsList;
 }
 
 export interface DysonAirMsgFaultsChange extends DysonMsg {
     msg:                    'FAULTS-CHANGE';
-    productErrors: {
-        // Should be Record<DysonAirProductError, DysonAirFaultChange>
-        [fault: string]:    DysonAirFaultChange;
-    }
-    productWarnings: {
-        // Should be Record<DysonAirProductWarning, DysonAirFaultChange>
-        [fault: string]:    DysonAirFaultChange;
-    }
-    moduleErrors: {
-        // Should be Record<DysonAirModuleError, DysonAirFaultChange>
-        [fault: string]:    DysonAirFaultChange;
-    }
-    moduleWarnings: {
-        // Should be Record<DysonAirModuleWarning, DysonAirFaultChange>
-        [fault: string]:    DysonAirFaultChange;
-    }
+    productErrors:          DysonAirFaultsChangeList;
+    productWarnings:        DysonAirFaultsChangeList;
+    moduleErrors:           DysonAirFaultsChangeList;
+    moduleWarnings:         DysonAirFaultsChangeList;
 }
 
 // MQTT topic: <type>/<sn>/status/scheduler

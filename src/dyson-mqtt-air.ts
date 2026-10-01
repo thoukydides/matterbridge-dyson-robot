@@ -22,10 +22,8 @@ import {
     DysonAirErrorCodeEnum,
     DysonAirFanSpeed,
     DysonAirFaultStatus,
-    DysonAirModuleError,
-    DysonAirModuleWarning,
-    DysonAirProductError,
-    DysonAirProductWarning,
+    DysonAirModuleFault,
+    DysonAirProductFault,
     DysonAirSensorValueEnum,
     DysonAirSleepTimerEnum,
     DysonAirWarningCodeEnum
@@ -65,10 +63,10 @@ type DysonMqttProductStateEntry<K extends keyof DysonMqttProductState =
 
 // Dyson air treatment machine faults status
 interface Faults {
-    productErrors:      Set<DysonAirProductError>;
-    productWarnings:    Set<DysonAirProductWarning>;
-    moduleErrors:       Set<DysonAirModuleError>;
-    moduleWarnings:     Set<DysonAirModuleWarning>;
+    productErrors:      Set<DysonAirProductFault>;
+    productWarnings:    Set<DysonAirProductFault>;
+    moduleErrors:       Set<DysonAirModuleFault>;
+    moduleWarnings:     Set<DysonAirModuleFault>;
 }
 
 // Dyson air treatment machine sensor status
@@ -226,10 +224,10 @@ export class DysonMqttAir extends DysonMqtt<DysonMsgMapAir, DysonMqttStatusAir> 
     // Update environmental sensor data from a received message
     updateFaults(msg: DysonAirMsgCurrentFaults): void {
         const faultKeysCheckers = [
-            ['productErrors',   DysonAirProductError],
-            ['productWarnings', DysonAirProductWarning],
-            ['moduleErrors',    DysonAirModuleError],
-            ['moduleWarnings',  DysonAirModuleWarning]
+            ['productErrors',   DysonAirProductFault],
+            ['productWarnings', DysonAirProductFault],
+            ['moduleErrors',    DysonAirModuleFault],
+            ['moduleWarnings',  DysonAirModuleFault]
         ] as const;
 
         // Convert each fault type to a set of active fault codes
