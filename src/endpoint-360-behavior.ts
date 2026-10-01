@@ -101,8 +101,9 @@ export class RvcRunModeServer360 extends RvcRunModeBehavior {
         try {
             // Check whether it is a valid request
             log.debug(`RVC Run Mode command: ChangeToMode ${newMode}...`);
-            const supported = this.state.supportedModes.some(({ mode }) => mode === newMode);
-            if (!supported) throw new ChangeToModeError.UnsupportedMode;
+            const isSupportedMode = (newMode: number): newMode is RvcRunMode360 =>
+                this.state.supportedModes.some(({ mode }) => mode === newMode);
+            if (!isSupportedMode(newMode)) throw new ChangeToModeError.UnsupportedMode;
 
             // Attempt to change the mode
             await device.executeCommand('ChangeRunMode', newMode);
@@ -127,8 +128,9 @@ export class RvcCleanModeServer360 extends RvcCleanModeBehavior {
         try {
             // Check whether it is a valid request
             log.debug(`RVC Clean Mode command: ChangeToMode ${newMode}...`);
-            const supported = this.state.supportedModes.some(({ mode }) => mode === newMode);
-            if (!supported) throw new ChangeToModeError.UnsupportedMode;
+            const isSupportedMode = (newMode: number): newMode is RvcCleanMode360 =>
+                this.state.supportedModes.some(({ mode }) => mode === newMode);
+            if (!isSupportedMode(newMode)) throw new ChangeToModeError.UnsupportedMode;
 
             // Attempt to change the mode
             await device.executeCommand('ChangeCleanMode', newMode);

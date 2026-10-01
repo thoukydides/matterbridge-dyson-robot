@@ -137,7 +137,7 @@ export function dysonRenderMap360VisNav(
     };
 
     // If the clean is associated with a map then parse its presentation map
-    let presentationBitmap: DysonBitmapOctet;
+    let presentationBitmap: DysonBitmapOctet<Dyson360VisNavPresentationOctet>;
     let presentationOrigin: { x: number, y: number } | undefined;
     if (clean.persistentMap && map) {
         // Parse the presentation map image and add most recent dock location
@@ -196,7 +196,7 @@ export function dysonRenderMap360VisNav(
                 [Dyson360VisNavPresentationOctet.Boundary]: makeGlyph(style, 'boundary'),
                 [Dyson360VisNavPresentationOctet.Empty]:    makeGlyph(style, 'empty')
             };
-            const presentationOctet: Dyson360VisNavPresentationOctet = Math.max(...presentation);
+            const presentationOctet = presentation.reduce((a, b) => (a < b ? b : a));
             const presentationChar = PRESENTATION_ANSI_BG[presentationOctet];
 
             // Faults take priority over everything else

@@ -8,6 +8,9 @@ import {
 } from 'matterbridge/matter/clusters';
 import { VENDOR_ERROR_360 } from './endpoint-360-behavior.js';
 
+// Helper function to convert a number to an enum value
+const toEnum = <T extends number>(val: number | T): T => val as never;
+
 // RVC Operational State errors
 export class RvcOperationalStateError extends Error {
 
@@ -29,11 +32,11 @@ export class RvcOperationalStateError extends Error {
     // Convert an arbitrary error (or nullish for success) to an ErrorStateStruct
     static toStruct(err?: unknown, defaultId = VENDOR_ERROR_360): RvcOperationalState.ErrorStateStruct {
         return err instanceof RvcOperationalStateError ? {
-            errorStateId:       err.id,
+            errorStateId:       toEnum<RvcOperationalState.ErrorState>(err.id),
             errorStateLabel:    err.label  ?.substring(0, 64) ?? undefined,
             errorStateDetails:  err.details?.substring(0, 64) ?? ''
         } : err ? {
-            errorStateId:       defaultId,
+            errorStateId:       toEnum<RvcOperationalState.ErrorState>(defaultId),
             errorStateLabel:    err instanceof Error ? err.message.substring(0, 64) : 'Unknown error',
             errorStateDetails:  ''
         } : {
@@ -86,14 +89,14 @@ export class ChangeToModeError extends Error {
 
     // Create a new error
     constructor(
-        readonly status:    ModeBase.ModeChangeStatus | number,
+        readonly status:    ModeBase.ModeChangeStatus,
         message?:           string,
         options?:           ErrorOptions
     ) {
         super(message, options);
         Error.captureStackTrace(this, ChangeToModeError);
         const statusName = ModeBase.ModeChangeStatus[status];
-        this.name = `ChangeToModeError[${statusName ?? `0x${status.toString(16)}`}]`;
+        this.name = `ChangeToModeError[${statusName}]`;
     }
 
     // Convert an arbitrary error (or nullish for success) to a ChangeToModeResponse
@@ -129,11 +132,11 @@ export class ChangeToModeError extends Error {
 export class SelectAreaError extends Error {
 
     // Create a new error
-    constructor(readonly status: ServiceArea.SelectAreasStatus | number, message?: string, options?: ErrorOptions) {
+    constructor(readonly status: ServiceArea.SelectAreasStatus, message?: string, options?: ErrorOptions) {
         super(message, options);
         Error.captureStackTrace(this, SelectAreaError);
         const statusName = ServiceArea.SelectAreasStatus[status];
-        this.name = `SelectAreaError[${statusName ?? `0x${status.toString(16)}`}]`;
+        this.name = `SelectAreaError[${statusName}]`;
     }
 
     // Convert an arbitrary error (or nullish for success) to a SelectAreasResponse
