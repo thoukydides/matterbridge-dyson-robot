@@ -44,15 +44,9 @@ const NON_ANSI_WARNING = /\[(?:warn|error|fatal?:)\]/;
 process.env.FORCE_COLOR = '1'; // Ensure that ANSI colour codes are used
 
 // Warnings and errors that should not be treated as test failures
-/* eslint-disable max-len */
 const IGNORED_WARNINGS: RegExp[] = [
-    /Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set./,
-    // https://github.com/matter-js/matter.js/pull/3021
-    /\[ThermostatServer\] No local TemperatureMeasurement cluster available and externalMeasuredIndoorTemperature state not set. Setting localTemperature to null/,
-    // https://github.com/matter-js/matter.js/pull/3398
-    /\[ValidatedElements\] Error in ThermostatServerAir.atomicRequest: Throws unimplemented exception/
+    /Received unknown active fault:/
 ];
-/* eslint-enable max-len */
 
 // Length of time to wait
 const TIMEOUT_MATTERBRIDGE_MS = 2 * 60 * 1000; // 2 minutes

@@ -165,7 +165,8 @@ export interface Dyson360MsgStateChange extends DysonMsg {
 
 export interface Dyson360MsgMapUploadStatus extends DysonMsg {
     msg:                                'MAP-UPLOAD-STATUS';
-    cleanId:                            string; // UUID
+    cleanId?:                           string; // UUID
+    persistentMapId?:                   string; // UUID
     status:                             Dyson360MapUploadStatus;
 }
 
@@ -229,7 +230,7 @@ export interface Dyson360MsgStateSet extends DysonMsg {
 export interface Dyson360MsgStart extends DysonMsg {
     msg:                                'START';
     'mode-reason'?:                     DysonModeReason;
-    fullCleanType:                      Dyson360CleaningType;
+    fullCleanType?:                     Dyson360CleaningType;
     cleaningMode?:                      Dyson360CleaningMode;
     cleaningProgramme?:                 Dyson360CleaningProgramme;
     cleaningStrategy?:                  Dyson360VacuumMode;

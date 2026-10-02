@@ -30,7 +30,9 @@ const DYSON_MQTT_CONFIG_360: DysonMqttConfig<DysonMsgMap360> = {
         command:    '@/@/command',
         subscribe: ['@/@/status'],
         other:     ['@/initialconnection/credentials',
-                    '@/initialconnection/status']
+                    '@/initialconnection/status',
+                    '@/@/command/jdm',
+                    '@/@/status/jdm']
     },
     messages: {
         prefix:     'Dyson360Msg',
@@ -95,13 +97,16 @@ export class DysonMqtt360 extends DysonMqtt<DysonMsgMap360, DysonMqttStatus360> 
     // Update the robot vacuum state from a received message
     updateState(msg: Dyson360MsgCurrentState): void {
         // Clear fields from the state that might have disappeared
+        // (but not for Spot+Scrub Ai updates only providing globalPosition)
         const DELETE_KEYS  = [
             'activeFaults',         'cleanDuration',            'cleanId',
             'cleaningProgramme',    'faults',                   'globalPosition',
             'persistentMapId',      'sessionId',                'traverseTargetId',
             'zoneId',               'zonesDefinitionVersion',   'zoneStatus'
         ] as const satisfies (keyof Dyson360MsgCurrentState)[];
-        for (const key of DELETE_KEYS) this.status[key] = undefined;
+        if (msg.state) {
+            for (const key of DELETE_KEYS) this.status[key] = undefined;
+        }
 
         // Copy status fields from the message to the state
         const { msg: _msg, time, ...status } = msg;

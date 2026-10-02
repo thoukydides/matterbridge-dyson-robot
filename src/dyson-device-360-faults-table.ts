@@ -269,14 +269,5 @@ export const DYSON_360_FAULT_SINGLE_CODES = new Map<number, Dyson360FaultDetail>
     [2510,                      { msg: 'Robot picked up',                                           opError: 'Stuck'                                            }],
     [2511,                      { msg: 'Robot upside down',                                         opError: 'Stuck'                                            }],
     [2515,                      { msg: 'Unable to return to dock',                                  opError: 'FailedToFindChargingDock'                         }],
-    [2516,                      { msg: 'Unable to return to dock',                                  opError: 'FailedToFindChargingDock'                         }],
-
-    // https://github.com/thoukydides/matterbridge-dyson-robot/issues/46#issue-5250424565
-    [2100,                      { msg: 'Battery charge required',                                   opError: 'LowBattery'                                       }],
-    [2101,                      { msg: 'Battery charging',                                          opError: 'LowBattery'                                       }],
-    [2103,                      { msg: 'Dock busy'                                                                                                              }],
-    [2104,                      { msg: 'Aborted'                                                                                                                }],
-    [2108,                      { msg: 'Discovery in progress'                                                                                                  }],
-    [2109,                      { msg: 'Cleaning in progress'                                                                                                   }],
-    [2110,                      { msg: 'Cleaning resumed'                                                                                                       }]
+    [2516,                      { msg: 'Unable to return to dock',                                  opError: 'FailedToFindChargingDock'                         }]
 ]);

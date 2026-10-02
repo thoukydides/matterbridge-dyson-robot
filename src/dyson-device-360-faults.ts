@@ -49,7 +49,7 @@ export class Dyson360FaultMapper {
 
     // Online lookup of fault codes
     lookupOnline?: Dyson360FaultLookup;
-    readonly lookupOnlineCache = new Map<string, Dyson360FaultDetail>();
+    readonly lookupOnlineCache = new Map<string, Dyson360FaultDetail | undefined>();
 
     // Construct a new fault mapper
     constructor(readonly log: AnsiLogger) {}
@@ -135,12 +135,10 @@ export class Dyson360FaultMapper {
     async findFaultOnline(faultCode: string): Promise<Dyson360FaultDetail | undefined> {
         try {
             // Return the cached result if available
-            const cached = this.lookupOnlineCache.get(faultCode);
-            if (cached)             return cached;
-            if (!this.lookupOnline) return;
+            if (this.lookupOnlineCache.has(faultCode)) return this.lookupOnlineCache.get(faultCode);
 
             // Otherwise attempt to retrieve the fault details from the cloud API
-            const msg = await this.lookupOnline(faultCode);
+            const msg = await this.lookupOnline?.(faultCode);
             if (!msg) return;
 
             // Cache and return the result
@@ -149,6 +147,7 @@ export class Dyson360FaultMapper {
             return detail;
         } catch (err) {
             logError(this.log, `Online lookup of fault ${faultCode}`, err);
+            this.lookupOnlineCache.set(faultCode, undefined);
         }
     }
 
