@@ -262,7 +262,7 @@ abstract class DysonDevice360NuroviBase extends DysonDevice360ZonesMixin(DysonDe
     // Attempt an online lookup of a fault code
     async findFaultOnline(faultCode: string): Promise<string | undefined> {
         // Retrieve the support information for this fault code from the API
-        assertIsDefined(this.api);
+        if (!this.api) return; // (mock devices do not support this)
         const details = await this.api.getFaultDetails360V1(faultCode);
         if (!details.length) throw new Error('No online product support result');
         if (!details.some(d => d.codes.includes(faultCode))) {
