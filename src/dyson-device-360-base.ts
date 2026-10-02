@@ -219,7 +219,7 @@ export abstract class DysonDevice360Base
             switch (msg.msg) {
             case 'MAP-UPLOAD-STATUS':
                 // Spot+Scrub Ai doesn't provide cleanId in its normal status
-                await this.logCompletedClean(msg.cleanId, this.mqtt.status.cleanDuration);
+                if (msg.cleanId) await this.logCompletedClean(msg.cleanId, this.mqtt.status.cleanDuration);
                 break;
             }
         }));
