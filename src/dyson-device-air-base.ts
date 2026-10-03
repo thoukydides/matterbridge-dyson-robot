@@ -47,6 +47,7 @@ import { ifValueChanged } from './decorator-changed.js';
 import { EndpointBase } from './endpoint-base.js';
 import { VendorId } from 'matterbridge/matter';
 import { DysonAirSerialise } from './dyson-device-air-serialise.js';
+import { DysonAirFaultLogger } from './dyson-device-air-faults.js';
 
 // Mappings between FanMode and SpeedSetting
 const FAN_MODE_TO_SPEED_LOW     = 1;
@@ -73,6 +74,9 @@ export abstract class DysonDeviceAirBase extends DysonDevice<DysonMqttAir> {
     // The air purifier device endpoints
     endpoints?:         EndpointsAir;
 
+    // Fault code handlers
+    faultLogger:        DysonAirFaultLogger;
+
     // Supported features
     hasBreeze:          boolean;
     hasHepaFilter:      boolean;
@@ -93,6 +97,9 @@ export abstract class DysonDeviceAirBase extends DysonDevice<DysonMqttAir> {
         this.hasDirection       = status.fdir !== undefined;
         this.hasLeftRight       = status.oson !== undefined;
         this.hasUpDown          = status.oton !== undefined;
+
+        // Prepare fault code logger
+        this.faultLogger = new DysonAirFaultLogger(this.log, this.api);
 
         // Prepare a listener for MQTT updates
         this.mqttListener = tryListener(this.mqtt, () =>
@@ -383,6 +390,9 @@ export abstract class DysonDeviceAirBase extends DysonDevice<DysonMqttAir> {
                 this.endpoints?.updateSensors(sensorStatus)
             ]);
         }
+
+        // Log changes to the active product faults
+        await this.faultLogger.update(status.productErrors, status.productWarnings);
     }
 
     // Convert the status to On/Off and Fan Control cluster attributes

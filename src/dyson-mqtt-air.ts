@@ -8,7 +8,7 @@ import {
 } from './ti/dyson-air-msg-types.js';
 import { Config } from './config-types.js';
 import { AnsiLogger } from 'matterbridge/logger';
-import { formatList, tryListener } from './utils.js';
+import { tryListener } from './utils.js';
 import {
     DysonAirMsgCurrentFaults,
     DysonAirMsgCurrentState,
@@ -22,8 +22,6 @@ import {
     DysonAirErrorCodeEnum,
     DysonAirFanSpeed,
     DysonAirFaultStatus,
-    DysonAirModuleFault,
-    DysonAirProductFault,
     DysonAirSensorValueEnum,
     DysonAirSleepTimerEnum,
     DysonAirWarningCodeEnum
@@ -62,12 +60,10 @@ type DysonMqttProductStateEntry<K extends keyof DysonMqttProductState =
     keyof DysonMqttProductState> = [K, DysonMqttProductState[K]];
 
 // Dyson air treatment machine faults status
-interface Faults {
-    productErrors:      Set<DysonAirProductFault>;
-    productWarnings:    Set<DysonAirProductFault>;
-    moduleErrors:       Set<DysonAirModuleFault>;
-    moduleWarnings:     Set<DysonAirModuleFault>;
-}
+type Faults = {
+    [K in keyof DysonAirMsgCurrentFaults as Required<DysonAirMsgCurrentFaults[K]> extends Record<string, DysonAirFaultStatus> ? K : never]:
+        Set<string>;
+};
 
 // Dyson air treatment machine sensor status
 type SensorDataV2 = 'hchr' | 'p25r' | 'p10r' | 'va10';
@@ -221,32 +217,13 @@ export class DysonMqttAir extends DysonMqtt<DysonMsgMapAir, DysonMqttStatusAir> 
         }
     }
 
-    // Update environmental sensor data from a received message
+    // Update active fault codes from a received message
     updateFaults(msg: DysonAirMsgCurrentFaults): void {
-        const faultKeysCheckers = [
-            ['productErrors',   DysonAirProductFault],
-            ['productWarnings', DysonAirProductFault],
-            ['moduleErrors',    DysonAirModuleFault],
-            ['moduleWarnings',  DysonAirModuleFault]
-        ] as const;
-
         // Convert each fault type to a set of active fault codes
-        for (const [key, knownValues] of faultKeysCheckers) {
-            // Identify unknown faults and active known faults
-            const activeFaults  = new Set<string>();
-            const unknownFaults = new Set<string>();
-            for (const [fault, status] of Object.entries(msg[key])) {
-                if (!Object.values(knownValues).includes(fault))    unknownFaults.add(fault);
-                else if (status === DysonAirFaultStatus.Fail)       activeFaults. add(fault);
-            }
-
-            // Log warnings for unknown faults (both active and inactive)
-            if (unknownFaults.size) {
-                this.log.warn(`Received unknown ${key}: ${formatList([...unknownFaults])}`);
-            }
-
-            // Update the status with the set of active faults
-            (this.status[key] as Set<string>) = activeFaults;
+        const FAULT_KEYS = ['productErrors', 'productWarnings', 'moduleErrors', 'moduleWarnings'] as const;
+        for (const key of FAULT_KEYS) {
+            const activeFaults = Object.entries(msg[key]).filter(([, status]) => status === DysonAirFaultStatus.Fail);
+            this.status[key] = new Set(activeFaults.map(([fault]) => fault));
         }
     }
 
