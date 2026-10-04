@@ -113,7 +113,7 @@ export type Dyson360PersistentMapMetadataResponseV2 = Dyson360PersistentMapMetad
 // PUT /v2/app/{serial}/persistent-map-metadata/{mapId} (Spot+Scrub Ai only)
 export type Dyson360UpdateMapZoneSelectionRequestV2 = Dyson360PersistentMapMetadataZoneV2[];
 
-// GET /v1/app/{serial}/persistent-maps/{mapId} (360 Vis Nav Ai only)
+// GET /v1/app/{serial}/persistent-maps/{mapId} (360 Vis Nav only)
 export interface Dyson360PersistentMapLocation {
     x:                                  number;             // mm
     y:                                  number;             // mm

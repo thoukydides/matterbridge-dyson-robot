@@ -2,13 +2,15 @@
 // Copyright © 2025-2026 Alexander Thoukydides
 
 import {
+    Dyson360CleaningMode,
     Dyson360CleaningProgramme,
     Dyson360ZoneCleanStatus,
     Dyson360ZoneIcon,
+    Dyson360ZoneStatus,
     Dyson360ZoneType
 } from './dyson-360-types.js';
 import { CommonAreaNamespaceTag } from 'matterbridge/matter';
-import { DysonDevice360Base } from './dyson-device-360-base.js';
+import { dyson360MapState, DysonDevice360Base } from './dyson-device-360-base.js';
 import { AbstractConstructor, assertIsDefined, MS } from './utils.js';
 import { ServiceArea } from 'matterbridge/matter/clusters';
 import { SelectAreaError } from './error-360.js';
@@ -16,7 +18,11 @@ import { Endpoint360, formatAreaName } from './endpoint-360.js';
 import { Device360CommandHandlers } from './dyson-device-360-commands.js';
 import { logError } from './log-error.js';
 import { isDeepStrictEqual } from 'node:util';
-import { Dyson360PersistentMapMetadataV1, Dyson360PersistentMapMetadataV2 } from './dyson-360-cloud-types.js';
+import {
+    Dyson360PersistentMapMetadataV1,
+    Dyson360PersistentMapMetadataV2
+} from './dyson-360-cloud-types.js';
+import { RvcRunMode360 } from './endpoint-360-behavior.js';
 
 // Mapping of Dyson area icons/names to Matter common areas
 type LocationType = number | null;
@@ -48,10 +54,26 @@ const PROGRESS_MAP: Record<Dyson360ZoneCleanStatus, ServiceArea.OperationalStatu
     [Dyson360ZoneCleanStatus.InProgress]:   ServiceArea.OperationalStatus.Operating,
     [Dyson360ZoneCleanStatus.Complete]:     ServiceArea.OperationalStatus.Completed
 };
+function mapProgress(status: Dyson360ZoneCleanStatus, isCleaning: boolean): ServiceArea.OperationalStatus {
+    let result = PROGRESS_MAP[status];
+    const ACTIVE_STATUS = [ServiceArea.OperationalStatus.Pending, ServiceArea.OperationalStatus.Operating];
+    if (!isCleaning && ACTIVE_STATUS.includes(result)) result = ServiceArea.OperationalStatus.Skipped;
+    return result;
+}
 
 // Zone type within the persistent map metadata
 type PersistentMapMetadata = Dyson360PersistentMapMetadataV1 | Dyson360PersistentMapMetadataV2;
 type PersistentMapMetadataZone = PersistentMapMetadata['zones'][number];
+
+// Zone cleaning status with its associated persistent map identifier
+export interface Dyson360CleaningStatusFields {
+    mapId:          string;
+    mapVersion?:    string;
+    zoneStatus:     Dyson360ZoneStatus[];
+}
+export type Dyson360CleaningStatus =
+    ({ cleaningMode: Dyson360CleaningMode.Global         } & Partial<Dyson360CleaningStatusFields>)
+  | ({ cleaningMode: Dyson360CleaningMode.ZoneConfigured } &         Dyson360CleaningStatusFields );
 
 // Interval between map update checks without zonesDefinitionLastUpdatedDate
 const MAP_REFRESH_INTERVAL_MS = 5 * 60 * MS; // 5 minutes
@@ -79,6 +101,9 @@ export function DysonDevice360ZonesMixin<TBase extends AbstractConstructor<Dyson
         // When were the maps last updated (in milliseconds since the epoch)
         lastMapFetch    = 0;
 
+        // Cache of zone cleaning status (for use when not cleaning)
+        zoneStatusCache?: Dyson360CleaningStatus;
+
         // Mixin constructor
         constructor(...args: any[]) {
             super(...args as ConstructorParameters<TBase>);
@@ -103,44 +128,52 @@ export function DysonDevice360ZonesMixin<TBase extends AbstractConstructor<Dyson
         override supportsMaps = () => true;
 
         // Update the Service Area cluster when the zone status changes
-        async updateZoneStatus(
-            persistentMapId:    string | undefined,
-            rvcVersion:         string | undefined,
-            currentZoneId:      string | undefined,
-            zoneCleanStatus:    { id: string; cleanStatus: Dyson360ZoneCleanStatus }[],
-            cleaningProgramme?: Dyson360CleaningProgramme | null
-        ): Promise<void> {
-            let currentArea:     number | null          = null;
-            let progress:        ServiceArea.Progress[] = [];
-            const selectedAreas: number[]               = [];
-            if (persistentMapId && await this.checkMap(persistentMapId, rvcVersion)) {
-                // If the current zone is known then map it to a Matter area
-                if (currentZoneId) currentArea = this.findAreaId(persistentMapId, currentZoneId);
+        async updateZoneStatus(cleaningStatus?: Dyson360CleaningStatus): Promise<void> {
+            const { state, persistentMapId, zonesDefinitionVersion, zoneId } = this.mqtt.status;
+            const { runMode } = dyson360MapState(state);
 
-                // Index the zone status by Matter area identifier
-                const progressMap = new Map<number, ServiceArea.OperationalStatus>();
-                for (const { id: zoneId, cleanStatus } of zoneCleanStatus) {
-                    const areaId = this.findAreaId(persistentMapId, zoneId);
-                    if (areaId) progressMap.set(areaId, PROGRESS_MAP[cleanStatus]);
-                }
+            // Update the zone status cache depending on the robot's state
+            if (runMode === RvcRunMode360.Mapping) {
+                // Avoid stale status during mapping
+                this.zoneStatusCache = undefined;
+            } else if (cleaningStatus) {
+                // Cache provided status (even if clean has already finished)
+                this.zoneStatusCache = cleaningStatus;
+            } else if (runMode === RvcRunMode360.Cleaning) {
+                // No usable data yet for the clean in progress
+                this.log.info('Cleaning status not yet available for current clean');
+                return;
+            } else {
+                // Idle with nothing new; use cached status from last clean
+            }
 
-                // If zone cleaning then map selected areas to Matter areas
-                const cleaningZones = new Set([
-                    ...(cleaningProgramme?.orderedZones   ?? []),
-                    ...(cleaningProgramme?.unorderedZones ?? [])
-                ]);
-                for (const zoneId of cleaningZones) {
-                    const areaId = this.findAreaId(persistentMapId, zoneId);
-                    if (areaId) {
+            // If the current zone is known then map it to a Matter area
+            let currentArea: number | null = null;
+            if (persistentMapId && zoneId && await this.checkMap(persistentMapId, zonesDefinitionVersion)) {
+                currentArea = this.findAreaId(persistentMapId, zoneId);
+            }
+
+            // If zone cleaning then attempt to set the areas and progress
+            const progress:         ServiceArea.Progress[] = [];
+            const selectedAreas:    number[]               = [];
+            if (this.zoneStatusCache?.cleaningMode === Dyson360CleaningMode.ZoneConfigured) {
+                const { mapId, mapVersion, zoneStatus } = this.zoneStatusCache;
+                if (await this.checkMap(mapId, mapVersion)) {
+                    for (const { zoneId, cleanStatus } of zoneStatus) {
+                        if (cleanStatus === Dyson360ZoneCleanStatus.NotRequested) continue;
+
+                        // Map the zone to a Matter area
+                        const areaId = this.findAreaId(mapId, zoneId);
+                        if (!areaId) continue;
+
+                        // Add this zone to both the selected areas and progress
                         selectedAreas.push(areaId);
-                        const status = progressMap.get(areaId) ?? ServiceArea.OperationalStatus.Pending;
+                        const status = mapProgress(cleanStatus, runMode === RvcRunMode360.Cleaning);
                         progress.push({ areaId, status });
-                    }
-                }
 
-                // If not zone cleaning provide any progress status reported
-                if (selectedAreas.length === 0) {
-                    progress = Array.from(progressMap.entries(), ([areaId, status]) => ({ areaId, status }));
+                        // Current location is zone being cleaned unless known
+                        if (cleanStatus === Dyson360ZoneCleanStatus.InProgress) currentArea ??= areaId;
+                    }
                 }
             }
 

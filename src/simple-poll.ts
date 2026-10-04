@@ -30,6 +30,11 @@ export class SimplePoll {
         }
     }
 
+    // Is the polling operation active (not stopped)
+    get isActive(): boolean {
+        return this.status !== 'stopped';
+    }
+
     // Perform the polling
     async doPolling(): Promise<void> {
         this.log.info(`${this.description} starting`);

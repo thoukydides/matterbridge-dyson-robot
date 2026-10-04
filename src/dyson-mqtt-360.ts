@@ -131,7 +131,7 @@ export class DysonMqtt360 extends DysonMqtt<DysonMsgMap360, DysonMqttStatus360> 
                 'mode-reason':      DysonModeReason.LocalApp,
                 fullCleanType:      Dyson360CleaningType.Immediate,
                 cleaningMode:       this.status.defaultCleaningMode     && Dyson360CleaningMode.Global,
-                cleaningStrategy:   this.status.defaultCleaningStrategy && Dyson360VacuumMode.Auto
+                cleaningStrategy:   this.status.defaultCleaningStrategy
             });
         case 'PAUSE':
         case 'RESUME':

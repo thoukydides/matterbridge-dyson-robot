@@ -1,22 +1,25 @@
 // Matterbridge plugin for Dyson robot vacuum and air treatment devices
 // Copyright © 2025-2026 Alexander Thoukydides
 
-import { BasicInformation } from 'matterbridge/matter/clusters';
-import { RvcCleanMode360 } from './endpoint-360-behavior.js';
+import { BasicInformation, RvcOperationalState } from 'matterbridge/matter/clusters';
+import { RvcCleanMode360, RvcRunMode360 } from './endpoint-360-behavior.js';
 import {
     Dyson360VacuumMode,
     Dyson360EyePowerMode,
     Dyson360HeuristPowerMode,
     Dyson360TimelineEvent,
-    Dyson360ZoneCleanStatus,
-    Dyson360CleaningProgramme
+    Dyson360CleaningProgramme,
+    Dyson360DockState,
+    Dyson360CleaningMode,
+    Dyson360ZoneCleanStatus
 } from './dyson-360-types.js';
 import {
     DysonDevice360Base,
     Dyson360PowerLevelMap,
-    Dyson360CleanSummaryResult
+    Dyson360CleanSummaryResult,
+    dyson360MapState
 } from './dyson-device-360-base.js';
-import { DysonDevice360ZonesMixin } from './dyson-device-360-zones.js';
+import { Dyson360CleaningStatus, DysonDevice360ZonesMixin } from './dyson-device-360-zones.js';
 import {
     dysonRenderMap360Eye,
     dysonRenderMap360VisNav
@@ -24,6 +27,7 @@ import {
 import {
     Dyson360PersistentMapMetadataResponseV1,
     Dyson360PersistentMapMetadataResponseV2,
+    Dyson360PersistentMapMetadataV2,
     Dyson360PersistentMapResponseV1
 } from './dyson-360-cloud-types.js';
 import { DysonMqtt360, DysonMqttStatus360 } from './dyson-mqtt-360.js';
@@ -31,6 +35,8 @@ import { assertIsDefined, formatList, MS, plural } from './utils.js';
 import { DysonDeviceConstructorParams } from './dyson-device-base.js';
 import { DysonMqttStatus } from './dyson-mqtt.js';
 import { SimplePoll } from './simple-poll.js';
+import { UpdateRvcOperationalState360 } from './endpoint-360.js';
+import { Dyson360MappedFaults } from './dyson-device-360-faults.js';
 
 /* eslint-disable max-len */
 
@@ -158,9 +164,33 @@ export class DysonDevice360VisNav extends DysonDevice360ZonesMixin(DysonDevice36
         await super.updateClusterAttributes(status);
 
         // Update the Service Area cluster when the zone status changes
-        const { persistentMapId, zonesDefinitionVersion, zoneId, zoneStatus, cleaningProgramme } = status;
-        const zoneCleanStatus = (zoneStatus ?? []).map(({ zoneId, cleanStatus }) => ({ id: zoneId, cleanStatus }));
-        await this.updateZoneStatus(persistentMapId, zonesDefinitionVersion, zoneId, zoneCleanStatus, cleaningProgramme);
+        const { currentCleaningMode: cleaningMode, cleaningProgramme, state, zoneStatus } = status;
+        let cleaningStatus: Dyson360CleaningStatus | undefined;
+        if (state.startsWith('FULL_CLEAN_')) {
+            assertIsDefined(cleaningMode);
+            if (cleaningMode === Dyson360CleaningMode.Global) {
+                // No map or zone for global cleans
+                cleaningStatus = { cleaningMode };
+            } else if (zoneStatus) {
+                // Live zone status available
+                const { persistentMapId: mapId, zonesDefinitionVersion: mapVersion } = status;
+                assertIsDefined(mapId);
+                cleaningStatus = { cleaningMode, mapId, mapVersion, zoneStatus };
+            } else if (cleaningProgramme) {
+                // No live zone status, so synthesise from cleaning programme
+                const zones = new Set([
+                    ...(cleaningProgramme.orderedZones ?? []),
+                    ...(cleaningProgramme.orderedZones ?? [])
+                ]);
+                cleaningStatus = {
+                    cleaningMode,
+                    mapId:      cleaningProgramme.persistentMapId,
+                    mapVersion: cleaningProgramme.zonesDefinitionLastUpdatedDate ?? undefined,
+                    zoneStatus: [...zones].map(zoneId => ({ zoneId, cleanStatus: Dyson360ZoneCleanStatus.Pending }))
+                };
+            }
+        }
+        await this.updateZoneStatus(cleaningStatus);
     }
 
     // Retrieve the latest persistent map metadata
@@ -206,7 +236,6 @@ abstract class DysonDevice360NuroviBase extends DysonDevice360ZonesMixin(DysonDe
     // Polled updates
     pollStatus:             SimplePoll;
     pollCleaning:           SimplePoll;
-    lastCleaningProgramme?: Dyson360CleaningProgramme;
 
     // Construct a new Dyson device instance
     constructor(...args: DysonDeviceConstructorParams<DysonMqtt360>) {
@@ -224,10 +253,12 @@ abstract class DysonDevice360NuroviBase extends DysonDevice360ZonesMixin(DysonDe
 
         // Use the live map to update the zone status
         this.pollCleaning = new SimplePoll(this.log, 'Live cleaning maps poll', SPOTSCRUB_POLL_LIVE_MAPS_CLEANING_MS, async () => {
-            assertIsDefined(this.api);
+            if (!this.api) return; // (mock devices do not support this)
+            const cleaningMode = this.mqtt.status.currentCleaningMode;
+            assertIsDefined(cleaningMode);
             const live = await this.api.getLiveMapsCleaning360V1();
-            const currentZoneId = live.zones.find(z => z.cleanStatus === Dyson360ZoneCleanStatus.InProgress)?.id;
-            await this.updateZoneStatus(live.id, undefined, currentZoneId, live.zones, this.lastCleaningProgramme);
+            const zoneStatus = live.zones.map(({ id, cleanStatus }) => ({ zoneId: id, cleanStatus }));
+            await this.updateZoneStatus({ mapId: live.id, cleaningMode, zoneStatus });
         });
     }
 
@@ -238,8 +269,38 @@ abstract class DysonDevice360NuroviBase extends DysonDevice360ZonesMixin(DysonDe
         await super.updateClusterAttributes(status);
 
         // Start or stop live map polling when cleaning
-        this.lastCleaningProgramme = status.cleaningProgramme;
-        if (status.state.startsWith('FullClean')) this.pollCleaning.start(); else this.pollCleaning.stop();
+        const { runMode } = dyson360MapState(status.state);
+        if (runMode === RvcRunMode360.Cleaning) this.pollCleaning.start();
+        else                                    this.pollCleaning.stop();
+
+        // Update the Service Area cluster when not polling the live map
+        if (!this.pollCleaning.isActive) await this.updateZoneStatus();
+    }
+
+    // Attempt to convert selected areas into a Dyson cleaning programme
+    override async makeCleaningProgramme(areaIds: number[]): Promise<Dyson360CleaningProgramme> {
+        const cleaningProgramme = await super.makeCleaningProgramme(areaIds);
+
+        // Select and order the zones before the clean is started
+        const map = this.mapFromMatter.values().find(m => m.id === cleaningProgramme.persistentMapId) as
+            Dyson360PersistentMapMetadataV2 | undefined;
+        assertIsDefined(map);
+        let changed = false;
+        for (const zone of map.zones) {
+            const isSelected = cleaningProgramme.unorderedZones?.includes(zone.id) ?? false;
+            if (zone.isSelected === isSelected) continue;
+            zone.isSelected = isSelected;
+            changed = true;
+        }
+        if (changed) {
+            this.log.info('Updating persistent map with zone selection');
+            await this.api?.setPersistentMapMetadata360V2(cleaningProgramme.persistentMapId, map.zones);
+        } else {
+            this.log.info('Zone selection does not require any change to the persistent map');
+        }
+
+        // Return the cleaning programme to start the clean via MQTT
+        return cleaningProgramme;
     }
 
     // Retrieve the latest persistent map metadata
@@ -257,6 +318,25 @@ abstract class DysonDevice360NuroviBase extends DysonDevice360ZonesMixin(DysonDe
     override async stop(): Promise<void> {
         this.pollStatus.stop();
         await super.stop();
+    }
+
+    // Convert the status to RVC Operational State cluster attributes
+    override mapOperationalState(
+        status: DysonMqttStatus<DysonMqttStatus360>,
+        faults: Dyson360MappedFaults
+    ): UpdateRvcOperationalState360 {
+        const state = super.mapOperationalState(status, faults);
+
+        // Override the Operational State if the dock is busy
+        const DOCK_STATE_MAP: Record<Dyson360DockState, keyof typeof RvcOperationalState.OperationalState | undefined> = {
+            [Dyson360DockState.CollectingDust]: 'EmptyingDustBin',
+            [Dyson360DockState.WashingMop]:     'CleaningMop',
+            [Dyson360DockState.DryingMop]:      'CleaningMop',
+            [Dyson360DockState.Idle]:           undefined
+        };
+        const mappedDockState = status.dockState && DOCK_STATE_MAP[status.dockState];
+        if (mappedDockState) state.operationalState = RvcOperationalState.OperationalState[mappedDockState];
+        return state;
     }
 
     // Attempt an online lookup of a fault code

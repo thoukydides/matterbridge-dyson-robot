@@ -144,7 +144,7 @@ The supported `debugFeatures` are:
 
 The recommended `Remote Account` provisioning method routes all MQTT messages via the AWS IoT gateway. No per-device configuration is required with this method.
 
-The other provisioning methods enable direct local connection to the robot vacuum and air treatment devices, but are not supported by some recent products (such as the Dyson 360 Vis Nav, Dyson Spot+Scrub Ai, and Dyson Purifier Big + Quiet Formaldehyde). These methods require manual configuration of the local network IP addresses or hostnames, and (for some methods) the credentials used to authorise the MQTT connection.
+The other provisioning methods enable direct local connection to the robot vacuum and air treatment devices, but are not supported by some recent products (such as the Dyson 360 Vis Nav, Dyson Spot+Scrub Ai, Dyson R1/R2/R3 Nurovi robots, and Dyson Purifier Big + Quiet Formaldehyde). These methods require manual configuration of the local network IP addresses or hostnames, and (for some methods) the credentials used to authorise the MQTT connection.
 
 #### `Remote Account` (Connect via AWS IoT Gateway / Configure using MyDyson account)
 
@@ -284,7 +284,7 @@ The following sections describe the functionality exposed to Matter. Different e
 <details>
 <summary>Robot Vacuums</summary>
 
-Each robot vacuum appears as a standalone Matter device with a single endpoint. This supports basic start/stop/pause/resume control and changing power mode. Detailed status information is provided for the robot vacuum's activity, battery, and any faults. Zone cleaning is also supported for Dyson 360 Vis Nav devices (only).
+Each robot vacuum appears as a standalone Matter device with a single endpoint. This supports basic start/stop/pause/resume control and (for non-zone cleaning) changing power mode. Detailed status information is provided for the robot vacuum's activity, battery, and any faults. Zone cleaning is also supported for Dyson 360 Vis Nav, Dyson Spot+Scrub Ai, and Dyson R1/R2/R3 Nurovi devices.
 
 #### Robotic Vacuum Cleaner Device
 
@@ -294,21 +294,23 @@ Each robot vacuum appears as a standalone Matter device with a single endpoint. 
   - `Mapping`: Status only (use the MyDyson app to initiate mapping and configure zones).
 
 - **RVC Clean Mode** cluster:
-  | Mode       | Dyson 360 Eye | Dyson 360 Heurist | Dyson 360 Vis Nav | Dyson Spot+Scrub Ai |
-  | ---------- | :-----------: | :---------------: | :---------------: | :-----------------: |
-  | `Quiet`    | Quiet         | Quiet             | Quiet             | Quiet               |
-  | `Quick`    |               |                   | Quick             | Quick               |
-  | `High`     |               | High              |                   |                     |
-  | `MaxBoost` | Max           | Max               | Boost             | Boost               |
-  | `Auto`     |               |                   | Auto              | Auto                |
+  | Mode            | 360 Eye | 360 Heurist | 360 Vis Nav / R1 Nurovi | Spot+Scrub Ai / R2/R3 Nurovi |
+  | --------------- | :------ | :---------: | :---------------------: | :--------------------------: |
+  | `Quiet`         | Quiet   | Quiet       | Quiet                   | Quiet                        |
+  | `Quick`         |         |             | Quick                   | Quick                        |
+  | `High`          |         | High        |                         |                              |
+  | `Max`           | Max     | Max         | Boost                   | Boost                        |
+  | `Auto`          |         |             | Auto                    | Auto                         |
+  | `Mop`           |         |             |                         | Wash-only                    |
+  | `VacuumThenMop` |         |             |                         | Vacuum and Wash              |
 
-  Spot+Scrub Ai wash mode settings (hydration level and wash repetitions) are not exposed to Matter.
+  Detailed Dyson Spot+Scrub Ai and Dyson R1/R2/R3 Nurovi cleaning settings (vacuum repetitions, wash repetitions, hydration level, etc) are not exposed to Matter. During a clean the *CurrentMode* indicates the current activity, e.g. `Mop` when washing as part of a vacuum-and-wash.
 
 **RVC Operational State** cluster:
   - `Pause`: Pause cleaning or mapping activity.
   - `Resume`: Resume from a paused state.
   - `GoHome`: Abort cleaning and return to dock (same as `Idle`).
-  - *OperationalState* (`Stopped`, `Running`, `Paused`, `Error`, `SeekingCharger`, `Charging`, or `Docked`).
+  - *OperationalState* (`Stopped`, `Running`, `Paused`, `Error`, `SeekingCharger`, `Charging`, `Docked`, `EmptyingDustBin`, `CleaningMop`, or `FillingWaterTank`).
   - Any active fault.
 
 **Power Source** cluster:
@@ -495,7 +497,7 @@ All notable changes to this project are documented in [`CHANGELOG.md`](CHANGELOG
           
 If you have discovered an issue or have an idea for how to improve this project, please [open a new issue](https://github.com/thoukydides/matterbridge-dyson-robot/issues/new/choose) using the appropriate issue template.
 
-Most device-specific issues cannot be meaningfully investigated without a **debug log file**, captured with the `Log MQTT Payloads as JSON` debug option enabled. Issues related to robot vacuum devices (especially 360 Heurist, 360 Vis Nav, or Spot+Scrub Ai) also require the `Log API Bodies` debug option enabled.
+Most device-specific issues cannot be meaningfully investigated without a **debug log file**, captured with the `Log MQTT Payloads as JSON` debug option enabled. Issues related to robot vacuum devices (especially 360 Heurist, 360 Vis Nav, Spot+Scrub Ai, or R1/R2/R3 Nurovi) also require the `Log API Bodies` debug option enabled.
 
 <details>
 <summary>Reporting Issues with Unsupported or Recently Released Air Treatment Devices</summary>

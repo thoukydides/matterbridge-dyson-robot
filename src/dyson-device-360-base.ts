@@ -102,7 +102,7 @@ const STATE_MAP: Record<Dyson360State, StateMapColumns> = {
     [Dyson360State.MappingRunning]:         ['Mapping',     'Running',          false],
     [Dyson360State.Aborted]:                ['Idle',        'SeekingCharger',   false]
 };
-function mapState(state: Dyson360State): {
+export function dyson360MapState(state: Dyson360State): {
     runMode:            RvcRunMode360,
     operationalState:   RvcOperationalState.OperationalState,
     isDocked:           boolean
@@ -314,7 +314,7 @@ export abstract class DysonDevice360Base
         // Map the state to cluster attribute values
         const faults = await this.faultMapper.mapFault(status.state, status.faults, status.activeFaults);
         const cleanMode         = this.powerModeToCleanMode(this.getPowerLevel());
-        const { runMode }       = mapState(status.state);
+        const { runMode }       = dyson360MapState(status.state);
         const operationalState  = this.mapOperationalState(status, faults);
         const batteryStatus     = this.mapBatteryStatus(status, faults);
 
@@ -340,7 +340,7 @@ export abstract class DysonDevice360Base
         status: DysonMqttStatus<DysonMqttStatus360>,
         faults: Dyson360MappedFaults
     ): UpdatePowerSource360 {
-        const { operationalState, isDocked } = mapState(status.state);
+        const { operationalState, isDocked } = dyson360MapState(status.state);
         const { batteryChargeLevel } = status;
         const { activeBatFaults, activeBatChargeFaults } = faults;
         if (!isDocked) activeBatChargeFaults.length = 0;
@@ -372,12 +372,12 @@ export abstract class DysonDevice360Base
         status: DysonMqttStatus<DysonMqttStatus360>,
         faults: Dyson360MappedFaults
     ): UpdateRvcOperationalState360 {
-        const mappedState = mapState(status.state);
+        const mappedState = dyson360MapState(status.state);
         const isActive = mappedState.runMode !== RvcRunMode360.Idle;
 
         // Ensure consistent Operational State and Operational Error
         const { operationalError } = faults;
-        let { operationalState } = mapState(status.state);
+        let { operationalState } = mappedState;
         if (operationalError.errorStateId !== RvcOperationalState.ErrorState.NoError) {
             // Force Error state if an error is being reported
             operationalState = RvcOperationalState.OperationalState.Error;
