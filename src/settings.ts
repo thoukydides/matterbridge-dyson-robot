@@ -25,7 +25,7 @@ export const DEFAULT_CONFIG: Readonly<Partial<Config>> = {
             token:      process.env.DYSON_TOKEN
         }
     }),
-    wildcardTopic:          false,
+    wildcardTopic:          true,
     enableServerRvc:        true,
     simpleModeTagsRvc:      true,
     logMapStyle:            'Matterbridge',

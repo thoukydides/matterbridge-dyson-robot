@@ -37,6 +37,7 @@ import { DysonMqttStatus } from './dyson-mqtt.js';
 import { SimplePoll } from './simple-poll.js';
 import { UpdateRvcOperationalState360 } from './endpoint-360.js';
 import { Dyson360MappedFaults } from './dyson-device-360-faults.js';
+import { DysonMqtt360JDM } from './dyson-mqtt-360-jdm.js';
 
 /* eslint-disable max-len */
 
@@ -221,7 +222,7 @@ export class DysonDevice360VisNav extends DysonDevice360ZonesMixin(DysonDevice36
 abstract class DysonDevice360NuroviBase extends DysonDevice360ZonesMixin(DysonDevice360Base) {
 
     // The MQTT client and status update listener
-    static readonly mqttConstructor = DysonMqtt360;
+    static readonly mqttConstructor = DysonMqtt360JDM;
 
     override getPowerLevelMaps = (): Dyson360PowerLevelMap[] => [
         [Dyson360VacuumMode.Auto,     RvcCleanMode360.Auto,       'Auto'],

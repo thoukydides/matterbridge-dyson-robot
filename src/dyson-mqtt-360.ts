@@ -25,14 +25,12 @@ import { DeviceConfigMqtt } from './dyson-mqtt-client-live.js';
 import NodePersist from 'node-persist';
 
 // Configuration of a Dyson MQTT client for robot vacuums
-const DYSON_MQTT_CONFIG_360: DysonMqttConfig<DysonMsgMap360> = {
+export const DYSON_MQTT_CONFIG_360: DysonMqttConfig<DysonMsgMap360> = {
     topics: {
         command:    '@/@/command',
         subscribe: ['@/@/status'],
         other:     ['@/initialconnection/credentials',
-                    '@/initialconnection/status',
-                    '@/@/command/jdm',
-                    '@/@/status/jdm']
+                    '@/initialconnection/status']
     },
     messages: {
         prefix:     'Dyson360Msg',
@@ -52,8 +50,14 @@ export type DysonMqtt360Action = 'START' | 'PAUSE' | 'RESUME' | 'ABORT';
 export class DysonMqtt360 extends DysonMqtt<DysonMsgMap360, DysonMqttStatus360> {
 
     // Construct a new MQTT client
-    constructor(log: AnsiLogger, config: Config, persist: NodePersist.LocalStorage, device: DeviceConfigMqtt) {
-        super(log, config, persist, device, DYSON_MQTT_CONFIG_360);
+    constructor(
+        log:        AnsiLogger,
+        config:     Config,
+        persist:    NodePersist.LocalStorage,
+        device:     DeviceConfigMqtt,
+        mqttConfig  = DYSON_MQTT_CONFIG_360
+    ) {
+        super(log, config, persist, device, mqttConfig);
 
         // Handle MQTT events
         this.on('subscribed', tryListener(this, async () =>
