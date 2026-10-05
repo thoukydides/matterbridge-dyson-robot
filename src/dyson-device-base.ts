@@ -14,9 +14,10 @@ import { DysonDeviceCompatibility } from './dyson-device-compatibility.js';
 
 // Dyson model details
 export interface DysonDeviceModel {
-    type:   string; // MQTT username
-    number: string; // Model number
-    name:   string; // Model description
+    type:       string;     // MQTT root topic
+    number:     string;     // Model number(s)
+    name:       string;     // Model description
+    variants?:  string[];   // Distinguish between models sharing same MQTT topic
 }
 
 // Details of an endpoint function (entity)

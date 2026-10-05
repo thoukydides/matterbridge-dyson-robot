@@ -67,15 +67,19 @@ async function configureAndRegisterPlugin(): Promise<void> {
     const config = PLUGIN_CONFIG_CONTENT;
     if (logsDirectory) {
         const logFiles = await fs.readdir(logsDirectory);
-        const devices: DeviceConfigMock[] = logFiles.map((logFile, index) => ({
-            name:           `Mock ${path.parse(logFile).name}`,
-            serialNumber:   String(index + 1),
-            rootTopic:      path.parse(logFile).name.replace(/-.*/, ''),
-            filename:       path.join(logsDirectory, logFile)
-        }));
+        const devices: DeviceConfigMock[] = logFiles.map((logFile, index) => {
+            const { name } = path.parse(logFile);
+            return {
+                name:           `Mock ${name}`,
+                serialNumber:   String(index + 1),
+                rootTopic:      name.replace(/\W.*/, ''),
+                variant:        /(?<=\().*(?=\))/.exec(name)?.[0],
+                filename:       path.join(logsDirectory, logFile)
+            };
+        });
         Object.assign(config, { provisioningMethod: 'Mock Devices', devices });
         for (const { name, rootTopic } of devices) {
-            const pattern = `\\[Dyson Robot - ${name}\\] End of MQTT log file reached`;
+            const pattern = `\\[Dyson Robot - ${name.replaceAll(/[()]/g, '\\$&')}\\] End of MQTT log file reached`;
             SUCCESS_TESTS[`Mock ${rootTopic}`] = new RegExp(pattern);
         }
     }

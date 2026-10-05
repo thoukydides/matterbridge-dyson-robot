@@ -188,8 +188,7 @@ export class PlatformDyson extends MatterbridgeDynamicPlatform {
             }
 
             // Create the device instance
-            const deviceApi = 'api' in deviceConfig ? deviceConfig.api : undefined;
-            const device = await createDysonDevice(deviceLog, this.config, this.persist, deviceConfig, deviceApi);
+            const device = await createDysonDevice(deviceLog, this.config, this.persist, deviceConfig);
 
             // Validate the device's main functions
             const entities = device.getEntities();

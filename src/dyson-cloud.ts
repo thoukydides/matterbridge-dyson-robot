@@ -29,7 +29,10 @@ import { DysonCloudAPIDevice } from './dyson-cloud-api-device.js';
 import { DysonAccountStatus } from './dyson-types.js';
 
 // Devices accessed via IoT MQTT can also use the Dyson cloud API
-type WithAPI<T> = T & { api?: DysonCloudAPIDevice; };
+type WithAPI<T> = T & {
+    api?:           DysonCloudAPIDevice;
+    variant?:       string; // Product variant, if known
+};
 export type DeviceConfigMqttWithApi = WithAPI<DeviceConfigMqtt>;
 
 // Persistent storage for an account
@@ -233,6 +236,7 @@ export class DysonCloudRemote extends DysonCloud<ConfigRemoteAccount> {
             const rootTopic = device.connectedConfiguration?.mqtt.mqttRootTopicLevel;
             const firmware = connectedConfiguration?.firmware.version;
             const name = device.name ?? productName;
+            const variant = device.variant ?? undefined;
             const deviceLog = new PrefixLogger(this.log, name);
             let status: string;
             if (rootTopic && isSupportedModel(rootTopic)) {
@@ -240,7 +244,7 @@ export class DysonCloudRemote extends DysonCloud<ConfigRemoteAccount> {
                 status = 'Supported';
                 const deviceApi = api.createDeviceClient(deviceLog, device);
                 const getCredentials = async () => this.getIoT(deviceApi);
-                deviceConfigs.push({ name, serialNumber, rootTopic, getCredentials, api: deviceApi });
+                deviceConfigs.push({ name, serialNumber, rootTopic, variant, getCredentials, api: deviceApi });
             } else status = '(unsupported)';
             rows.push([serialNumber, `"${name}"`, rootTopic ?? type, model, productName, firmware ?? '?', status]);
         }
@@ -327,10 +331,11 @@ export class DysonCloudLocal extends DysonCloud<ConfigLocalAccount> {
             } else {
                 const { localBrokerCredentials, mqttRootTopicLevel: rootTopic } = device.connectedConfiguration.mqtt;
                 const name = device.name ?? device.productName;
+                const variant = device.variant ?? undefined;
                 const deviceLog = new PrefixLogger(this.log, name);
                 const deviceApi = api.createDeviceClient(deviceLog, device);
                 const password = decodeLocalBrokerCredentials(localBrokerCredentials).apPasswordHash;
-                deviceConfigs.push({ ...deviceConfig, name, password, rootTopic, api: deviceApi });
+                deviceConfigs.push({ ...deviceConfig, name, password, rootTopic, variant, api: deviceApi });
             }
         }
 
@@ -340,7 +345,7 @@ export class DysonCloudLocal extends DysonCloud<ConfigLocalAccount> {
             const { serialNumber, name, model, type, productName, connectedConfiguration } = device;
             const matched = deviceConfigs.find(d => d.serialNumber === serialNumber);
             const rootTopic = device.connectedConfiguration?.mqtt.mqttRootTopicLevel;
-            const isSupported = rootTopic && isSupportedModel(rootTopic);
+            const isSupported = isSupportedModel(type);
             const firmware = connectedConfiguration?.firmware.version;
             let status: string;
             if (matched)            status = `= ${matched.host}:${matched.port}`;

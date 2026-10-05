@@ -51,6 +51,7 @@ export interface DeviceConfigMock {
     filename:               string;
     serialNumber:           string;
     rootTopic:              string;
+    variant?:               string;
 }
 
 // Entity names used for validation
