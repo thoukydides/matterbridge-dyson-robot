@@ -31,6 +31,7 @@ export const DEFAULT_CONFIG: Readonly<Partial<Config>> = {
     logMapStyle:            'Matterbridge',
     debug:                  false,
     debugFeatures:          [],
+    debugScrapeSN:          '',
     unregisterOnShutdown:   false
 };
 

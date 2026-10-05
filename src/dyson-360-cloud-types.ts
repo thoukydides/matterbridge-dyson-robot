@@ -20,10 +20,10 @@ import {
     Dyson360RestrictionBehaviour,
     Dyson360ZoneCleanStatus,
     Dyson360FaultNextAction,
-    Dyson360FaultSeverity,
     Dyson360PresentationType
 } from './dyson-360-types.js';
 import {
+    DysonFaultDescription,
     DysonUnifiedschedulerEvent,
     DysonUnifiedschedulerEventsResponseV1
 } from './dyson-cloud-types.js';
@@ -348,14 +348,7 @@ export interface Dyson360ZoneBehavioursRequestV1 {
 }
 
 // GET /v1/support/product-faults/{serial}?locale={languagecode}&market={countrycode}&faultCode=<code> (Spot+Scrub Ai only)
-export interface Dyson360FaultDescription {
-    codes:                      string[];       // e.g. ['597']
-    cta:                        string;         // e.g. 'dyson:///support/resolve/{serial}/RB05_TS_FAULT_WEB_DOCK_BIN_597'
-    description:                string;
-    dismissable:                boolean;
-    linkRef?:                   string;         // e.g. 'RB05_TS_FAULT_WEB_DOCK_BIN_597'
-    nextActionRequired?:        Dyson360FaultNextAction;
-    severity:                   Dyson360FaultSeverity;
-    title:                      string;
+export interface Dyson360FaultDescription extends DysonFaultDescription {
+    nextActionRequired?:                Dyson360FaultNextAction;
 }
 export type Dyson360FaultResponseV1 = Dyson360FaultDescription[];

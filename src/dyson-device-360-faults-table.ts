@@ -270,4 +270,7 @@ export const DYSON_360_FAULT_SINGLE_CODES = new Map<number, Dyson360FaultDetail>
     [2511,                      { msg: 'Robot upside down',                                         opError: 'Stuck'                                            }],
     [2515,                      { msg: 'Unable to return to dock',                                  opError: 'FailedToFindChargingDock'                         }],
     [2516,                      { msg: 'Unable to return to dock',                                  opError: 'FailedToFindChargingDock'                         }]
+
+    // There are also 98 fault codes for which no description has been found:
+    //   502, 517-518, 525, 527-536, 540-542, 550-551, 559, 563-565, 567, 571, 573-574, 580, 585, 588, 590, 601-605, 613-619, 621-628, 636, 638, 640-646, 700-701, 711-713, 2001-2002, 2004-2006, 2008-2011, 2013-2015, 2018-2020, 2100-2112, and 2114-2118
 ]);

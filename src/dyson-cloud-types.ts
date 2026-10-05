@@ -178,22 +178,6 @@ export interface DysonTimezoneResponseV1 {
 export interface DysonOwnershipResponseV1 {
     deviceStatus:               DysonOwnershipStatus;
 }
-
-// GET /v1/unifiedscheduler/{serial}/events?productType={mqttroottopic}
-export interface DysonUnifiedschedulerEvent {
-    days:                       number[];
-    enabled:                    boolean;
-    groupId:                    number;
-    settings:                   unknown;
-    startTime:                  string;             // e.g. '09:00' or '20:00:00'
-    weeklyRepeat:               boolean;
-}
-export interface DysonUnifiedschedulerEventsResponseV1 {
-    enabled:                    boolean;
-    events:                     DysonUnifiedschedulerEvent[];
-    serial:                     string;
-}
-
 // GET /v1/messageprocessor/devices/{serial}/connectionstatus
 export interface DysonConnectionStatusResponseV1 {
     BrokerHostName:             string | null;
@@ -219,4 +203,44 @@ export interface DysonProductAttributes {
 }
 export interface DysonProductAttributesResponseV1 {
     [model: string]:            DysonProductAttributes;
+}
+
+// GET /v1/support/product-faults/{serial}?locale={languagecode}&market={countrycode}&faultCode=<code>
+export enum DysonFaultSeverity {
+    Info                    = 'info',
+    Warning                 = 'warning',
+    Critical                = 'critical',
+    Success                 = 'success'
+}
+export interface DysonFaultDescription {
+    codes:                      string[];       // e.g. ['sen1.FAIL'] or ['597']
+    cta:                        string;         // e.g. 'dyson:///support/resolve/{serial}/008-01-01-4'
+    description:                string;
+    dismissable:                boolean;
+    linkRef?:                   string;         // e.g. '007-02-01-2' or 'RB05_TS_FAULT_WEB_DOCK_BIN_597'
+    severity:                   DysonFaultSeverity;
+    title:                      string;
+}
+export interface DysonFaultDescriptionPermissive extends DysonFaultDescription {
+    ctaType?:                   string;
+    id?:                        string;
+    nextActionRequired?:        string;
+    priority?:                  number;
+}
+export type DysonFaultResponseV1 = DysonFaultDescription[];
+export type DysonFaultResponseV1Permissive = DysonFaultDescriptionPermissive[];
+
+// GET /v1/unifiedscheduler/{serial}/events?productType={mqttroottopic}
+export interface DysonUnifiedschedulerEvent {
+    days:                       number[];
+    enabled:                    boolean;
+    groupId:                    number;
+    settings:                   unknown;
+    startTime:                  string;             // e.g. '09:00' or '20:00:00'
+    weeklyRepeat:               boolean;
+}
+export interface DysonUnifiedschedulerEventsResponseV1 {
+    enabled:                    boolean;
+    events:                     DysonUnifiedschedulerEvent[];
+    serial:                     string;
 }

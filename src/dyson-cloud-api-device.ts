@@ -5,9 +5,10 @@ import { AnsiLogger } from 'matterbridge/logger';
 import { DysonCloudAPIUserAgent } from './dyson-cloud-api-ua.js';
 import {
     DysonConnectionStatusResponseV1,
+    DysonFaultResponseV1,
+    DysonFaultResponseV1Permissive,
     DysonIoTCredentialsRequestV2,
     DysonIoTCredentialsResponseV2,
-    DysonManifestConnectedConfiguration,
     DysonManifestDeviceV3,
     DysonTimezoneResponseV1,
     DysonUnifiedschedulerEventsResponseV1
@@ -43,7 +44,6 @@ import { checkers as checkers360 } from './ti/dyson-360-cloud-types.js';
 import { checkers as checkersAir } from './ti/dyson-air-cloud-types.js';
 import { Config } from './config-types.js';
 import { Dyson360VacuumMode } from './dyson-360-types.js';
-import { assertIsDefined } from './utils.js';
 import { DysonOwnershipStatus } from './dyson-types.js';
 import {
     CountryCode,
@@ -56,40 +56,47 @@ import {
 export class DysonCloudAPIDevice {
 
     // User agent used for all requests
-    readonly ua:        DysonCloudAPIUserAgent;
+    readonly ua:                DysonCloudAPIUserAgent;
+
+    // Interesting information about the device
+    readonly serialNumber:      string;
+    readonly modelNumber?:      string;
+    readonly modelName?:        string;
+    readonly mqttRootTopic?:    string;
+    readonly firmwareVersion?:  string;
 
     // Country and language codes
-    readonly country:   CountryCode;
-    readonly locale:    LocaleCode;
+    readonly country:           CountryCode;
+    readonly locale:            LocaleCode;
 
     // Construct a new Dyson cloud API client
     constructor(
-        readonly log:       AnsiLogger,
-        readonly config:    Config,
-        readonly china:     boolean,
-        readonly token:     string,
-        readonly manifest:  DysonManifestDeviceV3
+        readonly log:           AnsiLogger,
+        readonly config:        Config,
+        readonly china:         boolean,
+        readonly token:         string,
+        manifestOrSN:           DysonManifestDeviceV3 | string
     ) {
+        // Extract details from the device manifest, if provided
+        let productCountryCode: string | undefined;
+        if (typeof manifestOrSN === 'string') {
+            this.serialNumber       = manifestOrSN;
+        } else {
+            this.serialNumber       = manifestOrSN.serialNumber;
+            this.modelNumber        = manifestOrSN.model;
+            this.modelName          = manifestOrSN.productName;
+            productCountryCode      = manifestOrSN.countryCode;
+            this.mqttRootTopic      = manifestOrSN.connectedConfiguration?.mqtt.mqttRootTopicLevel;
+            this.firmwareVersion    = manifestOrSN.connectedConfiguration?.firmware.version;
+        }
+
         // Select country and language codes
-        this.country = dysonNormaliseCountry(manifest.countryCode, china);
+        this.country = dysonNormaliseCountry(productCountryCode, china);
         this.locale = dysonCountryToLocale(this.country);
 
         // Create an authenticated user agent
         this.ua = new DysonCloudAPIUserAgent(log, config, china);
         this.ua.setBearerToken(token);
-    }
-
-    // Interesting information about this device
-    get serialNumber    (): string { return this.manifest.serialNumber; }
-    get modelNumber     (): string { return this.manifest.model; }
-    get modelName       (): string { return this.manifest.productName; }
-    get mqttRootTopic   (): string { return this.connectedConfiguration.mqtt.mqttRootTopicLevel; }
-    get firmwareVersion (): string { return this.connectedConfiguration.firmware.version; }
-
-    // Shortcut to nested (and optional but always present) object
-    get connectedConfiguration(): DysonManifestConnectedConfiguration {
-        assertIsDefined(this.manifest.connectedConfiguration);
-        return this.manifest.connectedConfiguration;
     }
 
     // Retrieve the AWS IoT credentials for a specific device
@@ -115,6 +122,15 @@ export class DysonCloudAPIDevice {
     // Retrieve list of scheduled events for the device
     getScheduledEventsV1<Type extends DysonUnifiedschedulerEventsResponseV1>(checker: CheckerT<Type>): Promise<Type> {
         const path = `/v1/unifiedscheduler/${this.serialNumber}/events?productType=${this.mqttRootTopic}`;
+        return this.ua.getJSON(checker, path);
+    }
+
+    // Retrieve detail for a fault code or all codes
+    getFaultDetailsV1<Type extends DysonFaultResponseV1 = DysonFaultResponseV1Permissive>(
+        faultCode   = '',
+        checker:    CheckerT<Type> = checkers.DysonFaultResponseV1Permissive as unknown as CheckerT<Type>
+    ): Promise<Type> {
+        const path = `/v1/support/product-faults/${this.serialNumber}?locale=${this.locale}&market=${this.country}&faultCode=${faultCode}`;
         return this.ua.getJSON(checker, path);
     }
 
@@ -203,8 +219,7 @@ export class DysonCloudAPIDevice {
 
     // Retrieve detail for a fault code or all codes (Spot+Scrub Ai only)
     getFaultDetails360V1(faultCode = ''): Promise<Dyson360FaultResponseV1> {
-        const path = `/v1/support/product-faults/${this.serialNumber}?locale=${this.locale}&market=${this.country}&faultCode=${faultCode}`;
-        return this.ua.getJSON(checkers360.Dyson360FaultResponseV1, path);
+        return this.getFaultDetailsV1(faultCode, checkers360.Dyson360FaultResponseV1);
     }
 
     // Retrieve the live map during cleaning (Spot+Scrub Ai only)
@@ -241,7 +256,6 @@ export class DysonCloudAPIDevice {
 
     // Retrieve detail for a fault code or all codes
     getFaultDetailsAirV1(faultCode = ''): Promise<DysonAirFaultResponseV1> {
-        const path = `/v1/support/product-faults/${this.serialNumber}?locale=${this.locale}&market=${this.country}&faultCode=${faultCode}`;
-        return this.ua.getJSON(checkersAir.DysonAirFaultResponseV1, path);
+        return this.getFaultDetailsV1(faultCode, checkersAir.DysonAirFaultResponseV1);
     }
 }

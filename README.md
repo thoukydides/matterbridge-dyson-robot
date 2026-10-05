@@ -103,6 +103,7 @@ You can include additional settings in `matterbridge-dyson-robot.config.json` to
 | `deviceEntityBlackList` | `{}`               | Per-device `entityBlackList`-style selection of endpoints. This only applies to air treatment devices. It is an object where the keys are device serial numbers, and the values are the list of endpoint device types that will be excluded for that device.
 | `debug`                 | `false`            | Sets the logger level for this plugin to *Debug*, overriding the global Matterbridge logger level setting.
 | `debugFeatures`         | `[]`               | Miscellaneous options to control the information logged. None of these should be set unless you are investigating a compatibility issue, MQTT message error, or other problem.
+| `debugScrapeSN`         | `""`               | When set to a non-empty string, this serial number is used by the `Scrape Fault Codes` debug feature instead of the serial numbers of the enabled devices. The serial number does not need to be associated with the authenticated MyDyson account.
 | `unregisterOnShutdown`  | `false`            | Unregister all exposed devices on shutdown. This is used during development and testing; do not set it for normal use.
 
 The black and white lists control which robot vacuum and air treatment devices are exposed as Matter devices. Robot vacuums are always exposed as a simple Matter device on a single endpoint, but air treatment devices are implemented as multiple devices and endpoints that can be individually included or excluded. Devices and endpoints are exposed only if they pass all specified whitelist and blacklist filters. Whitelist inclusion restricts the candidates, while blacklist entries exclude matching devices or endpoints even if whitelisted. This applies cumulatively across global and per-device filters. Devices are identified via their serial numbers (the same as their MQTT username) and endpoints are identified using their Matter device type:
@@ -126,7 +127,7 @@ The supported `debugFeatures` are:
 | `Log Serial Numbers`        | By default product serial numbers (a.k.a. MQTT usernames) and passwords are automatically redacted in the log. This setting logs serial numbers verbatim.
 | `Log Debug as Info`         | Redirect *Debug* level logging to *Info* level. This makes it visible in the Matterbridge frontend.
 | `Scrape MQTT Topics`        | At plugin startup retrieve details of all current products from the MyDyson API and log a list of all the robot vacuum and air treatment devices grouped by MQTT root topic. Devices that are currently unsupported by this plugin are logged at *Warning* level, and supported devices at *Info* level.
-| `Scrape Fault Codes`        | At plugin startup attempt to retrieve a list of all fault codes for the enabled devices, and log a list of those codes that have descriptions.
+| `Scrape Fault Codes`        | At plugin startup, attempt to retrieve the fault codes for each enabled device (or for the `debugScrapeSN` serial number if specified) and log those codes for which a description is available.
 
 </details>
 <a name="provisioning-methods"></a>

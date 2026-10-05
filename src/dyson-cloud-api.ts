@@ -91,8 +91,8 @@ export class DysonCloudAPI {
     }
 
     // Create a device-specific cloud API client
-    createDeviceClient(log: AnsiLogger, manifest: DysonManifestDeviceV3): DysonCloudAPIDevice {
+    createDeviceClient(log: AnsiLogger, manifestOrSN: DysonManifestDeviceV3 | string): DysonCloudAPIDevice {
         assertIsDefined(this.token);
-        return new DysonCloudAPIDevice(log, this.config, this.china, this.token, manifest);
+        return new DysonCloudAPIDevice(log, this.config, this.china, this.token, manifestOrSN);
     }
 }

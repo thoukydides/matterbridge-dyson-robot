@@ -2,8 +2,9 @@
 // Copyright © 2025-2026 Alexander Thoukydides
 
 import { DysonAirProductState } from './dyson-air-state-types.js';
-import { DysonAirCTAType, DysonAirFaultSeverity } from './dyson-air-types.js';
+import { DysonAirCTAType } from './dyson-air-types.js';
 import {
+    DysonFaultDescription,
     DysonUnifiedschedulerEvent,
     DysonUnifiedschedulerEventsResponseV1
 } from './dyson-cloud-types.js';
@@ -60,16 +61,9 @@ export interface DysonAirEnvironmentDataDailyResponseV1 {
 }
 
 // GET /v1/support/product-faults/{serial}?locale={languagecode}&market={countrycode}&faultCode=<code>
-export interface DysonAirFaultDescription {
-    codes:                      string[];       // e.g. ['sen1.FAIL']
-    cta:                        string;         // e.g. 'dyson:///support/resolve/{serial}/008-01-01-4'
-    ctaType:                    DysonAirCTAType;
-    description:                string;
-    dismissable:                boolean;
-    id?:                        string;         // e.g. 'fault_settings'
-    linkRef?:                   string;         // e.g. '007-02-01-2'
-    priority?:                  number;
-    severity:                   DysonAirFaultSeverity;
-    title:                      string;
+export interface DysonAirFaultDescription extends DysonFaultDescription {
+    ctaType:                DysonAirCTAType;
+    id?:                    string; // e.g. 'fault_settings'
+    priority?:              number;
 }
 export type DysonAirFaultResponseV1 = DysonAirFaultDescription[];

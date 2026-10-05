@@ -14,14 +14,6 @@ export enum DysonAirResetSource {
     Hibernate               = 'HIB'
 }
 
-// Dyson air treatment fault severity
-export enum DysonAirFaultSeverity {
-    Info                    = 'info',
-    Warning                 = 'warning',
-    Critical                = 'critical',
-    Success                 = 'success'
-}
-
 // Dyson air treatment call to action type
 export enum DysonAirCTAType {
     None                        = '',

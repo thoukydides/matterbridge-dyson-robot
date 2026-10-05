@@ -100,6 +100,7 @@ export interface ConfigBase {
     logMapStyle:            LogMapStyle;
     debug:                  boolean;
     debugFeatures:          DebugFeatures[];
+    debugScrapeSN:          string;
     unregisterOnShutdown:   boolean;
 }
 export interface ConfigAccount extends ConfigBase {

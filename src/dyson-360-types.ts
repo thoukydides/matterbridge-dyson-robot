@@ -94,13 +94,6 @@ export interface Dyson360ActiveFault {
     requiredUserAction?:                Dyson360FaultUserAction;
 }
 
-// Dyson robot vacuum fault severity
-export enum Dyson360FaultSeverity {
-    Info                                = 'info',
-    Warning                             = 'warning',
-    Critical                            = 'critical'
-}
-
 // Dyson robot vacuum power mode
 export enum Dyson360EyeEventPowerMode {
     Quiet                               = 1,

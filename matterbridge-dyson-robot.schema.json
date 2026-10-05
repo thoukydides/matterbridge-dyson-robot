@@ -156,11 +156,18 @@
                     "Log MQTT Payloads as JSON",
                     "Log Serial Numbers",
                     "Log Debug as Info",
-                    "List MQTT Topics",
-                    "List Fault Codes"
+                    "Scrape MQTT Topics",
+                    "Scrape Fault Codes"
                 ]
             },
             "default": []
+        },
+        "debugScrapeSN": {
+            "description": "Optional serial number for the \"Scrape Fault Codes\" debug feature. If specified, the MyDyson API is queried using this serial number instead of the serial numbers of the enabled devices, allowing fault codes to be retrieved for a different product model. The serial number does not need to be associated with the authenticated MyDyson account.",
+            "title": "Scrape Fault Codes Serial Number",
+            "type": "string",
+            "pattern": "^(|[A-Z0-9]{3}-[A-Z]{2}-[A-Z0-9]{8,})$",
+            "default": ""
         },
         "unregisterOnShutdown": {
             "description": "Unregister all exposed devices on shutdown (used for development/testing).",
