@@ -35,6 +35,13 @@ export const DEFAULT_CONFIG: Readonly<Partial<Config>> = {
     unregisterOnShutdown:   false
 };
 
+// Removed configuration options (for migration purposes)
+type RemovableKeys = Partial<Record<string, true> & Record<keyof Config, never>>;
+const REMOVE_CONFIG_KEYS_STRUCT: RemovableKeys = {
+    statusPollInterval: true
+};
+export const REMOVE_CONFIG_KEYS = Object.keys(REMOVE_CONFIG_KEYS_STRUCT);
+
 // Vendor name
 export const VENDOR_NAME = 'Dyson';
 export const VENDOR_ID   = 0x139E; // Dyson's official Matter Vendor ID

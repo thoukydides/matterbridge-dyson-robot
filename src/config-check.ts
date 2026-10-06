@@ -6,15 +6,22 @@ import { AnsiLogger, LogLevel } from 'matterbridge/logger';
 import { checkers } from './ti/config-types.js';
 import { CheckerT, IErrorDetail } from 'ts-interface-checker';
 import { deepMerge, getValidationTree } from './utils.js';
-import { DEFAULT_CONFIG, PLUGIN_NAME } from './settings.js';
+import { DEFAULT_CONFIG, PLUGIN_NAME, REMOVE_CONFIG_KEYS } from './settings.js';
 import { Config, DysonAccountLogin, ProvisioningMethod } from './config-types.js';
 import { inspect } from 'util';
 import { INSPECT_VERBOSE } from './logger-options.js';
 
 // Check that the configuration is valid
 export function checkConfiguration(log: AnsiLogger, config: PlatformConfig): asserts config is Config & PlatformConfig {
-    // Apply default values
+    // Apply default values and remove deprecated options
     Object.assign(config, deepMerge(DEFAULT_CONFIG, config));
+    for (const key of REMOVE_CONFIG_KEYS) {
+        if (key in config) {
+            log.warn(`Removing deprecated configuration option ${key}`);
+            // eslint-disable-next-line @typescript-eslint/no-dynamic-delete
+            delete config[key as keyof Config];
+        }
+    }
 
     // Pick the most appropriate checker for the configuration
     const PROVISIONING_CHECKER = new Map<string, CheckerT<Config>>([
