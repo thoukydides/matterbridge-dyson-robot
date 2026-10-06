@@ -4,9 +4,27 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v1.12.0] - 2026-10-06
+### Added
+* Added support for Dyson Purifier Hot+Cool (HP14), Dyson HushJet Big+Quiet Purifier (BP10), Dyson HushJet Purifier Compact HJ10 (SP01), Dyson HushJet Hot Cool Pure+ (JH01), and HushJet Cool Pure+ Formaldehyde / Ioniser+UV (MP01).
+* Added placeholder for Dyson R1 Nurovi Dry and R2 Nurovi Wash+Dry (RB07).
+* Experimental Dyson Spot+Scrub Ai mopping status and zone cleaning support. (#46)
+* Air purifier fault codes are decoded and logged.
+* Debug features to retrieve product list (`Scrape MQTT Topics`) and documented fault codes (`Scrape Fault Codes`) from the MyDyson API.
+### Changed
+* Improved retry behaviour for failed MyDyson API requests, including parsing Cloudflare RFC9457 structured error responses.
+* Increased timeout waiting for an end-of clean map.
+* Use device market to set MyDyson API country and locale.
+* Changed default for `wildcardTopic` configuration option to `true` to match the documentation.
+* Updated dependencies.
+### Fixed
+* Use selected robot vacuum power mode for non-zone cleans, rather than always using Auto.
+* Retain the Service Area cluster's `Progress` after a clean finishes instead of clearing it immediately.
+* Corrected handling of `SelectAreas` commands that either specify no or all areas.
+
 ## [v1.11.1] - 2026-09-14
 ### Added
-* Added support for HF1.
+* Added support for Dyson Hot+Cool HF1 (AM15).
 ### Changed
 * Updated dependencies.
 
@@ -49,7 +67,7 @@ All notable changes to this project will be documented in this file.
 
 ## [v1.10.11] - 2026-06-13
 ### Changed
-* Retry failures connecting to the Dyson cloud API (instead of just for HTTP status codes).
+* Retry failures connecting to the MyDyson API (instead of just for HTTP status codes).
 * Updated dependencies.
 
 ## [v1.10.10] - 2026-06-07
@@ -339,7 +357,7 @@ All notable changes to this project will be documented in this file.
 ### Added
 * Improved Apple Home compatibility for robot vacuum devices by using Matterbridge's `server` mode, which exposes each robot vacuum as a standalone Matter node instead of bridging them. This mode is enabled by default and requires robot vacuum devices to be re-paired with the Matter controller. It can be disabled by setting the `"enableServerRvc": false` configuration option. Requires Matterbridge version 3.1.1 or later.
 ### Fixed
-* Corrected `productUrl` attribute values in the Bridged Device Basic Information cluster.
+* Corrected `ProductUrl` attribute values in the Bridged Device Basic Information cluster.
 ### Changed
 * Updated dependencies.
 
@@ -420,7 +438,8 @@ All notable changes to this project will be documented in this file.
 
 Copyright © 2025-2026 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.11.1...HEAD
+[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.12.0...HEAD
+[v1.12.0]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.11.1...v1.12.0
 [v1.11.1]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.11.0...v1.11.1
 [v1.11.0]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.10.17...v1.11.0
 [v1.10.17]:         https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.10.16...v1.10.17
