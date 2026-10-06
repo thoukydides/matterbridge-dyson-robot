@@ -190,6 +190,9 @@ export class DysonMqttAir extends DysonMqtt<DysonMsgMapAir, DysonMqttStatusAir> 
 
         // Convert target temperature from Kelvin to Celsius
         if (this.status.hmax) this.status.hmax = roundedKtoC(this.status.hmax / 10);
+
+        // Notify clients of the update
+        this.emit('update');
     }
 
     // Update environmental sensor data from a received message
@@ -249,7 +252,7 @@ export class DysonMqttAir extends DysonMqtt<DysonMsgMapAir, DysonMqttStatusAir> 
 
         // Publish the command
         return this.publish('STATE-SET', {
-            'mode-reason':  DysonModeReason.LocalApp,
+            'mode-reason':  DysonModeReason.RemoteApp,
             data
         });
     }

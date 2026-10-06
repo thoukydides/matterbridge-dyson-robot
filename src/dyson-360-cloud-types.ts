@@ -90,7 +90,7 @@ export interface Dyson360ZoneSettingsV2 {
     cleanType:                          Dyson360CleanType;
     cleaningStrategy:                   Dyson360VacuumMode;
     dryPasses:                          Dyson360VacuumPasses;
-    isUvScanOn:                         boolean;            // UV sterilisation pass
+    isUvScanOn?:                        boolean;            // UV sterilisation pass
     mopPasses:                          Dyson360MopPasses;
     waterLevel:                         Dyson360WaterLevel;
 }
@@ -104,7 +104,7 @@ export interface Dyson360PersistentMapMetadataZoneV2 extends Dyson360PersistentM
 export interface Dyson360PersistentMapMetadataV2 {
     id:                                 string;             // e.g. '1788021937'
     name:                               string | null;      // e.g. 'Downstairs'
-    imageUrl:                           string;
+    imageUrl?:                          string;             // e.g. ''
     isCurrentMap:                       boolean;
     zones:                              Dyson360PersistentMapMetadataZoneV2[];
 }

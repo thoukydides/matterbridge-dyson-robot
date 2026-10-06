@@ -50,6 +50,7 @@ export interface DysonMqttEventMapBase {
     error:          [unknown];          // Error event (from EventEmitter)
     subscribed:     [];                 // Online and subscriptions configured
     status:         [];                 // State updated (not necessarily changed)
+    update:         [];                 // CURRENT-STATE/STATE-CHANGE update
 }
 export interface DysonMqttEventMap<T> extends DysonMqttEventMapBase {
     message:        [DysonMsgAny<T>];   // MQTT message received and checked

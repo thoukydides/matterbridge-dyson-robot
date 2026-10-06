@@ -100,15 +100,17 @@ export class DysonMqtt360 extends DysonMqtt<DysonMsgMap360, DysonMqttStatus360> 
 
     // Update the robot vacuum state from a received message
     updateState(msg: Dyson360MsgCurrentState): void {
+        // Spot+Scrub Ai sends updates only providing globalPosition
+        const isFullUpdate = Boolean(msg.state);
+
         // Clear fields from the state that might have disappeared
-        // (but not for Spot+Scrub Ai updates only providing globalPosition)
         const DELETE_KEYS  = [
             'activeFaults',         'cleanDuration',            'cleanId',
             'cleaningProgramme',    'faults',                   'globalPosition',
             'persistentMapId',      'sessionId',                'traverseTargetId',
             'zoneId',               'zonesDefinitionVersion',   'zoneStatus'
         ] as const satisfies (keyof Dyson360MsgCurrentState)[];
-        if (msg.state) {
+        if (isFullUpdate) {
             for (const key of DELETE_KEYS) this.status[key] = undefined;
         }
 
@@ -117,7 +119,10 @@ export class DysonMqtt360 extends DysonMqtt<DysonMsgMap360, DysonMqttStatus360> 
         Object.assign(this.status, status);
 
         // State is fully initialised after the first message with state field
-        if (msg.state !== undefined) this.updateInitialised();
+        if (isFullUpdate) {
+            this.updateInitialised();
+            this.emit('update');
+        }
     }
 
     // Publish a robot vacuum command to perform an action
@@ -127,12 +132,11 @@ export class DysonMqtt360 extends DysonMqtt<DysonMsgMap360, DysonMqttStatus360> 
         switch (msg) {
         case 'START':
             return this.publish('START', cleaningProgramme ? {
-                'mode-reason':      DysonModeReason.LocalApp,
-                fullCleanType:      Dyson360CleaningType.Immediate,
+                'mode-reason':      DysonModeReason.RemoteApp,
                 cleaningMode:       Dyson360CleaningMode.ZoneConfigured,
                 cleaningProgramme
             } : {
-                'mode-reason':      DysonModeReason.LocalApp,
+                'mode-reason':      DysonModeReason.RemoteApp,
                 fullCleanType:      Dyson360CleaningType.Immediate,
                 cleaningMode:       this.status.defaultCleaningMode     && Dyson360CleaningMode.Global,
                 cleaningStrategy:   this.status.defaultCleaningStrategy
@@ -141,7 +145,7 @@ export class DysonMqtt360 extends DysonMqtt<DysonMsgMap360, DysonMqttStatus360> 
         case 'RESUME':
         case 'ABORT':
             return this.publish(msg, {
-                'mode-reason':  DysonModeReason.LocalApp
+                'mode-reason':  DysonModeReason.RemoteApp
             });
         }
     }
@@ -149,7 +153,7 @@ export class DysonMqtt360 extends DysonMqtt<DysonMsgMap360, DysonMqttStatus360> 
     // Publish a robot vacuum command to set the default power level (360 Eye)
     commandSetPowerMode(defaultVacuumPowerMode: Dyson360PowerMode): Promise<void> {
         return this.publish('STATE-SET', {
-            'mode-reason':  DysonModeReason.LocalApp,
+            'mode-reason':  DysonModeReason.RemoteApp,
             data:           { defaultVacuumPowerMode }
         });
     }
@@ -157,7 +161,7 @@ export class DysonMqtt360 extends DysonMqtt<DysonMsgMap360, DysonMqttStatus360> 
     // Publish a robot vacuum command to set the default power level (360 Vis Nav)
     commandSetCleaningStrategy(defaultCleaningStrategy: Dyson360VacuumMode): Promise<void> {
         return this.publish('STATE-SET', {
-            'mode-reason':  DysonModeReason.LocalApp,
+            'mode-reason':  DysonModeReason.RemoteApp,
             defaults:       { defaultCleaningStrategy }
         });
     }

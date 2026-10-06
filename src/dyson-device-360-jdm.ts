@@ -21,14 +21,16 @@ import { DysonMqtt360, DysonMqttStatus360 } from './dyson-mqtt-360.js';
 import { assertIsDefined, formatList, MS, plural } from './utils.js';
 import { DysonDeviceConstructorParams } from './dyson-device-base.js';
 import { DysonMqttStatus } from './dyson-mqtt.js';
-import { SimplePoll } from './simple-poll.js';
+import { PeriodicOp } from './periodic-op.js';
 import { DysonMqtt360JDM } from './dyson-mqtt-360-jdm.js';
-import { EndpointOptions360, UpdateRvcOperationalState360 } from './endpoint-360.js';
+import { Endpoint360, EndpointOptions360, UpdateRvcOperationalState360 } from './endpoint-360.js';
 import { Dyson360MappedFaults } from './dyson-device-360-faults.js';
+import { DysonDevice360CommandHandlers } from './dyson-device-360-commands.js';
 
 // Spot+Scrub Ai status polling behaviour
-const POLL_STATUS_MS                = 30  * MS; // 30 seconds
-const POLL_LIVE_MAPS_CLEANING_MS    =  3 * MS;  //  3 seconds
+const POLL_STATUS_MS                =  30 * MS; // 30 seconds
+const POLL_STATUS_RAPID_MS          =   1 * MS; //  1 second
+const POLL_LIVE_MAPS_CLEANING_MS    = 3.5 * MS; // 3½ seconds
 
 // Common base class for Dyson post-360 robot vacuum devices (excluding mop)
 export abstract class DysonDevice360JDMBase extends DysonDevice360ZonesMixin(DysonDevice360Base) {
@@ -55,8 +57,8 @@ export abstract class DysonDevice360JDMBase extends DysonDevice360ZonesMixin(Dys
     }
 
     // Polled updates
-    pollStatus:             SimplePoll;
-    pollCleaning:           SimplePoll;
+    pollStatus:     PeriodicOp;
+    pollCleaning:   PeriodicOp;
 
     // Construct a new Dyson device instance
     constructor(...args: DysonDeviceConstructorParams<DysonMqtt360>) {
@@ -66,21 +68,37 @@ export abstract class DysonDevice360JDMBase extends DysonDevice360ZonesMixin(Dys
         this.faultMapper.lookupOnline = faultCode => this.findFaultOnline(faultCode);
 
         // Poll device status via MQTT
-        this.pollStatus = new SimplePoll(this.log, 'Current status poll', POLL_STATUS_MS, () => {
-            if (this.mqtt.status.reachable) void (async () => {
-                await this.mqtt.publish('REQUEST-CURRENT-STATE', {});
-            })();
-        });
+        this.pollStatus = new PeriodicOp(this.log, {
+            name:           'Current status poll',
+            interval:       POLL_STATUS_MS,
+            intervalRapid:  POLL_STATUS_RAPID_MS,
+            op:             () => {
+                if (this.mqtt.status.reachable) {
+                    return this.mqtt.publish('REQUEST-CURRENT-STATE', {});
+                }
+            }}
+        );
 
         // Use the live map to update the zone status
-        this.pollCleaning = new SimplePoll(this.log, 'Live cleaning maps poll', POLL_LIVE_MAPS_CLEANING_MS, async () => {
-            if (!this.api) return; // (mock devices do not support this)
-            const cleaningMode = this.mqtt.status.currentCleaningMode;
-            assertIsDefined(cleaningMode);
-            const live = await this.api.getLiveMapsCleaning360V1();
-            const zoneStatus = live.zones.map(({ id, cleanStatus }) => ({ zoneId: id, cleanStatus }));
-            await this.updateZoneStatus({ mapId: live.id, cleaningMode, zoneStatus });
-        });
+        this.pollCleaning = new PeriodicOp(this.log, {
+            name:           'Live cleaning maps poll',
+            interval:       POLL_LIVE_MAPS_CLEANING_MS,
+            op:             async () => {
+                if (!this.api) return; // (mock devices do not support this)
+                const cleaningMode = this.mqtt.status.currentCleaningMode;
+                assertIsDefined(cleaningMode);
+                const live = await this.api.getLiveMapsCleaning360V1();
+                const zoneStatus = live.zones.map(({ id, cleanStatus }) => ({ zoneId: id, cleanStatus }));
+                await this.updateZoneStatus({ mapId: live.id, cleaningMode, zoneStatus });
+            }}
+        );
+    }
+
+    // Attach command handlers to the endpoint
+    override attachCommandHandlers(endpoint: Endpoint360): DysonDevice360CommandHandlers {
+        const handlers = super.attachCommandHandlers(endpoint);
+        handlers.rapidPollRequest = this.pollStatus.requestRapid.bind(this.pollStatus);
+        return handlers;
     }
 
     // Update cluster attributes when the MQTT status is updated

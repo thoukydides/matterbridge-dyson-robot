@@ -5,7 +5,7 @@ import { AnsiLogger } from 'matterbridge/logger';
 import { DysonMqtt360, DysonMqtt360Action } from './dyson-mqtt-360.js';
 import { Endpoint360 } from './endpoint-360.js';
 import { RvcCleanMode360, RvcRunMode360 } from './endpoint-360-behavior.js';
-import { Dyson360State } from './dyson-360-types.js';
+import { Dyson360CleaningMode, Dyson360State } from './dyson-360-types.js';
 import { CN, CV, RI } from './logger-options.js';
 import { ChangeToModeError, RvcOperationalStateError, SelectAreaError } from './error-360.js';
 import { MS } from './utils.js';
@@ -33,14 +33,14 @@ const STATE_MAP: Record<Dyson360State, StateAction[]> = {
     [Dyson360State.FaultUserRecoverable]:   ['abort',   'START',    'START',    undefined,  undefined,  undefined,  'ABORT'     ],
     [Dyson360State.FullCleanAbandoned]:     [true,      'START',    undefined,  undefined,  undefined,  undefined,  true        ],
     [Dyson360State.FullCleanAborted]:       [true,      'START',    undefined,  undefined,  undefined,  undefined,  true        ],
-    [Dyson360State.FullCleanCharging]:      ['ABORT',   true,       undefined,  undefined,  'PAUSE',    undefined,  'ABORT'     ],
-    [Dyson360State.FullCleanDiscovering]:   ['ABORT',   true,       undefined,  undefined,  'PAUSE',    undefined,  'ABORT'     ],
+    [Dyson360State.FullCleanCharging]:      ['ABORT',   true,       true,       undefined,  'PAUSE',    undefined,  'ABORT'     ],
+    [Dyson360State.FullCleanDiscovering]:   ['ABORT',   true,       true,       undefined,  'PAUSE',    undefined,  'ABORT'     ],
     [Dyson360State.FullCleanFinished]:      [true,      'START',    undefined,  undefined,  undefined,  undefined,  true        ],
-    [Dyson360State.FullCleanInitiated]:     ['ABORT',   true,       undefined,  undefined,  'PAUSE',    undefined,  'ABORT'     ],
-    [Dyson360State.FullCleanNeedsCharge]:   ['ABORT',   true,       undefined,  undefined,  'PAUSE',    undefined,  'ABORT'     ],
-    [Dyson360State.FullCleanPaused]:        ['ABORT',   true,       undefined,  undefined,  undefined,  'RESUME',   'ABORT'     ],
-    [Dyson360State.FullCleanRunning]:       ['ABORT',   true,       undefined,  undefined,  'PAUSE',    undefined,  'ABORT'     ],
-    [Dyson360State.FullCleanTraversing]:    ['ABORT',   true,       undefined,  undefined,  'PAUSE',    undefined,  'ABORT'     ],
+    [Dyson360State.FullCleanInitiated]:     ['ABORT',   true,       true,       undefined,  'PAUSE',    undefined,  'ABORT'     ],
+    [Dyson360State.FullCleanNeedsCharge]:   ['ABORT',   true,       true,       undefined,  'PAUSE',    undefined,  'ABORT'     ],
+    [Dyson360State.FullCleanPaused]:        ['ABORT',   true,       true,       undefined,  undefined,  'RESUME',   'ABORT'     ],
+    [Dyson360State.FullCleanRunning]:       ['ABORT',   true,       true,       undefined,  'PAUSE',    undefined,  'ABORT'     ],
+    [Dyson360State.FullCleanTraversing]:    ['ABORT',   true,       true,       undefined,  'PAUSE',    undefined,  'ABORT'     ],
     [Dyson360State.InactiveCharged]:        [true,      'START',    'START',    undefined,  undefined,  undefined,  true        ],
     [Dyson360State.InactiveCharging]:       [true,      'START',    'START',    undefined,  undefined,  undefined,  true        ],
     [Dyson360State.InactiveDischarging]:    [true,      'START',    'START',    undefined,  undefined,  undefined,  'ABORT'     ],
@@ -70,6 +70,9 @@ export class DysonDevice360CommandHandlers {
 
     // Abort previous operations that are still in progress
     abort?: AbortController;
+
+    // Optional mechanism to request rapid status polling
+    rapidPollRequest?: (duration: number) => void;
 
     // Create a new command handler
     constructor (
@@ -121,7 +124,8 @@ export class DysonDevice360CommandHandlers {
                 const prefix = `${CN}ServiceArea${RI} ${CV}SelectAreas${RI} [${areaNames.join(', ')}]`;
 
                 // SelectWhileRunning is not supported
-                if (!this.targetAction('ZoneClean')) {
+                await this.waitForUpdateBeforeCommand();
+                if (this.targetAction('ZoneClean') !== 'START') {
                     this.log.info(`${prefix} → not allowed in current state`);
                     throw new SelectAreaError.InvalidInMode();
                 }
@@ -129,13 +133,33 @@ export class DysonDevice360CommandHandlers {
                 // Publish a command to start the zone configured cleaning
                 this.log.info(`${prefix} → ${CV}ZoneClean${RI}`);
                 const { description, command, condition } = await makeCleaningProgramme(newAreas);
-                await this.issueCommandAndWaitForUpdate(`perform action ${description}`, command, condition);
+                await this.issueCommandAndWaitForUpdate(
+                    `perform action ${description}`,
+                    command,
+                    () => this.targetAction('Cleaning') === true && condition()
+                );
+
+                // Confirm that the robot is actually performing a zone clean
+                if (this.mqtt.status.currentCleaningMode !== Dyson360CleaningMode.ZoneConfigured) {
+                    this.log.warn(`Zone clean started but robot reports a${this.mqtt.status.currentCleaningMode} clean`);
+                }
             }
         });
     }
 
+    // If status polled then wait for an update before processing a command
+    async waitForUpdateBeforeCommand(): Promise<void> {
+        if (!this.rapidPollRequest) return;
+        let updates = 0;
+        await this.issueCommandAndWaitForUpdate(
+            'poll for status update',
+            () => Promise.resolve(),
+            () => Boolean(updates++)
+        );
+    }
+
     // Perform a command and wait for a status update
-    async issueCommandAndWaitForUpdate (
+    async issueCommandAndWaitForUpdate(
         description:    string,
         command:        () => Promise<void>,
         condition:      () => boolean
@@ -145,13 +169,14 @@ export class DysonDevice360CommandHandlers {
             this.abort?.abort();
             this.abort = new AbortController();
             const signal = AbortSignal.any([this.abort.signal, AbortSignal.timeout(UPDATE_TIMEOUT)]);
+            this.rapidPollRequest?.(UPDATE_TIMEOUT);
 
             // Publish the command
             await command();
 
             // Wait for an update to satisfy the condition
             while (!condition()) {
-                await this.mqtt.onceAsync('status', signal);
+                await this.mqtt.onceAsync('update', signal);
             }
         } catch (cause) {
             // Identify the underlying error
@@ -178,6 +203,7 @@ export class DysonDevice360CommandHandlers {
     // Attempt to set a target state, returning false if not allowed
     async setTarget(description: string, target: StateTarget): Promise<boolean> {
         // Check whether the target is allowed or already satisfied
+        await this.waitForUpdateBeforeCommand();
         const action = this.targetAction(target);
         if (action === undefined) {
             this.log.info(`${description} → not allowed in current state`);

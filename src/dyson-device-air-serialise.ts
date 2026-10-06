@@ -82,7 +82,7 @@ export class DysonAirSerialise {
 
         // Wait for the next MQTT status update or a timeout
         const timeoutSignal = AbortSignal.timeout(UPDATE_TIMEOUT);
-        await this.mqtt.onceAsync('status', timeoutSignal);
+        await this.mqtt.onceAsync('update', timeoutSignal);
     }
 
     // Should attributes be updated in response to MQTT status messages

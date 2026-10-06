@@ -212,12 +212,12 @@ export function DysonDevice360ZonesMixin<TBase extends AbstractConstructor<Dyson
 
             // Map the Matter area identifiers to Dyson map and zone identifiers
             const maps = new Set<PersistentMapMetadata>();
-            const unorderedZones: string[] = [];
+            const zones = new Set<string>();
             for (const areaId of areaIds) {
                 const zone = this.zoneFromMatter.get(areaId);
                 if (!zone) throw new SelectAreaError.UnsupportedArea(`${areaId} is not a supported area`);
                 maps.add(zone[0]);
-                unorderedZones.push(zone[1].id);
+                zones.add(zone[1].id);
             }
             if (maps.size !== 1) throw new SelectAreaError.InvalidSet('Areas must all be from the same map');
             const [map] = maps;
@@ -225,11 +225,10 @@ export function DysonDevice360ZonesMixin<TBase extends AbstractConstructor<Dyson
 
             // Build the cleaning programme
             const cleaningProgramme: Dyson360CleaningProgramme = {
-                orderedZones:                   [],
                 persistentMapId:                map.id,
-                unorderedZones,
+                unorderedZones:                 [...zones],
                 zonesDefinitionLastUpdatedDate: 'zonesDefinitionLastUpdatedDate' in map
-                                                ? map.zonesDefinitionLastUpdatedDate : null
+                                                ? map.zonesDefinitionLastUpdatedDate : undefined
             };
             return {
                 description:    'ZoneClean',
