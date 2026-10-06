@@ -27,6 +27,7 @@ import {
     rvcCleanModeBehavior,
     RvcCleanModeOptions,
     rvcOperationalStateBehavior,
+    RvcOperationalStateOptions,
     rvcRunModeBehavior,
     serviceAreaBehavior
 } from './endpoint-360-rvc.js';
@@ -48,9 +49,10 @@ import {
 
 // Device-specific endpoint configuration
 export interface EndpointOptions360 extends EndpointOptionsBase {
-    powerSource:    BatteryPowerSourceOptions;
-    rvcCleanMode:   RvcCleanModeOptions;
-    supportsMaps:   boolean;
+    powerSource:            BatteryPowerSourceOptions;
+    rvcCleanMode:           RvcCleanModeOptions;
+    rvcOperationalState:    RvcOperationalStateOptions;
+    supportsMaps:           boolean;
 }
 
 // Updates to the Power Source cluster attributes
@@ -102,7 +104,7 @@ export class Endpoint360 extends EndpointBase {
         createBatteryPowerSourceClusterServer(this, options.powerSource);
         createRvcRunModeClusterServer(this);
         createRvcCleanModeClusterServer(this, options.rvcCleanMode);
-        createRvcOperationalStateClusterServer(this);
+        createRvcOperationalStateClusterServer(this, options.rvcOperationalState);
         if (options.supportsMaps) createServiceAreaClusterServer(this);
 
         // Add a command handler behavior

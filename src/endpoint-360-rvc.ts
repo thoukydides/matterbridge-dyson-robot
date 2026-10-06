@@ -23,12 +23,16 @@ import { assertIsDefined } from './utils.js';
 
 // Device-specific endpoint configuration
 export interface BatteryPowerSourceOptions {
-    batteryPartNumber:      string;
+    batteryPartNumber:          string;
 }
 export type RvcCleanModeLabels = [RvcCleanMode360, string][];
 export interface RvcCleanModeOptions {
-    labels:                 RvcCleanModeLabels;
-    simpleModeTags:         boolean;
+    labels:                     RvcCleanModeLabels;
+    simpleModeTags:             boolean;
+}
+export interface RvcOperationalStateOptions {
+    supportsEmptyingDustBin:    boolean;
+    supportsCleaningMop:        boolean;
 }
 
 // Create the Power Source cluster for the rechargeable battery
@@ -130,6 +134,7 @@ export function createRvcCleanModeClusterServer(
         [RvcCleanMode360.Quick]: [
             { value: RvcCleanMode.ModeTag.Quick },
             { value: RvcCleanMode.ModeTag.Vacuum },
+            { value: RvcCleanMode.ModeTag.LowEnergy },
             { value: RvcCleanMode.ModeTag.Day }
         ],
         [RvcCleanMode360.High]: [
@@ -145,6 +150,17 @@ export function createRvcCleanModeClusterServer(
         [RvcCleanMode360.Auto]: [
             { value: RvcCleanMode.ModeTag.Auto },
             { value: RvcCleanMode.ModeTag.Vacuum },
+            { value: RvcCleanMode.ModeTag.Day }
+        ],
+        [RvcCleanMode360.Mop]: [
+            { value: RvcCleanMode.ModeTag.Mop },
+            { value: RvcCleanMode.ModeTag.Day }
+        ],
+        [RvcCleanMode360.VacuumAndMop]: [
+            { value: RvcCleanMode.ModeTag.VacuumThenMop },
+            { value: RvcCleanMode.ModeTag.Vacuum },
+            { value: RvcCleanMode.ModeTag.Mop },
+            { value: RvcCleanMode.ModeTag.DeepClean },
             { value: RvcCleanMode.ModeTag.Day }
         ]
     };
@@ -180,19 +196,27 @@ export const rvcOperationalStateBehavior =
         }
     });
 export function createRvcOperationalStateClusterServer(
-    { behaviors }: Endpoint
+    { behaviors }:                                      Endpoint,
+    { supportsEmptyingDustBin, supportsCleaningMop }:   RvcOperationalStateOptions
 ): void {
+    const operationalStateList: RvcOperationalState.OperationalStateStruct[] = [
+        { operationalStateId: RvcOperationalState.OperationalState.Stopped },
+        { operationalStateId: RvcOperationalState.OperationalState.Running },
+        { operationalStateId: RvcOperationalState.OperationalState.Paused },
+        { operationalStateId: RvcOperationalState.OperationalState.Error },
+        { operationalStateId: RvcOperationalState.OperationalState.SeekingCharger },
+        { operationalStateId: RvcOperationalState.OperationalState.Charging },
+        { operationalStateId: RvcOperationalState.OperationalState.Docked }
+    ];
+    if (supportsEmptyingDustBin) {
+        operationalStateList.push({ operationalStateId: RvcOperationalState.OperationalState.EmptyingDustBin });
+    }
+    if (supportsCleaningMop) {
+        operationalStateList.push({ operationalStateId: RvcOperationalState.OperationalState.CleaningMop });
+    }
     behaviors.require(rvcOperationalStateBehavior, {
         // Constant attributes
-        operationalStateList: [
-            { operationalStateId: RvcOperationalState.OperationalState.Stopped },
-            { operationalStateId: RvcOperationalState.OperationalState.Running },
-            { operationalStateId: RvcOperationalState.OperationalState.Paused },
-            { operationalStateId: RvcOperationalState.OperationalState.Error },
-            { operationalStateId: RvcOperationalState.OperationalState.SeekingCharger },
-            { operationalStateId: RvcOperationalState.OperationalState.Charging },
-            { operationalStateId: RvcOperationalState.OperationalState.Docked }
-        ],
+        operationalStateList,
         // Variable attributes (with dummy defaults)
         operationalState:       RvcOperationalState.OperationalState.Stopped,
         operationalError:       RvcOperationalStateError.toStruct(),

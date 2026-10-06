@@ -5,7 +5,7 @@ import { AnsiLogger } from 'matterbridge/logger';
 import { DysonMqtt360, DysonMqtt360Action } from './dyson-mqtt-360.js';
 import { Endpoint360 } from './endpoint-360.js';
 import { RvcCleanMode360, RvcRunMode360 } from './endpoint-360-behavior.js';
-import { Dyson360CleaningProgramme, Dyson360State } from './dyson-360-types.js';
+import { Dyson360State } from './dyson-360-types.js';
 import { CN, CV, RI } from './logger-options.js';
 import { ChangeToModeError, RvcOperationalStateError, SelectAreaError } from './error-360.js';
 import { MS } from './utils.js';
@@ -59,14 +59,14 @@ type StateTarget = typeof STATE_COLUMNS[number];
 const UPDATE_TIMEOUT = 5 * MS; // 5 seconds
 
 // A command to issue
-export interface Device360Command {
+export interface DysonDevice360Command {
     description:    string;
     command:        () => Promise<void>;
     condition:      () => boolean;
 }
 
 // Attach command handlers to a Dyson robot vacuum device RVC endpoint
-export class Device360CommandHandlers {
+export class DysonDevice360CommandHandlers {
 
     // Abort previous operations that are still in progress
     abort?: AbortController;
@@ -97,7 +97,7 @@ export class Device360CommandHandlers {
     }
 
     // Handle RVC Clean Mode cluster ChangeToMode commands
-    attachCleanModeHandler(makePowerCommand: (cleanMode: RvcCleanMode360) => Device360Command): void {
+    attachCleanModeHandler(makePowerCommand: (cleanMode: RvcCleanMode360) => DysonDevice360Command): void {
         this.endpoint.setCommandHandler360('ChangeCleanMode', async newMode => {
             const { description, command, condition } = makePowerCommand(newMode);
             this.log.info(`${CN}RVC Clean Mode${RI} ChangeToMode ${formatEnumLog(RvcCleanMode360, newMode)} → ${CV}${description}${RI}`);
@@ -107,7 +107,7 @@ export class Device360CommandHandlers {
 
     // Handle Service Area cluster SelectAreas commands
     attachSelectAreasHandler(
-        makeCleaningProgramme:  (areaIds: number[]) => Promise<Dyson360CleaningProgramme>,
+        makeCleaningProgramme:  (areaIds: number[]) => Promise<DysonDevice360Command>,
         makeAreaName:           (areaId: number) => string
     ): void {
         this.endpoint.setCommandHandler360('SelectAreas', async newAreas => {
@@ -118,19 +118,18 @@ export class Device360CommandHandlers {
                 }
             } else {
                 const areaNames = newAreas.map(areaId => makeAreaName(areaId));
-                const description = `${CN}ServiceArea${RI} ${CV}SelectAreas${RI} [${areaNames.join(', ')}]`;
+                const prefix = `${CN}ServiceArea${RI} ${CV}SelectAreas${RI} [${areaNames.join(', ')}]`;
 
                 // SelectWhileRunning is not supported
                 if (!this.targetAction('ZoneClean')) {
-                    this.log.info(`${description} → not allowed in current state`);
+                    this.log.info(`${prefix} → not allowed in current state`);
                     throw new SelectAreaError.InvalidInMode();
                 }
 
                 // Publish a command to start the zone configured cleaning
-                this.log.info(`${description} → ${CV}ZoneClean${RI}`);
-                const cleaningProgramme = await makeCleaningProgramme(newAreas);
-                await this.issueCommandAndWaitForUpdate(
-                    'perform action ZoneClean', () => this.mqtt.commandAction('START', cleaningProgramme), () => true);
+                this.log.info(`${prefix} → ${CV}ZoneClean${RI}`);
+                const { description, command, condition } = await makeCleaningProgramme(newAreas);
+                await this.issueCommandAndWaitForUpdate(`perform action ${description}`, command, condition);
             }
         });
     }

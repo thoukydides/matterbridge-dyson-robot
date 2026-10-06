@@ -33,11 +33,14 @@ export enum RvcRunMode360 {
 
 // Robot Vacuum Cleaner Clean Mode cluster modes
 export enum RvcCleanMode360 {
-    Quiet,      // Eye: Quiet  Heurist: Quiet  Vis Nav: Quiet
-    Quick,      //                             Vis Nav: Quick
-    High,       //             Heurist: High
-    MaxBoost,   // Eye: Max    Heurist: Max    Vis Nav: Boost
-    Auto        //                             Vis Nav: Auto
+    //              360 Eye     Heurist     Vis Nav / R1    Spot+Scrub / R2/R3
+    Quiet,       // Quiet       Quiet       Quiet           Quiet
+    Quick,       //                         Quick           Quick
+    High,        //             High
+    MaxBoost,    // Max         Max         Boost           Boost
+    Auto,        //                         Auto            Auto
+    Mop,         //                                         Mop
+    VacuumAndMop //                                         VacuumAndMop
 }
 
 // OperationalStatus manufacturer error
@@ -216,10 +219,7 @@ export class ServiceAreaServer360 extends ServiceAreaBehavior {
                 if (!supportedArea) throw new SelectAreaError.UnsupportedArea(`${area} is not a supported area`);
                 maps.add(supportedArea.mapId);
             }
-
-            // If all areas are specified then treat it as an empty list
-            if (newAreas.length === this.state.supportedAreas.length) newAreas = [];
-            else if (maps.size !== 1) throw new SelectAreaError.InvalidSet('Areas must all be from the same map');
+            if (1 < maps.size) throw new SelectAreaError.InvalidSet('Areas must all be from the same map');
 
             // Attempt to select the areas
             await device.executeCommand('SelectAreas', newAreas);

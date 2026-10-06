@@ -33,8 +33,8 @@ import {
 } from './dyson-device-360-faults.js';
 import { assert } from 'console';
 import {
-    Device360Command,
-    Device360CommandHandlers
+    DysonDevice360Command,
+    DysonDevice360CommandHandlers
 } from './dyson-device-360-commands.js';
 import { EndpointBase } from './endpoint-base.js';
 import { MaybePromise, VendorId } from 'matterbridge/matter';
@@ -155,52 +155,56 @@ export abstract class DysonDevice360Base
 
     // Create the endpoint for this device
     makeEndpoint(): Endpoint360 {
-        const rvcCleanModeLabels: RvcCleanModeLabels =
-            this.getPowerLevelMaps().map(([, mode, label]) => [mode, label]);
-
-        // Static configuration of the RVC clusters
-        const endpointOptions: EndpointOptions360 = {
-            id:                     this.uniqueId,
-            matterbridgeDeviceName: this.deviceName,
-            basicInformation: {
-                nodeLabel:          this.deviceName,
-                partNumber:         this.modelNumber,
-                productAppearance:  this.getProductAppearance(),
-                productId:          this.productId,
-                productLabel:       this.modelNumber,
-                productName:        this.modelName,
-                productUrl:         PLUGIN_URL,
-                serialNumber:       this.serialNumber,
-                softwareVersion:    this.firmwareVersion,
-                uniqueId:           this.uniqueId,
-                vendorId:           VendorId(VENDOR_ID),
-                vendorName:         VENDOR_NAME
-            },
-            powerSource: {
-                batteryPartNumber:  this.getBatteryPartNumber()
-            },
-            rvcCleanMode: {
-                labels:             rvcCleanModeLabels,
-                simpleModeTags:     this.config.simpleModeTagsRvc
-            },
-            supportsMaps:           this.supportsMaps()
-        };
-
         // Create the endpoint and attach a command handler
+        const endpointOptions = this.getEndpointOptions();
         const endpoint = new Endpoint360(this.log, this.config, endpointOptions);
         this.attachCommandHandlers(endpoint);
         return endpoint;
     }
 
+    // Determine the supported endpoints and their options
+    getEndpointOptions(): EndpointOptions360 {
+        const rvcCleanModeLabels: RvcCleanModeLabels =
+            this.getPowerLevelMaps().map(([, mode, label]) => [mode, label]);
+        const endpointOptions: EndpointOptions360 = {
+            id:                             this.uniqueId,
+            matterbridgeDeviceName:         this.deviceName,
+            basicInformation: {
+                nodeLabel:                  this.deviceName,
+                partNumber:                 this.modelNumber,
+                productAppearance:          this.getProductAppearance(),
+                productId:                  this.productId,
+                productLabel:               this.modelNumber,
+                productName:                this.modelName,
+                productUrl:                 PLUGIN_URL,
+                serialNumber:               this.serialNumber,
+                softwareVersion:            this.firmwareVersion,
+                uniqueId:                   this.uniqueId,
+                vendorId:                   VendorId(VENDOR_ID),
+                vendorName:                 VENDOR_NAME
+            },
+            powerSource: {
+                batteryPartNumber:          this.getBatteryPartNumber()
+            },
+            rvcCleanMode: {
+                labels:                     rvcCleanModeLabels,
+                simpleModeTags:             this.config.simpleModeTagsRvc
+            },
+            rvcOperationalState: {
+                supportsEmptyingDustBin:    false,
+                supportsCleaningMop:        false
+            },
+            supportsMaps:                   false
+        };
+        return endpointOptions;
+    }
+
     // Attach command handlers to the endpoint
-    attachCommandHandlers(endpoint: Endpoint360): Device360CommandHandlers {
-        const handlers = new Device360CommandHandlers(this.log, this.mqtt, endpoint);
+    attachCommandHandlers(endpoint: Endpoint360): DysonDevice360CommandHandlers {
+        const handlers = new DysonDevice360CommandHandlers(this.log, this.mqtt, endpoint);
         handlers.attachCleanModeHandler(this.makePowerCommand.bind(this));
         return handlers;
     }
-
-    // Indicates whether the device supports Service Area map features
-    supportsMaps = (): boolean => false;
 
     // List of endpoint function names and descriptions to validate
     override getEntities(): DysonEntityDescription[] {
@@ -237,7 +241,8 @@ export abstract class DysonDevice360Base
     abstract getProductAppearance(): BasicInformation.ProductAppearance;
     abstract getPowerLevelMaps(): Dyson360PowerLevelMap[];
     abstract setPowerLevel(powerLevel: Dyson360PowerLevel): Promise<void>;
-    abstract getPowerLevel(): Dyson360PowerLevel | undefined;
+    abstract getDefaultPowerLevel(): Dyson360PowerLevel | undefined;
+    abstract getCurrentPowerLevel(): Dyson360PowerLevel | undefined;
 
     // Retrieve details of a completed clean
     getCompletedClean(_cleanId: string): MaybePromise<Dyson360CleanSummaryResult> { return {}; }
@@ -288,14 +293,14 @@ export abstract class DysonDevice360Base
     }
 
     // Construct a command to set power level based on an RVC Clean Mode
-    makePowerCommand(cleanMode: RvcCleanMode360): Device360Command {
+    makePowerCommand(cleanMode: RvcCleanMode360): DysonDevice360Command {
         const map = this.getPowerLevelMaps().find(([, m]) => m === cleanMode);
         assertIsDefined(map);
         const powerLevel = map[0];
         return {
             description:    map[0],
             command:        () => this.setPowerLevel(powerLevel),
-            condition:      () => this.getPowerLevel() === powerLevel
+            condition:      () => this.getDefaultPowerLevel() === powerLevel
         };
     }
 
@@ -313,7 +318,7 @@ export abstract class DysonDevice360Base
 
         // Map the state to cluster attribute values
         const faults = await this.faultMapper.mapFault(status.state, status.faults, status.activeFaults);
-        const cleanMode         = this.powerModeToCleanMode(this.getPowerLevel());
+        const cleanMode         = this.mapCleanMode(status);
         const { runMode }       = dyson360MapState(status.state);
         const operationalState  = this.mapOperationalState(status, faults);
         const batteryStatus     = this.mapBatteryStatus(status, faults);
@@ -336,10 +341,7 @@ export abstract class DysonDevice360Base
     }
 
     // Convert the battery status to Power Source cluster attributes
-    mapBatteryStatus(
-        status: DysonMqttStatus<DysonMqttStatus360>,
-        faults: Dyson360MappedFaults
-    ): UpdatePowerSource360 {
+    mapBatteryStatus(status: DysonMqttStatus<DysonMqttStatus360>, faults: Dyson360MappedFaults): UpdatePowerSource360 {
         const { operationalState, isDocked } = dyson360MapState(status.state);
         const { batteryChargeLevel } = status;
         const { activeBatFaults, activeBatChargeFaults } = faults;
@@ -367,11 +369,14 @@ export abstract class DysonDevice360Base
         };
     }
 
+    // Convert the status to RVC Clean Mode
+    mapCleanMode(_status: DysonMqttStatus<DysonMqttStatus360>): RvcCleanMode360 {
+        const powerLevel = this.getCurrentPowerLevel();
+        return this.powerModeToCleanMode(powerLevel);
+    }
+
     // Convert the status to RVC Operational State cluster attributes
-    mapOperationalState(
-        status: DysonMqttStatus<DysonMqttStatus360>,
-        faults: Dyson360MappedFaults
-    ): UpdateRvcOperationalState360 {
+    mapOperationalState(status: DysonMqttStatus<DysonMqttStatus360>, faults: Dyson360MappedFaults): UpdateRvcOperationalState360 {
         const mappedState = dyson360MapState(status.state);
         const isActive = mappedState.runMode !== RvcRunMode360.Idle;
 

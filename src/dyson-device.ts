@@ -105,5 +105,18 @@ function checkDysonDeviceSchemaConsistency(log: AnsiLogger): void {
     warnIfDifference(schemaTopics, codeTopics, 'in configuration schema but without any implementation');
     warnIfDifference(codeTopics, schemaTopics, 'implemented but not listed in configuration schema');
 
-    // HERE - Check that devices sharing a type have distinct variants
+    // Check that devices sharing a type have distinct variants
+    const topicVariants = new Map<string, Set<string>>();
+    const topicsWithDuplicates = new Set<string>;
+    for (const { model } of DYSON_DEVICE_TYPES) {
+        const topic = model.type;
+        const variants = new Set('variants' in model ? model.variants : ['∅']);
+        const seen = topicVariants.get(topic) ?? new Set<string>();
+        if (seen.intersection(variants).size) topicsWithDuplicates.add(topic);
+        topicVariants.set(topic, seen.union(variants));
+    }
+    if (topicsWithDuplicates.size) {
+        log.warn(`${plural(topicsWithDuplicates.size, 'MQTT root topic')} with non-discriminated variants`
+               + ` (${formatList([...topicsWithDuplicates].sort())})`);
+    }
 }

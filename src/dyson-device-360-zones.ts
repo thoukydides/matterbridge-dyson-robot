@@ -14,8 +14,8 @@ import { dyson360MapState, DysonDevice360Base } from './dyson-device-360-base.js
 import { AbstractConstructor, assertIsDefined, MS } from './utils.js';
 import { ServiceArea } from 'matterbridge/matter/clusters';
 import { SelectAreaError } from './error-360.js';
-import { Endpoint360, formatAreaName } from './endpoint-360.js';
-import { Device360CommandHandlers } from './dyson-device-360-commands.js';
+import { Endpoint360, EndpointOptions360, formatAreaName } from './endpoint-360.js';
+import { DysonDevice360Command, DysonDevice360CommandHandlers } from './dyson-device-360-commands.js';
 import { logError } from './log-error.js';
 import { isDeepStrictEqual } from 'node:util';
 import {
@@ -75,6 +75,11 @@ export type Dyson360CleaningStatus =
     ({ cleaningMode: Dyson360CleaningMode.Global         } & Partial<Dyson360CleaningStatusFields>)
   | ({ cleaningMode: Dyson360CleaningMode.ZoneConfigured } &         Dyson360CleaningStatusFields );
 
+// Return the cleaning programme with zone cleaning commands to enable overrides
+export interface DysonDevice360ZoneCommand extends DysonDevice360Command {
+    cleaningProgramme:  Dyson360CleaningProgramme;
+}
+
 // Interval between map update checks without zonesDefinitionLastUpdatedDate
 const MAP_REFRESH_INTERVAL_MS = 5 * 60 * MS; // 5 minutes
 
@@ -115,7 +120,7 @@ export function DysonDevice360ZonesMixin<TBase extends AbstractConstructor<Dyson
         }
 
         // Attach command handlers to the endpoint
-        override attachCommandHandlers(endpoint: Endpoint360): Device360CommandHandlers {
+        override attachCommandHandlers(endpoint: Endpoint360): DysonDevice360CommandHandlers {
             const handlers = super.attachCommandHandlers(endpoint);
             handlers.attachSelectAreasHandler(
                 this.makeCleaningProgramme.bind(this),
@@ -124,8 +129,12 @@ export function DysonDevice360ZonesMixin<TBase extends AbstractConstructor<Dyson
             return handlers;
         }
 
-        // Indicates whether the device supports Service Area map features
-        override supportsMaps = () => true;
+        // Add map capability
+        getEndpointOptions(): EndpointOptions360 {
+            const endpointOptions = super.getEndpointOptions();
+            endpointOptions.supportsMaps = true;
+            return endpointOptions;
+        }
 
         // Update the Service Area cluster when the zone status changes
         async updateZoneStatus(cleaningStatus?: Dyson360CleaningStatus): Promise<void> {
@@ -188,7 +197,7 @@ export function DysonDevice360ZonesMixin<TBase extends AbstractConstructor<Dyson
         }
 
         // Attempt to convert selected areas into a Dyson cleaning programme
-        async makeCleaningProgramme(areaIds: number[]): Promise<Dyson360CleaningProgramme> {
+        async makeCleaningProgramme(areaIds: number[]): Promise<DysonDevice360ZoneCommand> {
             // Ensure that the latest maps are being used
             if (await this.updateMaps()) {
                 // New maps retrieved, so update the supported maps and areas
@@ -215,12 +224,18 @@ export function DysonDevice360ZonesMixin<TBase extends AbstractConstructor<Dyson
             assertIsDefined(map);
 
             // Build the cleaning programme
-            return {
+            const cleaningProgramme: Dyson360CleaningProgramme = {
                 orderedZones:                   [],
                 persistentMapId:                map.id,
                 unorderedZones,
                 zonesDefinitionLastUpdatedDate: 'zonesDefinitionLastUpdatedDate' in map
                                                 ? map.zonesDefinitionLastUpdatedDate : null
+            };
+            return {
+                description:    'ZoneClean',
+                command:        () => this.mqtt.commandAction('START', cleaningProgramme),
+                condition:      () => true,
+                cleaningProgramme
             };
         }
 

@@ -1,23 +1,20 @@
 // Matterbridge plugin for Dyson robot vacuum and air treatment devices
 // Copyright © 2025-2026 Alexander Thoukydides
 
-import { BasicInformation, RvcOperationalState } from 'matterbridge/matter/clusters';
-import { RvcCleanMode360, RvcRunMode360 } from './endpoint-360-behavior.js';
+import { BasicInformation } from 'matterbridge/matter/clusters';
+import { RvcCleanMode360 } from './endpoint-360-behavior.js';
 import {
     Dyson360VacuumMode,
     Dyson360EyePowerMode,
     Dyson360HeuristPowerMode,
     Dyson360TimelineEvent,
-    Dyson360CleaningProgramme,
-    Dyson360DockState,
     Dyson360CleaningMode,
     Dyson360ZoneCleanStatus
 } from './dyson-360-types.js';
 import {
     DysonDevice360Base,
     Dyson360PowerLevelMap,
-    Dyson360CleanSummaryResult,
-    dyson360MapState
+    Dyson360CleanSummaryResult
 } from './dyson-device-360-base.js';
 import { Dyson360CleaningStatus, DysonDevice360ZonesMixin } from './dyson-device-360-zones.js';
 import {
@@ -26,18 +23,13 @@ import {
 } from './dyson-device-360-map.js';
 import {
     Dyson360PersistentMapMetadataResponseV1,
-    Dyson360PersistentMapMetadataResponseV2,
-    Dyson360PersistentMapMetadataV2,
     Dyson360PersistentMapResponseV1
 } from './dyson-360-cloud-types.js';
-import { DysonMqtt360, DysonMqttStatus360 } from './dyson-mqtt-360.js';
-import { assertIsDefined, formatList, MS, plural } from './utils.js';
-import { DysonDeviceConstructorParams } from './dyson-device-base.js';
+import { DysonMqttStatus360 } from './dyson-mqtt-360.js';
+import { assertIsDefined } from './utils.js';
 import { DysonMqttStatus } from './dyson-mqtt.js';
-import { SimplePoll } from './simple-poll.js';
-import { UpdateRvcOperationalState360 } from './endpoint-360.js';
-import { Dyson360MappedFaults } from './dyson-device-360-faults.js';
-import { DysonMqtt360JDM } from './dyson-mqtt-360-jdm.js';
+import { DysonDevice360MopMixin } from './dyson-device-360-mop.js';
+import { DysonDevice360JDMBase } from './dyson-device-360-jdm.js';
 
 /* eslint-disable max-len */
 
@@ -74,9 +66,8 @@ ${DYSON360_COMPATIBILITY_COMMON}`;
 
 /* eslint-enable max-len */
 
-// Spot+Scrub Ai status polling behaviour
-const SPOTSCRUB_POLL_STATUS_MS              = 30  * MS; // 30 seconds
-const SPOTSCRUB_POLL_LIVE_MAPS_CLEANING_MS  =  3 * MS;  //  3 seconds
+// =============================================================================
+// Dyson 360 robot vacuum family...
 
 // A Dyson 360 Eye device
 export class DysonDevice360Eye extends DysonDevice360Base {
@@ -95,7 +86,8 @@ export class DysonDevice360Eye extends DysonDevice360Base {
     ];
 
     override setPowerLevel = (powerLevel: Dyson360EyePowerMode) => this.mqtt.commandSetPowerMode(powerLevel);
-    override getPowerLevel = () => this.mqtt.status.defaultVacuumPowerMode;
+    override getDefaultPowerLevel = () => this.mqtt.status.defaultVacuumPowerMode;
+    override getCurrentPowerLevel = () => this.mqtt.status.currentVacuumPowerMode;
 
     // Retrieve details of a completed clean
     override async getCompletedClean(cleanId: string): Promise<Dyson360CleanSummaryResult> {
@@ -113,6 +105,8 @@ export class DysonDevice360Eye extends DysonDevice360Base {
         return dysonRenderMap360Eye(this.log, logMapStyle, clean, map);
     }
 }
+
+// -----------------------------------------------------------------------------
 
 // A Dyson 360 Heurist device
 export class DysonDevice360Heurist extends DysonDevice360Base {
@@ -132,10 +126,13 @@ export class DysonDevice360Heurist extends DysonDevice360Base {
     ];
 
     override setPowerLevel = (powerLevel: Dyson360HeuristPowerMode) => this.mqtt.commandSetPowerMode(powerLevel);
-    override getPowerLevel = () => this.mqtt.status.defaultVacuumPowerMode;
+    override getDefaultPowerLevel = () => this.mqtt.status.defaultVacuumPowerMode;
+    override getCurrentPowerLevel = () => this.mqtt.status.currentVacuumPowerMode;
 
     override get compatibilityWarning() { return DYSON360_COMPATIBILITY_HEURIST; }
 }
+
+// -----------------------------------------------------------------------------
 
 // A Dyson 360 Vis Nav device
 export class DysonDevice360VisNav extends DysonDevice360ZonesMixin(DysonDevice360Base) {
@@ -156,7 +153,8 @@ export class DysonDevice360VisNav extends DysonDevice360ZonesMixin(DysonDevice36
     ];
 
     override setPowerLevel = (powerLevel: Dyson360VacuumMode) => this.mqtt.commandSetCleaningStrategy(powerLevel);
-    override getPowerLevel = () => this.mqtt.status.defaultCleaningStrategy;
+    override getDefaultPowerLevel = () => this.mqtt.status.defaultCleaningStrategy;
+    override getCurrentPowerLevel = () => this.mqtt.status.currentCleaningStrategy;
 
     // Update cluster attributes when the MQTT status is updated
     override async updateClusterAttributes(
@@ -218,154 +216,11 @@ export class DysonDevice360VisNav extends DysonDevice360ZonesMixin(DysonDevice36
     }
 }
 
-// Dyson Spot+Scrub Ai and Nurovi family of devices
-abstract class DysonDevice360NuroviBase extends DysonDevice360ZonesMixin(DysonDevice360Base) {
-
-    // The MQTT client and status update listener
-    static readonly mqttConstructor = DysonMqtt360JDM;
-
-    override getPowerLevelMaps = (): Dyson360PowerLevelMap[] => [
-        [Dyson360VacuumMode.Auto,     RvcCleanMode360.Auto,       'Auto'],
-        [Dyson360VacuumMode.Quick,    RvcCleanMode360.Quick,      'Quick'],
-        [Dyson360VacuumMode.Quiet,    RvcCleanMode360.Quiet,      'Quiet'],
-        [Dyson360VacuumMode.Boost,    RvcCleanMode360.MaxBoost,   'Boost']
-    ];
-
-    override setPowerLevel = (powerLevel: Dyson360VacuumMode) => this.mqtt.commandSetCleaningStrategy(powerLevel);
-    override getPowerLevel = () => this.mqtt.status.defaultCleaningStrategy;
-
-    // Polled updates
-    pollStatus:             SimplePoll;
-    pollCleaning:           SimplePoll;
-
-    // Construct a new Dyson device instance
-    constructor(...args: DysonDeviceConstructorParams<DysonMqtt360>) {
-        super(...args);
-
-        // Enable online fault code lookup
-        this.faultMapper.lookupOnline = faultCode => this.findFaultOnline(faultCode);
-
-        // Poll device status via MQTT
-        this.pollStatus = new SimplePoll(this.log, 'Current status poll', SPOTSCRUB_POLL_STATUS_MS, () => {
-            if (this.mqtt.status.reachable) void (async () => {
-                await this.mqtt.publish('REQUEST-CURRENT-STATE', {});
-            })();
-        });
-
-        // Use the live map to update the zone status
-        this.pollCleaning = new SimplePoll(this.log, 'Live cleaning maps poll', SPOTSCRUB_POLL_LIVE_MAPS_CLEANING_MS, async () => {
-            if (!this.api) return; // (mock devices do not support this)
-            const cleaningMode = this.mqtt.status.currentCleaningMode;
-            assertIsDefined(cleaningMode);
-            const live = await this.api.getLiveMapsCleaning360V1();
-            const zoneStatus = live.zones.map(({ id, cleanStatus }) => ({ zoneId: id, cleanStatus }));
-            await this.updateZoneStatus({ mapId: live.id, cleaningMode, zoneStatus });
-        });
-    }
-
-    // Update cluster attributes when the MQTT status is updated
-    override async updateClusterAttributes(
-        status: DysonMqttStatus<DysonMqttStatus360>
-    ): Promise<void> {
-        await super.updateClusterAttributes(status);
-
-        // Start or stop live map polling when cleaning
-        const { runMode } = dyson360MapState(status.state);
-        if (runMode === RvcRunMode360.Cleaning) this.pollCleaning.start();
-        else                                    this.pollCleaning.stop();
-
-        // Update the Service Area cluster when not polling the live map
-        if (!this.pollCleaning.isActive) await this.updateZoneStatus();
-    }
-
-    // Attempt to convert selected areas into a Dyson cleaning programme
-    override async makeCleaningProgramme(areaIds: number[]): Promise<Dyson360CleaningProgramme> {
-        const cleaningProgramme = await super.makeCleaningProgramme(areaIds);
-
-        // Select and order the zones before the clean is started
-        const map = this.mapFromMatter.values().find(m => m.id === cleaningProgramme.persistentMapId) as
-            Dyson360PersistentMapMetadataV2 | undefined;
-        assertIsDefined(map);
-        let changed = false;
-        for (const zone of map.zones) {
-            const isSelected = cleaningProgramme.unorderedZones?.includes(zone.id) ?? false;
-            if (zone.isSelected === isSelected) continue;
-            zone.isSelected = isSelected;
-            changed = true;
-        }
-        if (changed) {
-            this.log.info('Updating persistent map with zone selection');
-            await this.api?.setPersistentMapMetadata360V2(cleaningProgramme.persistentMapId, map.zones);
-        } else {
-            this.log.info('Zone selection does not require any change to the persistent map');
-        }
-
-        // Return the cleaning programme to start the clean via MQTT
-        return cleaningProgramme;
-    }
-
-    // Retrieve the latest persistent map metadata
-    override getPersistentMapMetadata(): Promise<Dyson360PersistentMapMetadataResponseV2> | undefined {
-        return this.api?.getPersistentMapMetadata360V2();
-    }
-
-    // Spot+Scrub Ai does not publish status updates, so poll periodically
-    override async start(): Promise<void> {
-        await super.start();
-        this.pollStatus.start();
-    }
-
-    // Stop the device when Matterbridge is shutting down
-    override async stop(): Promise<void> {
-        this.pollStatus.stop();
-        await super.stop();
-    }
-
-    // Convert the status to RVC Operational State cluster attributes
-    override mapOperationalState(
-        status: DysonMqttStatus<DysonMqttStatus360>,
-        faults: Dyson360MappedFaults
-    ): UpdateRvcOperationalState360 {
-        const state = super.mapOperationalState(status, faults);
-
-        // Override the Operational State if the dock is busy
-        const DOCK_STATE_MAP: Record<Dyson360DockState, keyof typeof RvcOperationalState.OperationalState | undefined> = {
-            [Dyson360DockState.CollectingDust]: 'EmptyingDustBin',
-            [Dyson360DockState.WashingMop]:     'CleaningMop',
-            [Dyson360DockState.DryingMop]:      'CleaningMop',
-            [Dyson360DockState.Idle]:           undefined
-        };
-        const mappedDockState = status.dockState && DOCK_STATE_MAP[status.dockState];
-        if (mappedDockState) state.operationalState = RvcOperationalState.OperationalState[mappedDockState];
-        return state;
-    }
-
-    // Attempt an online lookup of a fault code
-    async findFaultOnline(faultCode: string): Promise<string | undefined> {
-        // Retrieve the support information for this fault code from the API
-        if (!this.api) return; // (mock devices do not support this)
-        const details = await this.api.getFaultDetails360V1(faultCode);
-        if (!details.length) throw new Error('No online product support result');
-        if (!details.some(d => d.codes.includes(faultCode))) {
-            this.log.error('Online product support does not appear to be for the requested fault code');
-        }
-
-        // Log detailed support information
-        this.log.warn(`Online product support for fault ${faultCode}...`);
-        for (const entry of details) {
-            const codes = `${plural(entry.codes.length, 'fault code', false)} ${formatList(entry.codes)}`;
-            let description = `[${entry.severity}] "${entry.title}" (${codes})`;
-            if (entry.nextActionRequired) description += `- ${entry.nextActionRequired}`;
-            this.log.warn(`${description}: "${entry.description}"`);
-        }
-
-        // Use the combined titles as the fault description
-        return formatList(details.map(d => d.title));
-    }
-}
+// =============================================================================
+// Dyson Spot+Scrub Ai and Nurovi robot vacuum families...
 
 // A Dyson Spot+Scrub Ai device
-export class DysonDevice360SpotScrub extends DysonDevice360NuroviBase {
+export class DysonDevice360SpotScrub extends DysonDevice360MopMixin(DysonDevice360JDMBase) {
     static readonly model = { type: 'RB05', number: 'RB05', variants: ['A', 'E'], name: 'Spot+Scrub Ai' };
 
     override getBatteryPartNumber = () => '975571-01';
@@ -378,11 +233,10 @@ export class DysonDevice360SpotScrub extends DysonDevice360NuroviBase {
     override get compatibilityWarning() { return DYSON360_COMPATIBILITY_SPOTSCRUB; }
 }
 
-// A Dyson R1 Nurovi Dry device
-export class DysonDevice360R1NuroviDry extends DysonDevice360NuroviBase {
-    static readonly model = { type: 'RB07', number: 'RB07', variants: [''], name: 'R1 Nurovi Dry' };
+// -----------------------------------------------------------------------------
 
-    override getBatteryPartNumber = () => '976331-01';
+// Common base class for Dyson Nurovi family devices
+export abstract class DysonDevice360NuroviBase extends DysonDevice360JDMBase {
 
     override getProductAppearance = () => ({
         finish:         BasicInformation.ProductFinish.Matte,
@@ -390,35 +244,29 @@ export class DysonDevice360R1NuroviDry extends DysonDevice360NuroviBase {
     });
 
     override get compatibilityWarning() { return DYSON360_COMPATIBILITY_NUROVI; }
+}
+
+// -----------------------------------------------------------------------------
+
+// A Dyson R1 Nurovi Dry device (no mop)
+export class DysonDevice360R1NuroviDry extends DysonDevice360NuroviBase {
+    static readonly model = { type: 'RB07', number: 'RB07', variants: [''], name: 'R1 Nurovi Dry' };
+    override getBatteryPartNumber = () => '976331-01';
 }
 
 // A Dyson R2 Nurovi Wash+Dry device
-export class DysonDevice360R2NuroviWashDry extends DysonDevice360NuroviBase {
+export class DysonDevice360R2NuroviWashDry extends DysonDevice360MopMixin(DysonDevice360NuroviBase) {
     static readonly model = { type: 'RB07', number: 'RB07', variants: ['A'], name: 'R2 Nurovi Wash+Dry' };
-
     override getBatteryPartNumber = () => '976331-01';
-
-    override getProductAppearance = () => ({
-        finish:         BasicInformation.ProductFinish.Matte,
-        primaryColor:   BasicInformation.Color.White
-    });
-
-    override get compatibilityWarning() { return DYSON360_COMPATIBILITY_NUROVI; }
 }
 
 // A Dyson R3 Nurovi Spot+Scrub UV device
-export class DysonDevice360R3NuroviSpotScrub extends DysonDevice360NuroviBase {
+export class DysonDevice360R3NuroviSpotScrub extends DysonDevice360MopMixin(DysonDevice360NuroviBase) {
     static readonly model = { type: 'RB05', number: 'RB05', variants: ['B', 'F'], name: 'R3 Nurovi Spot+Scrub UV' };
-
     override getBatteryPartNumber = () => '975571-01';
-
-    override getProductAppearance = () => ({
-        finish:         BasicInformation.ProductFinish.Matte,
-        primaryColor:   BasicInformation.Color.White
-    });
-
-    override get compatibilityWarning() { return DYSON360_COMPATIBILITY_NUROVI; }
 }
+
+// =============================================================================
 
 // List of constructors for Dyson robot vacuum devices
 export const DYSON_DEVICE_TYPES_360 = [
