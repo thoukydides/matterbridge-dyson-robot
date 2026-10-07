@@ -51,6 +51,25 @@ export enum Dyson360State {
     Aborted                             = 'ABORTED'
 }
 
+// Coordinates
+export type Dyson360Coordinate = [number, number];
+export interface Dyson360Point {
+    x:                                  number;
+    y:                                  number;
+}
+export interface Dyson360PointRotated extends Dyson360Point {
+    angle:                              number;
+}
+export interface Dyson360PointUnrotated extends Dyson360Point {
+    angle:                              0;
+}
+
+// Dyson robot vacuum route position (Spot+Scrub only)
+export interface Dyson360PointRoute extends Dyson360PointRotated {
+    id:                                 number;         // Incrementing index
+    update:                             number;
+}
+
 // Dyson robot vacuum fault status
 export type Dyson360FaultStatus = {
     active:                             false;
@@ -128,19 +147,31 @@ export enum Dyson360CleaningType {
     Mapping                             = 'mapping'
 }
 
-// Dyson robot vacuum cleaning mode (360 Heurist and 360 Vis Nav only)
+// Dyson robot vacuum cleaning mode (360 Heurist and later)
 export enum Dyson360CleaningMode {
     Global                              = 'global',
-    ZoneConfigured                      = 'zoneConfigured'
+    Spot                                = 'spotZoneConfigured',
+    Zones                               = 'zoneConfigured'
 }
 
-// Dyson robot vacuum cleaning programme (360 Heurist and 360 Vis Nav only)
-export interface Dyson360CleaningProgramme {
+// Dyson robot vacuum cleaning programme (360 Heurist and later)
+export interface Dyson360CleaningProgrammeZones {
     orderedZones?:                      string[];
-    persistentMapId:                    string;         // UUID
+    persistentMapId:                    string;
     unorderedZones?:                    string[];       // e.g. ['4','1','2','3']
     zonesDefinitionLastUpdatedDate?:    string | null;  // e.g. '2025-12-17T10:53:21.8147587Z'
 }
+export interface Dyson360SpotZone {
+    id:                                 string;         // e.g. '1'
+    points:                             Dyson360Point[];  // x,y coordinates in metres
+}
+export interface Dyson360CleaningProgrammeSpot {
+    defaultSpotZoneSettings:            Dyson360ZoneSettings;
+    spotZones:                          Dyson360SpotZone[];
+    persistentMapId:                    string;
+}
+export type Dyson360CleaningProgramme =
+    Dyson360CleaningProgrammeZones | Dyson360CleaningProgrammeSpot;
 
 // Dyson robot vacuum clean type (Spot+Scrub Ai only)
 export enum Dyson360CleanType {
@@ -149,7 +180,7 @@ export enum Dyson360CleanType {
     VacuumAndMop                        = 'vacuumAndMop'
 }
 
-// Dyson robot vacuum zone status (360 Heurist and 360 Vis Nav only)
+// Dyson robot vacuum zone status (360 Heurist and later)
 export enum Dyson360ZoneCleanStatus {
     NotRequested                        = 'CLEAN_NOT_REQUESTED',
     Unable                              = 'CANT_CLEAN',
@@ -189,22 +220,21 @@ export type Dyson360MopPasses           = 1 | 2;
 
 // Dyson robot vacuum water level (Spot+Scrub Ai only)
 export enum Dyson360WaterLevel {
+    VeryLow                             = 'veryLow',
     Low                                 = 'low',
     Medium                              = 'medium',
     High                                = 'high'
 }
 
-// Dyson robot vacuum position
-export type Dyson360Position360 = [number, number];
-export interface Dyson360PositionSpotScrubCoord {
-    angle:                              number;
-    id:                                 number;         // Incrementing index
-    update:                             number;
-    x:                                  number;
-    y:                                  number;
+// Dyson robot vacuum zone settings (Spot+Scrub Ai only)
+export interface Dyson360ZoneSettings {
+    cleanType:                          Dyson360CleanType;
+    cleaningStrategy:                   Dyson360VacuumMode;
+    dryPasses:                          Dyson360VacuumPasses;
+    isUvScanOn?:                        boolean;            // UV sterilisation pass
+    mopPasses:                          Dyson360MopPasses;
+    waterLevel:                         Dyson360WaterLevel;
 }
-export type Dyson360PositionSpotScrub = Dyson360PositionSpotScrubCoord[];
-export type Dyson360Position = Dyson360Position360 | Dyson360PositionSpotScrub;
 
 // Dyson robot vacuum map data (after base64 and gzip decoding) (360 Eye only)
 export type Dyson360MapBitmap = number[][];

@@ -19,10 +19,11 @@ import {
     Dyson360GoodbyeReason,
     Dyson360MapUploadStatus,
     Dyson360OutOfBoxState,
-    Dyson360Position,
     Dyson360PowerMode,
     Dyson360State,
-    Dyson360ZoneStatus
+    Dyson360ZoneStatus,
+    Dyson360Coordinate,
+    Dyson360PointRoute
 } from './dyson-360-types.js';
 import { DysonModeReason, DysonMsg } from './dyson-types.js';
 
@@ -111,7 +112,7 @@ export interface Dyson360MsgCurrentState extends DysonMsg {
     faults?:                            Dyson360Faults;
     fullCleanAction?:                   Dyson360FullCleanAction;
     fullCleanType?:                     Dyson360CleaningType;
-    globalPosition?:                    Dyson360Position;
+    globalPosition?:                    Dyson360Coordinate | Dyson360PointRoute[];
     hotWaterMop?:                       boolean;
     hotWaterSwitch?:                    boolean;
     initialDockCommissioningCompleted?: boolean;
@@ -146,7 +147,7 @@ export interface Dyson360MsgStateChange extends DysonMsg {
     endOfClean?:                        boolean;
     faults?:                            Dyson360Faults;
     fullCleanType?:                     Dyson360CleaningType;
-    globalPosition?:                    Dyson360Position;
+    globalPosition?:                    Dyson360Coordinate | Dyson360PointRoute[];
     newActiveFaults?:                   Dyson360ActiveFault[],
     newOutOfBoxState?:                  Dyson360OutOfBoxState;
     newstate:                           Dyson360State;
@@ -192,7 +193,7 @@ export interface Dyson360MsgMapGlobal extends DysonMsg {
 
 export interface Dyson360MsgMapGrid extends DysonMsg {
     msg:                                'MAP-GRID',
-    anchor:                             Dyson360Position;
+    anchor:                             Dyson360Coordinate;
     cleanId:                            string; // UUID
     gridID:                             string; // e.g. '3'
     height:                             number;

@@ -74,8 +74,8 @@ export interface Dyson360CleaningStatusFields {
     zoneStatus:     Dyson360ZoneStatus[];
 }
 export type Dyson360CleaningStatus =
-    ({ cleaningMode: Dyson360CleaningMode.Global         } & Partial<Dyson360CleaningStatusFields>)
-  | ({ cleaningMode: Dyson360CleaningMode.ZoneConfigured } &         Dyson360CleaningStatusFields );
+    ({ cleaningMode: Dyson360CleaningMode.Global    } & Partial<Dyson360CleaningStatusFields>)
+  | ({ cleaningMode: Dyson360CleaningMode.Zones     } &         Dyson360CleaningStatusFields );
 
 // Return the cleaning programme with zone cleaning commands to enable overrides
 export interface DysonDevice360ZoneCommand extends DysonDevice360Command {
@@ -181,7 +181,7 @@ export function DysonDevice360ZonesMixin<TBase extends AbstractConstructor<Dyson
             // If zone cleaning then attempt to set the areas and progress
             const progress:         ServiceArea.Progress[] = [];
             const selectedAreas:    number[]               = [];
-            if (this.zoneStatusCache?.cleaningMode === Dyson360CleaningMode.ZoneConfigured) {
+            if (this.zoneStatusCache?.cleaningMode === Dyson360CleaningMode.Zones) {
                 const { mapId, mapVersion, zoneStatus } = this.zoneStatusCache;
                 if (await this.checkMap(mapId, mapVersion)) {
                     for (const { zoneId, cleanStatus } of zoneStatus) {

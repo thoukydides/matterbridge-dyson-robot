@@ -5,14 +5,10 @@ import {
     Dyson360CleaningMode,
     Dyson360CleaningProgramme,
     Dyson360VacuumMode,
-    Dyson360CleanType,
-    Dyson360VacuumPasses,
     Dyson360DustName,
     Dyson360EyeEventPowerMode,
-    Dyson360WaterLevel,
     Dyson360Rotation,
     Dyson360TimelineEvent,
-    Dyson360MopPasses,
     Dyson360ZoneIcon,
     Dyson360ZoneStatus,
     Dyson360ZoneType,
@@ -20,7 +16,11 @@ import {
     Dyson360RestrictionBehaviour,
     Dyson360ZoneCleanStatus,
     Dyson360FaultNextAction,
-    Dyson360PresentationType
+    Dyson360PresentationType,
+    Dyson360ZoneSettings,
+    Dyson360Point,
+    Dyson360PointRotated,
+    Dyson360PointUnrotated
 } from './dyson-360-types.js';
 import {
     DysonFaultDescription,
@@ -86,19 +86,11 @@ export interface Dyson360PersistentMapMetadataV1 {
 export type Dyson360PersistentMapMetadataResponseV1 = Dyson360PersistentMapMetadataV1[];
 
 // GET /v2/app/{serial}/persistent-map-metadata (Spot+Scrub Ai only)
-export interface Dyson360ZoneSettingsV2 {
-    cleanType:                          Dyson360CleanType;
-    cleaningStrategy:                   Dyson360VacuumMode;
-    dryPasses:                          Dyson360VacuumPasses;
-    isUvScanOn?:                        boolean;            // UV sterilisation pass
-    mopPasses:                          Dyson360MopPasses;
-    waterLevel:                         Dyson360WaterLevel;
-}
 export interface Dyson360PersistentMapMetadataZoneV2 extends Dyson360PersistentMapMetadataZoneBase {
     isSelected:                         boolean;
-    nameLocation:                       Dyson360PersistentMapLocation;
+    nameLocation:                       Dyson360Point;
     order:                              number;             // Cleaning sequence (1 is first)
-    settings:                           Dyson360ZoneSettingsV2;
+    settings:                           Dyson360ZoneSettings;
     type:                               Dyson360ZoneType | '';
 }
 export interface Dyson360PersistentMapMetadataV2 {
@@ -114,13 +106,6 @@ export type Dyson360PersistentMapMetadataResponseV2 = Dyson360PersistentMapMetad
 export type Dyson360UpdateMapZoneSelectionRequestV2 = Dyson360PersistentMapMetadataZoneV2[];
 
 // GET /v1/app/{serial}/persistent-maps/{mapId} (360 Vis Nav only)
-export interface Dyson360PersistentMapLocation {
-    x:                                  number;             // mm
-    y:                                  number;             // mm
-}
-export interface Dyson360PersistentMapLocationRotated extends Dyson360PersistentMapLocation {
-    angle:                              number;             // °
-}
 export interface Dyson360PersistentMapBitmap {
     resolution:                         number;             // mm/pixel
     data:                               string;             // base64 encoded PNG image
@@ -138,7 +123,7 @@ export interface Dyson360PersistentMapZonesDefinitionV1 {
     persistentMapDisplayOrientation:    Dyson360Rotation;
     persistentMapId:                    string;             // UUID
     persistentMapName:                  string;             // e.g. 'Downstairs'
-    persistentMapOffset:                Dyson360PersistentMapLocationRotated;
+    persistentMapOffset:                Dyson360PointRotated;
     persistentMapVersion:               number;             // e.g. 1
     thresholds:                         Dyson360PersistentMapThreshold[];
     zoneProperties:                     Dyson360PersistentMapMetadataZoneProperties[],
@@ -158,24 +143,24 @@ export interface Dyson360PersistentMapRestrictionV1 {
     name:                               string;             // e.g. 'Avoid cables'
     priority:                           number;
     properties:                         Dyson360PersistentMapRestrictionProperties;
-    vertices:                           Dyson360PersistentMapLocation[];
+    vertices:                           Dyson360Point[];
 }
 export interface Dyson360PersistentMapRestrictionsDefinitionV1 {
     lastUpdatedDate:                    string;             // e.g. '2025-12-17T11:30:52.6166355Z'
     persistentMapId:                    string;             // UUID
-    persistentMapOffset:                Dyson360PersistentMapLocationRotated;
+    persistentMapOffset:                Dyson360PointRotated;
     persistentMapVersion:               number;             // e.g. 3
     restrictions:                       Dyson360PersistentMapRestrictionV1[];
 }
 export interface Dyson360PersistentMapResponseV1 {
     id:                                 string;             // UUID
-    dockLocations:                      Dyson360PersistentMapLocationRotated[],
+    dockLocations:                      Dyson360PointRotated[],
     highSensitivityAdditionalObjects:   Dyson360PersistentMapBitmap;
     lastVisited:                        string;             // e.g. '2025-12-17T13:36:17.768Z',
     lowSensitivityObjects:              Dyson360PersistentMapBitmap;
     maturity:                           Dyson360PersistentMapBitmap;
     occupancyProbability:               Dyson360PersistentMapBitmap;
-    offset:                             Dyson360PersistentMapLocationRotated;
+    offset:                             Dyson360PointRotated;
     presentationMap:                    Dyson360PersistentMapBitmap;
     restrictionsDefinition:             Dyson360PersistentMapRestrictionsDefinitionV1 | null;
     version:                            number;             // e.g. 2
@@ -193,31 +178,31 @@ export interface Dyson360PersistentMapDimensions {
 }
 export interface Dyson360PersistentMapFurniture {
     id:                                 string;             // e.g. '1789145395'
-    points:                             Dyson360PersistentMapLocation[];
+    points:                             Dyson360Point[];
     type:                               Dyson360FurnitureType;
     userDefined:                        boolean;
 }
 export interface Dyson360PersistentMapZonePresentation {
-    start:                              Dyson360PersistentMapLocation;
-    end:                                Dyson360PersistentMapLocation;
+    start:                              Dyson360Point;
+    end:                                Dyson360Point;
     type:                               Dyson360PresentationType;
 }
 export interface Dyson360PersistentMapZoneV2 extends Dyson360PersistentMapMetadataZoneBase {
     cleanStatus:                        Dyson360ZoneCleanStatus;
-    nameLocation:                       Dyson360PersistentMapLocation;
+    nameLocation:                       Dyson360Point;
     presentation:                       Dyson360PersistentMapZonePresentation[]
     type?:                              Dyson360ZoneType;
-    visited:                            Dyson360PersistentMapLocation[];
+    visited:                            Dyson360Point[];
 }
 export interface Dyson360PersistentMapRestrictionV2 {
     behavior:                           Dyson360RestrictionBehaviour;
     id:                                 string;             // e.g. '0'
-    points:                             Dyson360PersistentMapLocation[];
+    points:                             Dyson360Point[];
 }
 export interface Dyson360PersistentMapResponseV2 {
     id:                                 string;             // e.g. '1788021937'
     dimensions:                         Dyson360PersistentMapDimensions;
-    dockLocation:                       Dyson360PersistentMapLocationRotated;
+    dockLocation:                       Dyson360PointRotated;
     furniture:                          Dyson360PersistentMapFurniture[];
     groutLines:                         [];
     hazardZones:                        [];
@@ -231,7 +216,7 @@ export interface Dyson360PersistentMapResponseV2 {
 export interface Dyson360CleanEstimationZoneV2 {
     area:                               number;             // m²
     id:                                 string;             // e.g. '1'
-    settings:                           Dyson360ZoneSettingsV2;
+    settings:                           Dyson360ZoneSettings;
 }
 export interface Dyson360CleanEstimationRequestV2 {
     zones:                              Dyson360CleanEstimationZoneV2[];
@@ -242,22 +227,22 @@ export interface Dyson360CleanEstimationResponseV2 {
 }
 
 // GET /v1/app/{serial}/live-maps/cleaning (Spot+Scrub Ai only)
-export interface Dyson360LiveMapPathPoint extends Dyson360PersistentMapLocation {
+export interface Dyson360LiveMapPathPoint extends Dyson360Point {
     update:                             0 | 1;
 };
-export interface Dyson360LiveMapRobotLocation extends Dyson360PersistentMapLocationRotated {
+export interface Dyson360LiveMapRobotLocation extends Dyson360PointRotated {
     update:                             0 | 1;
     id:                                 string;             // e.g. '1044'
 }
 export interface Dyson360LiveMapCleaningResponseV1 {
     cleanPath:                          Dyson360LiveMapPathPoint[];
     dirt:                               [];
-    dockLocation:                       Dyson360PersistentMapLocationRotated;
+    dockLocation:                       Dyson360PointRotated;
     furniture:                          Dyson360PersistentMapFurniture[];
     groutLines:                         [];
     hazardZones:                        [];
     id:                                 string;             // e.g. '1788021937'
-    obstacles:                          Dyson360PersistentMapLocation[];
+    obstacles:                          Dyson360Point[];
     orientation:                        number;
     restrictions:                       Dyson360PersistentMapRestrictionV2[];
     robotLocation:                      Dyson360LiveMapRobotLocation;
@@ -270,7 +255,7 @@ export interface Dyson360LiveMapCleaningResponseV1 {
 // GET /v1/app/{serial}/live-maps/mapping (Spot+Scrub Ai only)
 export interface Dyson360LiveMapMappingResponseV1 {
     dimensions:                         Dyson360PersistentMapDimensions;
-    dockLocation:                       Dyson360PersistentMapLocationRotated;
+    dockLocation:                       Dyson360PointRotated;
     mapData:                            number[];
     orientation:                        number;
     robotLocation:                      Dyson360LiveMapRobotLocation;
@@ -278,13 +263,6 @@ export interface Dyson360LiveMapMappingResponseV1 {
 }
 
 // GET /v1/{serial}/clean-maps?dustMap=total (360 Vis Nav only)
-export interface Dyson360CleanMapLocation {
-    x:                                  number;             // mm
-    y:                                  number;             // mm
-}
-export interface Dyson360CleanMapLocationUnrotated extends Dyson360CleanMapLocation{
-    angle:                              0;                  // °
-}
 export interface Dyson360CleanTimelineEntry {
     eventName:                          Dyson360TimelineEvent;
     time:                               string;             // e.g. '2025-12-23T09:00:25Z'
@@ -294,7 +272,7 @@ export interface Dyson360CleanTimelineEntry {
     reason:                             null;
     faultCode:                          string | null;      // e.g. '23.1.-1'
     faultType:                          string | null;      // e.g. 'BRUSH_BAR_AND_TRACTION'
-    faultLocation:                      Dyson360CleanMapLocation | null;
+    faultLocation:                      Dyson360Point | null;
 }
 export interface DysonCleanMapDustData {
     name:                               Dyson360DustName;   // (only 'total')
@@ -309,7 +287,7 @@ export interface DysonCleanMapDustMap {
 }
 export interface DysonCleanMapPersistentMap {
     id:                                 string;             // UUID
-    cleanMapPosition:                   Dyson360CleanMapLocationUnrotated;
+    cleanMapPosition:                   Dyson360PointUnrotated;
 };
 export interface Dyson360CleanMap {
     cleanedFootprint:                   Dyson360PersistentMapBitmap;

@@ -133,7 +133,7 @@ export class DysonMqtt360 extends DysonMqtt<DysonMsgMap360, DysonMqttStatus360> 
         case 'START':
             return this.publish('START', cleaningProgramme ? {
                 'mode-reason':      DysonModeReason.RemoteApp,
-                cleaningMode:       Dyson360CleaningMode.ZoneConfigured,
+                cleaningMode:       Dyson360CleaningMode.Zones,
                 cleaningProgramme
             } : {
                 'mode-reason':      DysonModeReason.RemoteApp,

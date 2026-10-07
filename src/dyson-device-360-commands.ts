@@ -140,7 +140,7 @@ export class DysonDevice360CommandHandlers {
                 );
 
                 // Confirm that the robot is actually performing a zone clean
-                if (this.mqtt.status.currentCleaningMode !== Dyson360CleaningMode.ZoneConfigured) {
+                if (this.mqtt.status.currentCleaningMode !== Dyson360CleaningMode.Zones) {
                     this.log.warn(`Zone clean started but robot reports a${this.mqtt.status.currentCleaningMode} clean`);
                 }
             }
