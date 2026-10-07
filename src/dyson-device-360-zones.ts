@@ -23,6 +23,8 @@ import {
     Dyson360PersistentMapMetadataV2
 } from './dyson-360-cloud-types.js';
 import { RvcRunMode360 } from './endpoint-360-behavior.js';
+import { DysonMsgAny } from './dyson-mqtt-parse.js';
+import { TypeMap as DysonMsgMap360 } from './ti/dyson-360-msg-types.js';
 
 // Mapping of Dyson area icons/names to Matter common areas
 type LocationType = number | null;
@@ -115,7 +117,11 @@ export function DysonDevice360ZonesMixin<TBase extends AbstractConstructor<Dyson
 
             // Perform an initial fetch of the persistent maps
             void (async () => {
-                try { await this.updateMaps(); } catch (err) { logError(this.log, 'Retrieving maps', err); }
+                try {
+                    await this.updateMaps();
+                } catch (err) {
+                    logError(this.log, 'Retrieving maps', err);
+                }
             })();
         }
 
@@ -134,6 +140,16 @@ export function DysonDevice360ZonesMixin<TBase extends AbstractConstructor<Dyson
             const endpointOptions = super.getEndpointOptions();
             endpointOptions.supportsMaps = true;
             return endpointOptions;
+        }
+
+        // Handle a received MQTT message
+        async mqttMessageReceived(msg: DysonMsgAny<DysonMsgMap360>): Promise<void> {
+            switch (msg.msg) {
+            case 'PERSISTENT-MAP-MANIFEST-UPDATED':
+                // Force a map refresh after they have been updated
+                await this.updateMaps(true);
+                break;
+            }
         }
 
         // Update the Service Area cluster when the zone status changes
@@ -199,16 +215,7 @@ export function DysonDevice360ZonesMixin<TBase extends AbstractConstructor<Dyson
         // Attempt to convert selected areas into a Dyson cleaning programme
         async makeCleaningProgramme(areaIds: number[]): Promise<DysonDevice360ZoneCommand> {
             // Ensure that the latest maps are being used
-            if (await this.updateMaps()) {
-                // New maps retrieved, so update the supported maps and areas
-                await this.endpoint?.updateServiceArea({
-                    currentArea:    null,
-                    progress:       [],
-                    selectedAreas:  [],
-                    supportedAreas: this.supportedAreas,
-                    supportedMaps:  this.supportedMaps
-                });
-            }
+            await this.updateMaps(true);
 
             // Map the Matter area identifiers to Dyson map and zone identifiers
             const maps = new Set<PersistentMapMetadata>();
@@ -283,7 +290,7 @@ export function DysonDevice360ZonesMixin<TBase extends AbstractConstructor<Dyson
         }
 
         // Retrieve the latest persistent maps
-        async updateMaps(): Promise<boolean> {
+        async updateMaps(updateServiceAreas = false): Promise<boolean> {
             // Retrieve the latest persistent map metadata
             const metadata = await this.getPersistentMapMetadata();
             if (!metadata) return false;
@@ -307,7 +314,18 @@ export function DysonDevice360ZonesMixin<TBase extends AbstractConstructor<Dyson
             }
 
             // Rebuild the Matter maps and areas if changed
-            if (changed) this.rebuildMatterMaps(metadata);
+            if (changed) {
+                this.rebuildMatterMaps(metadata);
+                if (updateServiceAreas) {
+                    await this.endpoint?.updateServiceArea({
+                        currentArea:    null,
+                        progress:       [],
+                        selectedAreas:  [],
+                        supportedAreas: this.supportedAreas,
+                        supportedMaps:  this.supportedMaps
+                    });
+                }
+            }
             return changed;
         }
 

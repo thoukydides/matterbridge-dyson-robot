@@ -39,6 +39,8 @@ import {
 import { EndpointBase } from './endpoint-base.js';
 import { MaybePromise, VendorId } from 'matterbridge/matter';
 import { setTimeout } from 'node:timers/promises';
+import { DysonMsgAny } from './dyson-mqtt-parse.js';
+import { TypeMap as DysonMsgMap360 } from './ti/dyson-360-msg-types.js';
 
 // Details of a completed clean
 export interface Dyson360CleanSummary {
@@ -131,6 +133,7 @@ export abstract class DysonDevice360Base
     // The MQTT client and status update listener
     static readonly mqttConstructor = DysonMqtt360;
     mqttStatusListener:     () => void;
+    mqttMessageListener:    (msg: DysonMsgAny<DysonMsgMap360>) => void;
 
     // The RVC device endpoint
     endpoint?:              Endpoint360;
@@ -149,8 +152,8 @@ export abstract class DysonDevice360Base
         this.faultMapper = new Dyson360FaultMapper(this.log);
 
         // Prepare listeners for MQTT updates
-        this.mqttStatusListener = tryListener(this.mqtt, () =>
-            this.updateClusterAttributes(this.mqtt.status));
+        this.mqttStatusListener     = tryListener(this.mqtt, ()     => this.updateClusterAttributes(this.mqtt.status));
+        this.mqttMessageListener    = tryListener(this.mqtt, (msg)  => this.mqttMessageReceived(msg));
     }
 
     // Create the endpoint for this device
@@ -219,20 +222,14 @@ export abstract class DysonDevice360Base
     // Start the device after the endpoints are active
     override async start(): Promise<void> {
         this.mqtt.on('status', this.mqttStatusListener);
-        this.mqtt.on('message', tryListener(this.mqtt, async msg => {
-            switch (msg.msg) {
-            case 'MAP-UPLOAD-STATUS':
-                // Spot+Scrub Ai doesn't provide cleanId in its normal status
-                if (msg.cleanId) await this.logCompletedClean(msg.cleanId, this.mqtt.status.cleanDuration);
-                break;
-            }
-        }));
+        this.mqtt.on('message', this.mqttMessageListener);
         await this.updateClusterAttributes(this.mqtt.status);
     }
 
     // Stop the device when Matterbridge is shutting down
     override async stop(): Promise<void> {
         this.mqtt.off('status', this.mqttStatusListener);
+        this.mqtt.off('message', this.mqttMessageListener);
         await super.stop();
     }
 
@@ -243,6 +240,16 @@ export abstract class DysonDevice360Base
     abstract setPowerLevel(powerLevel: Dyson360PowerLevel): Promise<void>;
     abstract getDefaultPowerLevel(): Dyson360PowerLevel | undefined;
     abstract getCurrentPowerLevel(): Dyson360PowerLevel | undefined;
+
+    // Handle a received MQTT message
+    async mqttMessageReceived(msg: DysonMsgAny<DysonMsgMap360>): Promise<void> {
+        switch (msg.msg) {
+        case 'MAP-UPLOAD-STATUS':
+            // Spot+Scrub Ai doesn't provide cleanId in its normal status
+            if (msg.cleanId) await this.logCompletedClean(msg.cleanId, this.mqtt.status.cleanDuration);
+            break;
+        }
+    }
 
     // Retrieve details of a completed clean
     getCompletedClean(_cleanId: string): MaybePromise<Dyson360CleanSummaryResult> { return {}; }
