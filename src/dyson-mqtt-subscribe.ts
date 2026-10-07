@@ -55,8 +55,8 @@ export class DysonMqttSubscribe extends EventEmitter<DysonMqttSubscribeEventMap>
                 // Use full wildcard topic for local connections
                 topics.push('#');
             } else {
-                // AWS IoT disconnects on wildcards; subscribe to command topic
-                topics.push(this.replaceTopicPlaceholders(this.topics.command));
+                // AWS IoT disconnects on full wildcards; subscribe to username
+                topics.push(this.replaceTopicPlaceholders('@/@/#'));
             }
         }
 
