@@ -22,7 +22,7 @@ import { assertIsDefined, formatList, MS, plural } from './utils.js';
 import { DysonDeviceConstructorParams } from './dyson-device-base.js';
 import { DysonMqttStatus } from './dyson-mqtt.js';
 import { PeriodicOp } from './periodic-op.js';
-import { DysonMqtt360JDM } from './dyson-mqtt-360-jdm.js';
+import { DysonMqtt360Jdm } from './dyson-mqtt-360-jdm.js';
 import { Endpoint360, EndpointOptions360, UpdateRvcOperationalState360 } from './endpoint-360.js';
 import { Dyson360MappedFaults } from './dyson-device-360-faults.js';
 import { DysonDevice360CommandHandlers } from './dyson-device-360-commands.js';
@@ -33,10 +33,10 @@ const POLL_STATUS_RAPID_MS          =   1 * MS; //  1 second
 const POLL_LIVE_MAPS_CLEANING_MS    = 3.5 * MS; // 3½ seconds
 
 // Common base class for Dyson post-360 robot vacuum devices (excluding mop)
-export abstract class DysonDevice360JDMBase extends DysonDevice360ZonesMixin(DysonDevice360Base) {
+export abstract class DysonDevice360JdmBase extends DysonDevice360ZonesMixin(DysonDevice360Base) {
 
     // The MQTT client and status update listener with JDM endpoints
-    static readonly mqttConstructor = DysonMqtt360JDM;
+    static readonly mqttConstructor = DysonMqtt360Jdm;
 
     override getPowerLevelMaps = (): Dyson360PowerLevelMap[] => [
         [Dyson360VacuumMode.Auto,   RvcCleanMode360.Auto,       'Auto'],
@@ -125,7 +125,7 @@ export abstract class DysonDevice360JDMBase extends DysonDevice360ZonesMixin(Dys
         assertIsDefined(map);
         let changed = false;
         for (const zone of map.zones) {
-            const isSelected = cleaningProgramme.unorderedZones?.includes(zone.id) ?? false;
+            const isSelected = cleaningProgramme.unorderedZones.includes(zone.id);
             if (zone.isSelected === isSelected) continue;
             zone.isSelected = isSelected;
             changed = true;

@@ -39,7 +39,8 @@ const DYSON_MQTT_CONFIG_AIR: DysonMqttConfig<DysonMsgMapAir> = {
         command:    '@/@/command',
         subscribe: ['@/@/status/connection',
                     '@/@/status/current',
-                    '@/@/status/faults']
+                    '@/@/status/faults',
+                    '@/@/status/summary']
     },
     messages: {
         prefix:     'DysonAirMsg',

@@ -27,6 +27,7 @@ const STATE_MAP: Record<Dyson360State, StateAction[]> = {
     [Dyson360State.FaultOnDock]:            ['abort',   'START',    'START',    undefined,  undefined,  undefined,  true        ],
     [Dyson360State.FaultOnDockCharged]:     ['abort',   'START',    'START',    undefined,  undefined,  undefined,  true        ],
     [Dyson360State.FaultOnDockCharging]:    ['abort',   'START',    'START',    undefined,  undefined,  undefined,  true        ],
+    [Dyson360State.FaultPowerCycle]:        ['abort',   'START',    'START',    undefined,  undefined,  undefined,  'ABORT'     ],
     [Dyson360State.FaultReplaceOnDock]:     ['abort',   'START',    'START',    undefined,  undefined,  undefined,  undefined   ],
     [Dyson360State.FaultReturnToDock]:      ['abort',   'START',    'START',    undefined,  undefined,  undefined,  undefined   ],
     [Dyson360State.FaultRunningDiagnostic]: ['abort',   'START',    'START',    undefined,  undefined,  undefined,  'ABORT'     ],

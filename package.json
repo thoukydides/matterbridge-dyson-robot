@@ -63,6 +63,7 @@
     },
     "dependencies": {
         "@types/pngjs": "^6.0.5",
+        "cbor2": "^2.4.0",
         "mqtt": "^5.16.0",
         "node-persist": "^4.0.4",
         "pngjs": "^7.0.0",

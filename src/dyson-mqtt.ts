@@ -7,14 +7,18 @@ import { Config } from './config-types.js';
 import { MS, tryListener } from './utils.js';
 import EventEmitter from 'events';
 import { DysonMsg } from './dyson-types.js';
+import { checkers as dysonMsgCheckers } from './ti/dyson-types.js';
 import {
     DysonMqttParserConfig,
     DysonMsgAny,
-    dysonMqttParse
+    dysonMqttParseJSON,
+    assertIsDysonMsg,
+    dysonMqttParseCBOR
 } from './dyson-mqtt-parse.js';
 import {
     DysonMqttSubscribe,
-    DysonMqttSubscribeConfig
+    DysonMqttSubscribeConfig,
+    DysonMqttTopic
 } from './dyson-mqtt-subscribe.js';
 import { DysonMqttConnection } from './dyson-mqtt-connect.js';
 import { inspect } from 'util';
@@ -57,11 +61,13 @@ export interface DysonMqttEventMap<T> extends DysonMqttEventMapBase {
 }
 
 // Tuple of parameters for publishing a message
+type DistributiveOmit<T, K extends PropertyKey> =
+    T extends unknown ? Omit<T, K> : never;
 export type PublishArgs<T, O extends string> = {
     [K in keyof T]: T[K] extends DysonMsg
-        ? (Omit<T[K], O | 'msg'> extends Record<string, never>
+        ? (DistributiveOmit<T[K], O | 'msg'> extends Record<string, never>
            ? [T[K]['msg']]
-           : [T[K]['msg'], Omit<T[K], O | 'msg'>])
+           : [T[K]['msg'], DistributiveOmit<T[K], O | 'msg'>])
         : never
 }[keyof T];
 
@@ -130,19 +136,12 @@ export abstract class DysonMqtt<T, S>
         // Handle received MQTT messages
         this.mqttFilter = new DysonMqttFilter(log);
         this.mqtt.on('message', tryListener(this, (topic, payload) => {
-            // Check the received topic and message
+            // Check the received topic and attempt to parse as JSON
             const topicStatus = this.mqttSubscribe.checkTopic(topic);
             const normalise = topicStatus !== 'command';
-            const msg = dysonMqttParse<T>(log, mqttConfig.messages, topic, normalise, payload);
-            const filter = this.mqttFilter.filter(msg);
-
-            // Dispatch the validated message and indicate a status update
-            this.logPayload('receive', topic, msg, filter);
-            if (!filter && topicStatus === 'subscribed') {
-                this.updateReachable('msg', !UNREACHABLE_MESSAGES.includes(msg.msg));
-                this.emit('message', msg);
-                this.emit('status');
-            }
+            const rawMsg = dysonMqttParseJSON(this.log, topic, normalise, payload);
+            const msg = dysonMqttParseCBOR(this.log, topic, normalise, rawMsg);
+            this.parseReceived(topic, topicStatus, msg);
         }));
 
         // Attempt to restore cached status
@@ -235,6 +234,21 @@ export abstract class DysonMqtt<T, S>
         await this.mqttConnection.stop();
     }
 
+    // Parse a received message
+    parseReceived(topic: string, topicStatus: DysonMqttTopic, msg: unknown): void {
+        // Validate the received message
+        assertIsDysonMsg<T>(this.log, this.mqttConfig.messages, topic, msg);
+        const filter = this.mqttFilter.filter(msg);
+
+        // Dispatch the validated message and indicate a status update
+        this.logPayload('receive', topic, msg, filter);
+        if (!filter && topicStatus === 'subscribed') {
+            this.updateReachable('msg', !UNREACHABLE_MESSAGES.includes(msg.msg));
+            this.emit('message', msg);
+            this.emit('status');
+        }
+    }
+
     // Publish a command
     async publish(...[msg, params]: PublishArgs<T, 'time'>): Promise<void> {
         // Construct the full message
@@ -249,31 +263,37 @@ export abstract class DysonMqtt<T, S>
     }
 
     // Log received or transmitted message payloads
-    logPayload(direction: 'publish' | 'receive', topic: string, payload: DysonMsg, filter?: DysonMqttFiltered): void {
+    logPayload(direction: 'publish' | 'receive', topic: string, payload: unknown, filter?: DysonMqttFiltered): void {
         if (this.config.debugFeatures.includes('Log MQTT Payloads as JSON')) {
             // Simple unconditional logging when plain JSON required
             const object = JSON.stringify(payload);
             this.log.debug(`MQTT ${direction}: ${object} topic '${topic}'${filter ? ` (${filter})` : ''}`);
         } else if (this.config.debugFeatures.includes('Log MQTT Payloads')) {
-            // List the fixed fields first
-            const { msg, time, ...other } = payload;
-            const properties = [
-                `msg: ${direction === 'publish' ? MP : MR}'${msg}'${MM}`,
-                `time: ${RD}'${time}'${MM}`
-            ];
-
-            // Include the other fields from the message, unless it is a duplicate
-            if (filter === 'duplicate') {
-                properties.push('...');
-            } else {
-                const inspectOptions = INSPECT_SINGLE_LINE;
-                properties.push(...Object.entries(other).sort().map(
-                    ([key, value]) => `${key}: ${inspect(value, inspectOptions)}`
-                ));
+            const properties: string[] = [];
+            if (dysonMsgCheckers.DysonMsg.test(payload)) {
+                // For standard Dyson messages list the fixed fields first
+                const { msg, time, ...other } = payload;
+                properties.push(
+                    `msg: ${direction === 'publish' ? MP : MR}'${msg}'${MM}`,
+                    `time: ${RD}'${time}'${MM}`
+                );
+                payload = other;
             }
-
-            // Log the message (formatting with strikethrough if dropped by filter)
-            const object = `${MM}{ ${properties.join(', ')} }${RD}`;
+            let object: string;
+            if (filter === 'duplicate') {
+                // For duplicates drop other fields and apply strikethrough
+                properties.push('...');
+                object = `${ST}${MM}{ ${properties.join(', ')} }${RD}${SR}`;
+            } else if (typeof payload === 'object' && payload !== null) {
+                // Include the other fields from objects
+                properties.push(...Object.entries(payload).sort().map(
+                    ([key, value]) => `${key}: ${inspect(value, INSPECT_SINGLE_LINE)}`
+                ));
+                object = `${MM}{ ${properties.join(', ')} }${RD}`;
+            } else {
+                // Format non-object types
+                object = `${MM}${inspect(payload, INSPECT_SINGLE_LINE)}${RD}`;
+            }
             this.log.debug(filter ? `MQTT ${direction}: ${ST}${object}${SR} (${filter})`
                                   : `MQTT ${direction}: ${object} topic '${topic}'`);
         }

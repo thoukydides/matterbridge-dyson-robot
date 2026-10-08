@@ -19,7 +19,7 @@ import {
     Dyson360CleanEstimationResponseV2,
     Dyson360CleanEstimationZoneV2,
     Dyson360CleanHistoryResponseV1,
-    Dyson360CleanMap,
+    Dyson360CleanMapV1,
     Dyson360FaultResponseV1,
     Dyson360LiveMapCleaningResponseV1,
     Dyson360PersistentMapResponseV2,
@@ -31,7 +31,8 @@ import {
     Dyson360PersistentMapMetadataResponseV1,
     Dyson360LiveMapMappingResponseV1,
     Dyson360UpdateMapZoneSelectionRequestV2,
-    Dyson360PersistentMapMetadataZoneV2
+    Dyson360PersistentMapMetadataZoneV2,
+    Dyson360CleanMapsDataResponseV2
 } from './dyson-360-cloud-types.js';
 import {
     DysonAirEnvironmentDataDailyResponseV1,
@@ -199,9 +200,15 @@ export class DysonCloudAPIDevice {
     }
 
     // Retrieve details of recent cleaning sessions (360 Vis Nav only)
-    getCleanMaps360V1(): Promise<Dyson360CleanMap[]> {
+    getCleanMaps360V1(): Promise<Dyson360CleanMapV1[]> {
         const path = `/v1/${this.serialNumber}/clean-maps?dustMap=total`;
         return this.ua.getJSON(checkers360.Dyson360CleanMapsResponseV1, path);
+    }
+
+    // Retrieve details of recent cleaning sessions (Spot+Scrub Ai only)
+    getCleanMap360V2(cleanId: string): Promise<Dyson360CleanMapsDataResponseV2> {
+        const path = `/v2/${this.serialNumber}/clean-maps-data/${cleanId}`;
+        return this.ua.getJSON(checkers360.Dyson360CleanMapsDataResponseV2, path);
     }
 
     // Request details of the recommended clean (360 Vis Nav only)

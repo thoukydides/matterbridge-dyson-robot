@@ -74,6 +74,7 @@ export class DysonAirSerialise {
             for (const description of unique) this.log.info(`    ${description}`);
         }
         const values = Object.entries(productState).map(([key, value]) => `${CC}${key}=${value}${RI}`);
+        if (!values.length) throw new Error('No product state specified');
         this.log.info(`Setting state: ${formatList(values)}`);
 
         // Publish the command and process the next MQTT status update

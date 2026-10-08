@@ -7,6 +7,12 @@ export interface DysonMsg {
     time?:                  string; // e.g. '2025-04-28T12:33:27.003Z'
 }
 
+// Messages encoded using RFC8949 Concise Binary Object Representation (CBOR)
+export interface DysonMsgCBOR { // Does NOT extend DysonMsg
+    time:                   string;
+    bin:                    string; // base64 encoded
+}
+
 // Dyson mode reason
 export enum DysonModeReason {
     Unknown                 = '',
@@ -18,14 +24,6 @@ export enum DysonModeReason {
     None                    = 'NONE'
 }
 
-// Dyson state reason
-export enum DysonStateReason {
-    Environment             = 'ENV',
-    FLT                     = 'FLT',
-    Mode                    = 'MODE',
-    None                    = 'NONE'
-}
-
 // Dyson app platform
 export enum DysonAppPlatform {
     iOS                     = 'ios',
@@ -34,12 +32,14 @@ export enum DysonAppPlatform {
 
 // Dyson account registration status
 export enum DysonAccountStatus {
-    Unregistered            = 'UNREGISTERED',
-    Active                  = 'ACTIVE'
+    Active                  = 'ACTIVE',
+    NeedsActivation         = 'NEEDS_ACTIVATION',
+    Unregistered            = 'UNREGISTERED'
 };
 
 // Dyson device registration status
 export enum DysonOwnershipStatus {
+    AnotherAccount          = 'REGISTERED_TO_ANOTHER_ACCOUNT',
     Registered              = 'REGISTERED_TO_THIS_ACCOUNT',
     Unregistered            = 'DEVICE_UNREGISTERED'
 }

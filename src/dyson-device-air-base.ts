@@ -303,18 +303,18 @@ export abstract class DysonDeviceAirBase extends DysonDevice<DysonMqttAir> {
 
     // Set horizontal oscillation (all except Big+Quiet models)
     async setOscillateLeftRight(oscillate: boolean): Promise<void> {
-        // Most models use 'ON'/'OFF', but some use 'OION'/'OIOF' instead
+        // Some models use different values when idle
         const { oson, osal, osau, ancp } = this.mqtt.status;
-        const isOI = oson === DysonAirOscillation.FixedOI
-                  || oson === DysonAirOscillation.OscillatingOI;
+        const isIdle = oson === DysonAirOscillation.FixedIdle
+                    || oson === DysonAirOscillation.OscillatingIdle;
         if (oscillate) {
             // Angle-capable models require the angle set when enabling oscillation
             await this.setState('Enabling left/right oscillation',
-                                { oson: DysonAirOscillation[isOI ? 'OscillatingOI' : 'Oscillating'], osal, osau, ancp });
+                                { oson: DysonAirOscillation[isIdle ? 'OscillatingIdle' : 'Oscillating'], osal, osau, ancp });
         } else {
             // Disable oscillation
             await this.setState('Disabling left/right oscillation',
-                                { oson: DysonAirOscillation[isOI ? 'FixedOI' : 'Fixed'] });
+                                { oson: DysonAirOscillation[isIdle ? 'FixedIdle' : 'Fixed'] });
         }
     }
 
@@ -366,6 +366,12 @@ export abstract class DysonDeviceAirBase extends DysonDevice<DysonMqttAir> {
         const { fpwr, fmod } = this.mqtt.status;
         if (fpwr === DysonAirFanPower.Off)      productState.fpwr ??= DysonAirFanPower.On;          // Non-Link
         if (fmod === DysonAirFanAutoPower.Off)  productState.fmod ??= DysonAirFanAutoPower.Manual;  // Link models
+
+        // No action required unless state is actually being set
+        if (!Object.keys(productState).length) {
+            this.log.debug('No state change required');
+            return;
+        }
 
         // Queue the MQTT command
         await this.serialise.setState(description, productState);
@@ -447,7 +453,7 @@ export abstract class DysonDeviceAirBase extends DysonDevice<DysonMqttAir> {
         if (this.hasLeftRight) {
             // All except Big+Quiet models
             rockLeftRight = oson === DysonAirOscillation.Oscillating
-                         || oson === DysonAirOscillation.OscillatingOI;
+                         || oson === DysonAirOscillation.OscillatingIdle;
         }
         if (this.hasUpDown) {
             // Big+Quiet models only

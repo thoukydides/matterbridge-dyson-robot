@@ -11,14 +11,15 @@ import {
 import { tryListener } from './utils.js';
 import {
     Dyson360MsgCurrentState,
+    Dyson360MsgCurrentStateState,
     Dyson360MsgStateChange
 } from './dyson-360-msg-types.js';
 import {
     Dyson360CleaningMode,
-    Dyson360CleaningProgramme,
     Dyson360VacuumMode,
     Dyson360CleaningType,
-    Dyson360PowerMode
+    Dyson360PowerMode,
+    Dyson360CleaningProgrammeZones
 } from './dyson-360-types.js';
 import { DysonModeReason } from './dyson-types.js';
 import { DeviceConfigMqtt } from './dyson-mqtt-client-live.js';
@@ -40,8 +41,8 @@ export const DYSON_MQTT_CONFIG_360: DysonMqttConfig<DysonMsgMap360> = {
 
 // Dyson robot vacuum status
 export type DysonMqttStatus360 =
-    Omit<Dyson360MsgCurrentState, 'msg' | 'time'>
-    & Required<Pick<Dyson360MsgCurrentState, 'state'>>;
+    Omit<Dyson360MsgCurrentStateState, 'msg' | 'time'>
+    & Pick<Dyson360MsgCurrentStateState, 'state'>;
 
 // Dyson robot vacuum supported commands
 export type DysonMqtt360Action = 'START' | 'PAUSE' | 'RESUME' | 'ABORT';
@@ -77,7 +78,7 @@ export class DysonMqtt360 extends DysonMqtt<DysonMsgMap360, DysonMqttStatus360> 
     }
 
     // Convert a STATE-CHANGE message to CURRENT-STATE format
-    convertStateChange(msg: Dyson360MsgStateChange): Dyson360MsgCurrentState {
+    convertStateChange(msg: Dyson360MsgStateChange): Dyson360MsgCurrentStateState {
         const {
             // Discard unmapped or replaced fields
             msg: _, endOfClean,
@@ -101,7 +102,7 @@ export class DysonMqtt360 extends DysonMqtt<DysonMsgMap360, DysonMqttStatus360> 
     // Update the robot vacuum state from a received message
     updateState(msg: Dyson360MsgCurrentState): void {
         // Spot+Scrub Ai sends updates only providing globalPosition
-        const isFullUpdate = Boolean(msg.state);
+        const isFullUpdate = 'state' in msg;
 
         // Clear fields from the state that might have disappeared
         const DELETE_KEYS  = [
@@ -109,7 +110,7 @@ export class DysonMqtt360 extends DysonMqtt<DysonMsgMap360, DysonMqttStatus360> 
             'cleaningProgramme',    'faults',                   'globalPosition',
             'persistentMapId',      'sessionId',                'traverseTargetId',
             'zoneId',               'zonesDefinitionVersion',   'zoneStatus'
-        ] as const satisfies (keyof Dyson360MsgCurrentState)[];
+        ] as const satisfies (keyof Dyson360MsgCurrentStateState)[];
         if (isFullUpdate) {
             for (const key of DELETE_KEYS) this.status[key] = undefined;
         }
@@ -127,15 +128,16 @@ export class DysonMqtt360 extends DysonMqtt<DysonMsgMap360, DysonMqttStatus360> 
 
     // Publish a robot vacuum command to perform an action
     commandAction(msg: DysonMqtt360Action): Promise<void>;
-    commandAction(msg: 'START', cleaningProgramme?: Dyson360CleaningProgramme): Promise<void>;
-    commandAction(msg: DysonMqtt360Action, cleaningProgramme?: Dyson360CleaningProgramme): Promise<void> {
+    commandAction(msg: 'START', cleaningProgramme?: Dyson360CleaningProgrammeZones): Promise<void>;
+    commandAction(msg: DysonMqtt360Action, cleaningProgramme?: Dyson360CleaningProgrammeZones): Promise<void> {
         switch (msg) {
         case 'START':
             return this.publish('START', cleaningProgramme ? {
                 'mode-reason':      DysonModeReason.RemoteApp,
+                fullCleanType:      Dyson360CleaningType.Immediate,
                 cleaningMode:       Dyson360CleaningMode.Zones,
                 cleaningProgramme
-            } : {
+            }: {
                 'mode-reason':      DysonModeReason.RemoteApp,
                 fullCleanType:      Dyson360CleaningType.Immediate,
                 cleaningMode:       this.status.defaultCleaningMode     && Dyson360CleaningMode.Global,

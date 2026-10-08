@@ -78,6 +78,7 @@ const STATE_MAP: Record<Dyson360State, StateMapColumns> = {
     [Dyson360State.FaultOnDock]:            ['Idle',        'Error',            true],
     [Dyson360State.FaultOnDockCharged]:     ['Idle',        'Error',            true],
     [Dyson360State.FaultOnDockCharging]:    ['Idle',        'Error',            true],
+    [Dyson360State.FaultPowerCycle]:        ['Idle',        'Error',            false],
     [Dyson360State.FaultReplaceOnDock]:     ['Idle',        'Error',            false],
     [Dyson360State.FaultReturnToDock]:      ['Idle',        'Error',            false],
     [Dyson360State.FaultRunningDiagnostic]: ['Idle',        'Error',            false],

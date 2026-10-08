@@ -29,7 +29,7 @@ import { DysonMqttStatus360 } from './dyson-mqtt-360.js';
 import { assertIsDefined } from './utils.js';
 import { DysonMqttStatus } from './dyson-mqtt.js';
 import { DysonDevice360MopMixin } from './dyson-device-360-mop.js';
-import { DysonDevice360JDMBase } from './dyson-device-360-jdm.js';
+import { DysonDevice360JdmBase } from './dyson-device-360-jdm.js';
 
 /* eslint-disable max-len */
 
@@ -175,10 +175,10 @@ export class DysonDevice360VisNav extends DysonDevice360ZonesMixin(DysonDevice36
                 const { persistentMapId: mapId, zonesDefinitionVersion: mapVersion } = status;
                 assertIsDefined(mapId);
                 cleaningStatus = { cleaningMode, mapId, mapVersion, zoneStatus };
-            } else if (cleaningProgramme) {
+            } else if (cleaningProgramme && 'orderedZones' in cleaningProgramme) {
                 // No live zone status, so synthesise from cleaning programme
                 const zones = new Set([
-                    ...(cleaningProgramme.orderedZones ?? []),
+                    ...cleaningProgramme.unorderedZones,
                     ...(cleaningProgramme.orderedZones ?? [])
                 ]);
                 cleaningStatus = {
@@ -220,7 +220,7 @@ export class DysonDevice360VisNav extends DysonDevice360ZonesMixin(DysonDevice36
 // Dyson Spot+Scrub Ai and Nurovi robot vacuum families...
 
 // A Dyson Spot+Scrub Ai device
-export class DysonDevice360SpotScrub extends DysonDevice360MopMixin(DysonDevice360JDMBase) {
+export class DysonDevice360SpotScrub extends DysonDevice360MopMixin(DysonDevice360JdmBase) {
     static readonly model = { type: 'RB05', number: 'RB05', variants: ['A', 'E'], name: 'Spot+Scrub Ai' };
 
     override getBatteryPartNumber = () => '975571-01';
@@ -236,7 +236,7 @@ export class DysonDevice360SpotScrub extends DysonDevice360MopMixin(DysonDevice3
 // -----------------------------------------------------------------------------
 
 // Common base class for Dyson Nurovi family devices
-export abstract class DysonDevice360NuroviBase extends DysonDevice360JDMBase {
+export abstract class DysonDevice360NuroviBase extends DysonDevice360JdmBase {
 
     override getProductAppearance = () => ({
         finish:         BasicInformation.ProductFinish.Matte,

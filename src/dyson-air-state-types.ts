@@ -35,7 +35,7 @@ import {
     DysonAirBrightness,
     DysonAirOscillationStatus,
     DysonAirTiltOscillationStatus,
-    DysonAirSelectiveCatalyticOxidisationFilterType,
+    DysonAirCatalyticFilterType,
     DysonAirSleepTimer,
     DysonAirFindFollowMode,
     DysonAirFindFollowState
@@ -66,7 +66,7 @@ export interface DysonAirProductState {
     otau?:  DysonAirTiltAngle;          // Tilt angle upper bound °
     oton?:  DysonAirTiltOscillation;
     sflr?:  string;                     // SCO filter life:     '0000'~'0100' %
-    sflt?:  DysonAirSelectiveCatalyticOxidisationFilterType;
+    sflt?:  DysonAirCatalyticFilterType;
     otcs?:  DysonAirTiltOscillationStatus;
 
     // All models except Pure (Hot+)Cool Link
@@ -149,7 +149,7 @@ export interface DysonAirProductStateChange {
     otau?:  [DysonAirTiltAngle,                                 DysonAirTiltAngle];
     oton?:  [DysonAirTiltOscillation,                           DysonAirTiltOscillation];
     sflr?:  [string,                                            string];
-    sflt?:  [DysonAirSelectiveCatalyticOxidisationFilterType,   DysonAirSelectiveCatalyticOxidisationFilterType];
+    sflt?:  [DysonAirCatalyticFilterType,                       DysonAirCatalyticFilterType];
     otcs?:  [DysonAirTiltOscillationStatus,                     DysonAirTiltOscillationStatus];
     auto?:  [DysonAirAutoMode,                                  DysonAirAutoMode];
     cflr?:  [DysonAirCarbonFilterLife,                          DysonAirCarbonFilterLife];

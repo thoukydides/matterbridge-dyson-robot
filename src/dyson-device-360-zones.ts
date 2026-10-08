@@ -4,6 +4,7 @@
 import {
     Dyson360CleaningMode,
     Dyson360CleaningProgramme,
+    Dyson360CleaningProgrammeZones,
     Dyson360ZoneCleanStatus,
     Dyson360ZoneIcon,
     Dyson360ZoneStatus,
@@ -74,12 +75,12 @@ export interface Dyson360CleaningStatusFields {
     zoneStatus:     Dyson360ZoneStatus[];
 }
 export type Dyson360CleaningStatus =
-    ({ cleaningMode: Dyson360CleaningMode.Global    } & Partial<Dyson360CleaningStatusFields>)
-  | ({ cleaningMode: Dyson360CleaningMode.Zones     } &         Dyson360CleaningStatusFields );
+    ({ cleaningMode: Dyson360CleaningMode.Global | Dyson360CleaningMode.Spot } & Partial<Dyson360CleaningStatusFields>)
+  | ({ cleaningMode: Dyson360CleaningMode.Zones                              } &         Dyson360CleaningStatusFields );
 
 // Return the cleaning programme with zone cleaning commands to enable overrides
 export interface DysonDevice360ZoneCommand extends DysonDevice360Command {
-    cleaningProgramme:  Dyson360CleaningProgramme;
+    cleaningProgramme:  Dyson360CleaningProgrammeZones;
 }
 
 // Interval between map update checks without zonesDefinitionLastUpdatedDate

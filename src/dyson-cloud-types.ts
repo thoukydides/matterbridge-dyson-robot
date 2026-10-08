@@ -45,9 +45,13 @@ export type DysonVersionResponseV1 = string;
 export interface DysonEmailUserStatusRequestV3 {
     email:                      string;
 }
+export enum DysonAccountAuthenticationMethod {
+    PasswordOnly                = 'EMAIL_PWD',
+    TwoFactor                   = 'EMAIL_PWD_2FA'
+}
 export interface DysonEmailUserStatusResponseV3 {
     accountStatus:              DysonAccountStatus;
-    authenticationMethod:       'EMAIL_PWD_2FA';
+    authenticationMethod:       DysonAccountAuthenticationMethod;
 }
 
 // POST /v3/userregistration/email/auth
@@ -77,11 +81,11 @@ export enum DysonManifestCategory {
     FloorCare                   = 'flrc',
     Formulation                 = 'formulation',
     HairCare                    = 'hc',
-    ConnectedHairCare           = 'kc',
+    Category5                   = 'kc',
     Light                       = 'light',
     OralCare                    = 'oc',
     RobotVacuum                 = 'robot',
-    Wearable                    = 'wearable'
+    WearableAirTreatment        = 'wearable'
 }
 export enum DysonManifestCapability {
     ActiveFaults                = 'ActiveFaults',
@@ -178,6 +182,7 @@ export interface DysonTimezoneResponseV1 {
 export interface DysonOwnershipResponseV1 {
     deviceStatus:               DysonOwnershipStatus;
 }
+
 // GET /v1/messageprocessor/devices/{serial}/connectionstatus
 export interface DysonConnectionStatusResponseV1 {
     BrokerHostName:             string | null;

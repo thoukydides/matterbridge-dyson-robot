@@ -20,7 +20,10 @@ import {
     Dyson360ZoneSettings,
     Dyson360Point,
     Dyson360PointRotated,
-    Dyson360PointUnrotated
+    Dyson360PointUnrotated,
+    Dyson360PointPath,
+    Dyson360PointRobot,
+    Dyson360DirtType
 } from './dyson-360-types.js';
 import {
     DysonFaultDescription,
@@ -227,16 +230,13 @@ export interface Dyson360CleanEstimationResponseV2 {
 }
 
 // GET /v1/app/{serial}/live-maps/cleaning (Spot+Scrub Ai only)
-export interface Dyson360LiveMapPathPoint extends Dyson360Point {
-    update:                             0 | 1;
-};
-export interface Dyson360LiveMapRobotLocation extends Dyson360PointRotated {
-    update:                             0 | 1;
-    id:                                 string;             // e.g. '1044'
+export interface Dyson360LiveMapDirt extends Dyson360Point {
+    type:                               Dyson360DirtType,
+    isUvScanOn:                         boolean;
 }
 export interface Dyson360LiveMapCleaningResponseV1 {
-    cleanPath:                          Dyson360LiveMapPathPoint[];
-    dirt:                               [];
+    cleanPath:                          Dyson360PointPath[];
+    dirt:                               Dyson360LiveMapDirt[];
     dockLocation:                       Dyson360PointRotated;
     furniture:                          Dyson360PersistentMapFurniture[];
     groutLines:                         [];
@@ -245,7 +245,7 @@ export interface Dyson360LiveMapCleaningResponseV1 {
     obstacles:                          Dyson360Point[];
     orientation:                        number;
     restrictions:                       Dyson360PersistentMapRestrictionV2[];
-    robotLocation:                      Dyson360LiveMapRobotLocation;
+    robotLocation:                      Dyson360PointRobot;
     spotZones:                          [];
     swingDoors:                         [];
     taskBeginTime:                      number;             // seconds since epoch
@@ -258,7 +258,7 @@ export interface Dyson360LiveMapMappingResponseV1 {
     dockLocation:                       Dyson360PointRotated;
     mapData:                            number[];
     orientation:                        number;
-    robotLocation:                      Dyson360LiveMapRobotLocation;
+    robotLocation:                      Dyson360PointRobot;
     taskBeginTime:                      number;             // milliseconds since epoch
 }
 
@@ -279,7 +279,7 @@ export interface DysonCleanMapDustData {
     scaleFactor:                        number;             // 100% in data scale
     data:                               string;             // base64 encoded, zlib deflate compressed, width×height octets
 }
-export interface DysonCleanMapDustMap {
+export interface DysonCleanMapDustMapV1 {
     width:                              number;             // pixels
     height:                             number;             // pixels
     resolution:                         number;             // mm/pixel
@@ -289,11 +289,11 @@ export interface DysonCleanMapPersistentMap {
     id:                                 string;             // UUID
     cleanMapPosition:                   Dyson360PointUnrotated;
 };
-export interface Dyson360CleanMap {
+export interface Dyson360CleanMapV1 {
     cleanedFootprint:                   Dyson360PersistentMapBitmap;
     cleanId:                            string;             // UUID
     cleanTimeline:                      Dyson360CleanTimelineEntry[];
-    dustMap:                            DysonCleanMapDustMap;
+    dustMap:                            DysonCleanMapDustMapV1;
     highSensitivityAdditionalObjects:   Dyson360PersistentMapBitmap;
     lowSensitivityObjects:              Dyson360PersistentMapBitmap;
     occupancyProbability:               Dyson360PersistentMapBitmap;
@@ -303,7 +303,29 @@ export interface Dyson360CleanMap {
     zones:                              Dyson360PersistentMapBitmap | null;
     zoneStatus:                         Dyson360ZoneStatus[] | null;
 }
-export type Dyson360CleanMapsResponseV1 = Dyson360CleanMap[];
+export type Dyson360CleanMapsResponseV1 = Dyson360CleanMapV1[];
+
+// GET /v2/{serial}/clean-maps-data/{cleanId} (Spot+Scrub Ai only)
+export interface Dyson360CleanMapDustMapV2 {
+    type:                               Dyson360DustName;
+    data:                               number[];           // width×height
+}
+export interface Dyson360CleanMapBoundary {
+    minX:                               number;
+    maxX:                               number;
+    minY:                               number;
+    maxY:                               number;
+}
+export interface Dyson360CleanMapsDataResponseV2 {
+    boundary:                           Dyson360CleanMapBoundary;
+    cleanId:                            string;             // UUID
+    cleanPath:                          Dyson360PointPath[];
+    dimensions:                         Dyson360PersistentMapDimensions;
+    dirt:                               Dyson360LiveMapDirt[];
+    dockLocation:                       Dyson360PointRotated;
+    dustMap:                            Dyson360CleanMapDustMapV2;
+    orientation:                        number;
+}
 
 // GET /v1/app/{serial}/recommended-cleans (360 Vis Nav only)
 export interface Dyson360ZonePredictionDustMilligrams {

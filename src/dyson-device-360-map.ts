@@ -7,7 +7,7 @@ import { assertIsDefined } from './utils.js';
 import { DysonAnsiChar, DysonBitmapAnsi } from './dyson-bitmap-ansi.js';
 import {
     Dyson360CleanHistoryEntry,
-    Dyson360CleanMap,
+    Dyson360CleanMapV1,
     Dyson360PersistentMapResponseV1
 } from './dyson-360-cloud-types.js';
 import { inflateSync } from 'zlib';
@@ -115,7 +115,7 @@ export function dysonRenderMap360Eye(
 export function dysonRenderMap360VisNav(
     log:    AnsiLogger,
     style:  Dyson360MapStyle,
-    clean:  Dyson360CleanMap,
+    clean:  Dyson360CleanMapV1,
     map?:   Dyson360PersistentMapResponseV1
 ): Dyson360CleanSummary {
     // Check that the bitmaps are all the same resolution
