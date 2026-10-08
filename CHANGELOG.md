@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v1.12.1] - 2026-10-08
+### Added
+* MQTT messages using RFC8949 Concise Binary Object Representation (CBOR) are now decoded.
+* Minimal parsing of `/status/summary` MQTT root topic for air treatment devices, and the `/jdm/command` and `/jdm/status` topics for applicable robot vacuums.
+### Changed
+* `wildcardTopic` configuration option uses device-specific MQTT wildcard topic with Remote Account connections instead of just subscribing to the `/command` topic.
+* Updated API and MQTT type definitions.
+### Fixed
+* Avoid sending an empty `STATE-SET` command to air treatment devices when they are already switched on.
+
 ## [v1.12.0] - 2026-10-06
 ### Added
 * Added support for Dyson Purifier Hot+Cool (HP14), Dyson HushJet Big+Quiet Purifier (BP10), Dyson HushJet Purifier Compact HJ10 (SP01), Dyson HushJet Hot Cool Pure+ (JH01), and HushJet Cool Pure+ Formaldehyde / Ioniser+UV (MP01).
@@ -438,7 +448,8 @@ All notable changes to this project will be documented in this file.
 
 Copyright © 2025-2026 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.12.0...HEAD
+[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.12.1...HEAD
+[v1.12.1]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.12.0...v1.12.1
 [v1.12.0]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.11.1...v1.12.0
 [v1.11.1]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.11.0...v1.11.1
 [v1.11.0]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.10.17...v1.11.0
