@@ -4,6 +4,7 @@
 import { Dyson360BackReason } from './dyson-360-types.js';
 import {
     DysonAirCurrentSensorData,
+    DysonAirEnvData,
     DysonAirEnvironmentalUsageData
 } from './dyson-air-sensor-types.js';
 import {
@@ -131,20 +132,19 @@ export interface DysonAirMsgScheduleUpdated extends DysonMsg {
 // (Published CBOR encoded encapsulated in DysonMsgCBOR)
 export interface DysonAirMsgEnvData extends DysonMsg {
     msg:                    'ENV-DATA',
-    // 20 minute history, 1 minute intervals, most recent last
-    aqlm:                   number[];   // AQL:                     ?
-    co2m:                   number[];   // CO2:                     ?
-    fnau:                   number[];   // Fan?
-    fnmd:                   number[];   // Fan?
-    fnon:                   number[];   // Fan?
-    fnsp:                   number[];   // Fan speed:      0 ~  100 %
-    hchm:                   number[];   // Formaldehyde:            deci-µg/m³
-    humm:                   number[];   // Humidity:       0 ~ 1000 deci-%
-    no2m:                   number[];   // NOx:                     ppb
-    p10m:                   number[];   // PM10:                    µg/m³
-    p25m:                   number[];   // PM2.5:                   µg/m³
-    tmpm:                   number[];   // Temperature: 2430 ~ 3530 deci-K
-    volm:                   number[];   // VOC:                     ?
+    aqlm:                   DysonAirEnvData; // AQL:                     ?
+    co2m:                   DysonAirEnvData; // CO2:                     ?
+    fnau:                   DysonAirEnvData; // Fan?
+    fnmd:                   DysonAirEnvData; // Fan?
+    fnon:                   DysonAirEnvData; // Fan?
+    fnsp:                   DysonAirEnvData; // Fan speed:      0 ~  100 %
+    hchm:                   DysonAirEnvData; // Formaldehyde:            deci-µg/m³
+    humm:                   DysonAirEnvData; // Humidity:       0 ~ 1000 deci-%
+    no2m:                   DysonAirEnvData; // NOx:                     ppb
+    p10m:                   DysonAirEnvData; // PM10:                    µg/m³
+    p25m:                   DysonAirEnvData; // PM2.5:                   µg/m³
+    tmpm:                   DysonAirEnvData; // Temperature: 2430 ~ 3530 deci-K
+    volm:                   DysonAirEnvData; // VOC:                     ?
 }
 
 // MQTT topic: <type>/<sn>/command

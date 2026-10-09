@@ -74,3 +74,9 @@ export interface DysonAirEnvironmentalUsageData {
     humm?:  DysonAirSensorValue;    // Humidity?            '0000'~'0100' %
     tmpm?:  DysonAirSensorValue;    // Temperature?         '0000'~'5000' deci-K
 }
+
+// Dyson air treatment 20 minute history (1 minute intervals, most recent last)
+export type DysonAirEnvData = [
+    number, number, number, number, number, number, number, number, number, number,
+    number, number, number, number, number, number, number, number, number, number
+];
