@@ -7,7 +7,7 @@ All notable changes to this project will be documented in this file.
 ## [v1.12.1] - 2026-10-08
 ### Added
 * MQTT messages using RFC8949 Concise Binary Object Representation (CBOR) are now decoded.
-* Minimal parsing of `/status/summary` MQTT root topic for air treatment devices, and the `/jdm/command` and `/jdm/status` topics for applicable robot vacuums.
+* Minimal parsing of `/status/summary` MQTT root topic for air treatment devices, and the `/command/jdm` and `/status/jdm` topics for applicable robot vacuums.
 ### Changed
 * `wildcardTopic` configuration option uses device-specific MQTT wildcard topic with Remote Account connections instead of just subscribing to the `/command` topic.
 * Updated API and MQTT type definitions.
