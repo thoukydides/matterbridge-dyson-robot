@@ -88,11 +88,11 @@ export class Dyson360FaultMapper {
         // Highest priority are specific matches for each active fault
         for (const fault of activeFaults ?? []) {
             if (fault.present !== Dyson360FaultPresent.NotPresent) {
-                const isFault = fault.nextActionRequired !== Dyson360FaultNextAction.LogOnly;
                 const detail = findFaultMatch(fault.faultCode) ?? await this.findFaultOnline(fault.faultCode);
                 const description = [fault.faultCode, fault.nextActionRequired, fault.requiredUserAction].filter(Boolean).join(' ');
                 if (detail) {
-                    this.log.debug(`Mapped ${description} to ${JSON.stringify(detail)}`);
+                    const isFault = fault.nextActionRequired !== Dyson360FaultNextAction.LogOnly && !detail.statusOnly;
+                    this.log.debug(`Mapped ${description} to ${JSON.stringify(detail)} ${isFault ? '' : ' (status only)'}`);
                     if (isFault) detailList.push(detail);
                 } else {
                     this.log.warn(`Received unknown active fault: ${description}`);

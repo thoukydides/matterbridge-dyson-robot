@@ -12,6 +12,7 @@ export interface Dyson360FaultDetail {
     opError?:       keyof typeof RvcOperationalState.ErrorState;
     batFault?:      keyof typeof PowerSource.BatFault;
     chargeFault?:   keyof typeof PowerSource.BatChargeFault;
+    statusOnly?:    boolean;
 }
 
 // Fault code patterns and ranges
@@ -269,8 +270,62 @@ export const DYSON_360_FAULT_SINGLE_CODES = new Map<number, Dyson360FaultDetail>
     [2510,                      { msg: 'Robot picked up',                                           opError: 'Stuck'                                            }],
     [2511,                      { msg: 'Robot upside down',                                         opError: 'Stuck'                                            }],
     [2515,                      { msg: 'Unable to return to dock',                                  opError: 'FailedToFindChargingDock'                         }],
-    [2516,                      { msg: 'Unable to return to dock',                                  opError: 'FailedToFindChargingDock'                         }]
+    [2516,                      { msg: 'Unable to return to dock',                                  opError: 'FailedToFindChargingDock'                         }],
 
-    // There are also 98 fault codes for which no description has been found:
+    // Fault codes that appear to exist but are not documented by Dyson:
     //   502, 517-518, 525, 527-536, 540-542, 550-551, 559, 563-565, 567, 571, 573-574, 580, 585, 588, 590, 601-605, 613-619, 621-628, 636, 638, 640-646, 700-701, 711-713, 2001-2002, 2004-2006, 2008-2011, 2013-2015, 2018-2020, 2100-2112, and 2114-2118
+
+    // Karcher RCV 5 fault codes (excluding duplicates of above)
+    // https://github.com/vosadci/karcher-rcv5-ha/blob/main/doc/PROTOCOL.md
+    [ 100,                      { msg: 'Hardware driver error'                                                                                                  }], // FAULT_HWDRIVER
+    // [ 500,                   { msg: 'LiDAR sensor obstructed',                                   opError: 'NavigationSensorObscured'                         }], // FAULT_LIDAR_TIME_OUT
+    // [ 501,                   { msg: 'Wheels lifted',                                             opError: 'Stuck'                                            }], // FAULT_WHEEL_UP
+    // [ 502,                   { msg: 'Battery is low',                                            opError: 'LowBattery'                                       }], // FAULT_LOW_START_BATTERY
+    // [ 503,                   { msg: "Robot's bin not detected",                                  opError: 'DustBinMissing'                                   }], // FAULT_DUSTBOX_NOT_EXIST
+    // [ 504,                   { msg: 'Gyroscopic sensor error',                                   opError: 'NavigationSensorObscured'                         }], // FAULT_GEOMAGETISM_STRUCT
+    [ 505,                      { msg: 'Unable to start from dock',                                 opError: 'UnableToStartOrResume'                            }], // FAULT_START_DOCK_FAILED
+    [ 506,                      { msg: 'Follow IR sensor exception',                                opError: 'NavigationSensorObscured'                         }], // FAULT_FOLLOWE_IR_EXCEPTION
+    // [ 507,                   { msg: 'Unable to determine position',                              opError: 'CannotReachTargetArea'                            }], // FAULT_RELOCALIZATION_FAILED
+    // [ 508,                   { msg: 'Unable to climb slope',                                     opError: 'Stuck'                                            }], // FAULT_SLOPE_START_FAILED
+    // [ 509,                   { msg: 'Drop sensor obstructed',                                    opError: 'NavigationSensorObscured'                         }], // FAULT_CLIFF_IR_STRUCT
+    // [ 510,                   { msg: 'Collision sensor obstructed',                               opError: 'NavigationSensorObscured'                         }], // FAULT_BUMPER_STRUCT
+    // [ 511,                   { msg: 'Unable to return to dock',                                  opError: 'FailedToFindChargingDock'                         }], // FAULT_GO_DOCK_FAILED
+    [ 512,                      { msg: 'Place robot on dock',                                       opError: 'FailedToFindChargingDock'                         }], // FAULT_PUT_MACHINE_DOCK
+    // [ 513,                   { msg: 'Robot stuck',                                               opError: 'Stuck'                                            }], // FAULT_NAVIGATION_FAILED
+    // [ 514,                   { msg: 'Robot stuck',                                               opError: 'Stuck'                                            }], // FAULT_ESCAPE_FAILED
+    [ 515,                      { msg: 'Dock clip exception',                                       opError: 'FailedToFindChargingDock'                         }], // FAULT_DOCK_CLIP_EXCEPTION
+    // [ 516,                   { msg: 'Battery temperature high',                                  batFault: 'OverTemp',   chargeFault: 'BatteryTooHot'        }], // FAULT_BATTERY_TEMPATURE
+    [ 517,                      { msg: 'System upgrading',                                          opError: 'CommandInvalidInState'                            }], // FAULT_SYSTEM_UPGRADE
+    [ 518,                      { msg: 'Battery is low',                                            opError: 'LowBattery'                                       }], // FAULT_WAIT_CHARGE_FINISH
+    [ 519,                      { msg: 'Main brush stalled',                                        opError: 'BrushJammed'                                      }], // FAULT_ROLL_BRUSH_STALL
+    [ 520,                      { msg: 'Side brush stalled',                                        opError: 'BrushJammed'                                      }], // FAULT_SIDE_BRUSH_STALL
+    // [ 521,                   { msg: "Dock's clean water tank not detected",                      opError: 'WaterTankMissing'                                 }], // FAULT_WATER_BOX_NOT_EXIST
+    // [ 522,                   { msg: 'Wet roller not detected',                                   opError: 'MopCleaningPadMissing'                            }], // FAULT_MOPPING_NOT_EXIST
+    [ 523,                      { msg: 'Bin full',                                                  opError: 'DustBinFull'                                      }], // FAULT_HANDPPEN_DUST_BOX_FULL
+    [ 524,                      { msg: 'Power switch not on',                                       chargeFault: 'Unspecified'                                  }], // FAULT_POWER_SWITCH_NOT_OPEN
+    [ 525,                      { msg: 'Water tank empty',                                          opError: 'WaterTankEmpty'                                   }], // FAULT_WATER_TRUNK_EMPTY
+    [ 526,                      { msg: 'Mop cloth dirty',                                           opError: 'MopCleaningPadMissing'                            }], // FAULT_DISHCLOTH_DIRTY
+    [ 527,                      { msg: 'Bin full',                                                  opError: 'DustBinFull'                                      }], // FAULT_FAULT_DUST_BOX_FULL
+    [ 530,                      { msg: 'Battery temperature too high',                              batFault: 'OverTemp',   chargeFault: 'BatteryTooHot'        }], // FAULT_BATTERY_TEMPERATURE_ABNORMAL
+    [ 531,                      { msg: 'Battery temperature returned to normal',                                                           statusOnly: true     }], // FAULT_BATTERY_TEMPERATURE_NORMAL
+    // [2000,                   { msg: "Dock's bin full",                                           opError: 'DustBinFull'                                      }], // FAULT_DUSBOX_FULL
+    [2001,                      { msg: 'Left brush blocked',                                        opError: 'BrushJammed'                                      }], // FAULT_BRUSH_LEFT_BLOCK
+    [2002,                      { msg: 'Right brush blocked',                                       opError: 'BrushJammed'                                      }], // FAULT_BRUSH_RIGHT_BLOCK
+    // [2003,                   { msg: 'Unable to start scheduled clean - Charge to >20%',          opError: 'LowBattery'                                       }], // FAULT_NO_POWER_PLAN_DIS
+    // [2007,                   { msg: 'Mapping failed',                                            opError: 'CannotReachTargetArea'                            }], // FAULT_BROKEN_CLEANING
+    [2008,                      { msg: 'Cleaning complete',                                                                                 statusOnly: true    }], // FAULT_CLEAN_COMPLETE
+    [2009,                      { msg: 'Scheduled clean complete',                                                                          statusOnly: true    }], // FAULT_PLAN_CLEAN_COMPLETE
+    [2010,                      { msg: 'ToF sensor abnormal',                                       opError: 'NavigationSensorObscured'                         }], // FAULT_TOF_ABNORMAL
+    [2100,                      { msg: 'Return-to-dock interrupted',                                opError: 'FailedToFindChargingDock'                         }], // FAULT_BROKEN_GO_HOME
+    [2101,                      { msg: 'Charging interrupted',                                      opError: 'LowBattery'                                       }], // FAULT_BROKEN_CHARING
+    [2102,                      { msg: 'Returning to dock...',                                                                              statusOnly: true    }], // FAULT_ROBOT_GLOBAL_GO_HOME
+    [2103,                      { msg: 'Changing...',                                                                                       statusOnly: true    }], // FAULT_ROBOT_CHANGING
+    [2104,                      { msg: 'Returning to dock (user-initiated)...',                                                             statusOnly: true    }], // FAULT_ROBOT_USER_GO_HOME
+    [2105,                      { msg: 'Charging complete',                                                                                 statusOnly: true    }], // FAULT_ROBOT_CHARGE_FINISH
+    [2106,                      { msg: 'Charging-wait interrupted',                                                                         statusOnly: true    }], // FAULT_BROKEN_CHARGING_WAIT
+    [2107,                      { msg: 'Scheduled clean in progress...',                                                                    statusOnly: true    }], // FAULT_GLOBAL_APPOINT_CLEAN
+    [2108,                      { msg: 'Finding position on map...',                                                                        statusOnly: true    }], // FAULT_ROBOT_RELOCALITION_ING
+    [2109,                      { msg: 'Repeat cleaning in progress...',                                                                    statusOnly: true    }], // FAULT_ROBOT_REPEAT_CLEAN_ING
+    [2110,                      { msg: 'Performing self-test...',                                                                           statusOnly: true    }], // FAULT_ROBOT_SELF_CHECK_ING
+    [4002,                      { msg: 'Map error',                                                 opError: 'UnableToCompleteOperation'                        }]  // FAULT_MAP_ERROR
 ]);
