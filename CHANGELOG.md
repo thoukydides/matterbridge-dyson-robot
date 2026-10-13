@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v1.12.2] - 2026-10-13
+### Added
+* When starting a zone clean on a Spot+Scrub Ai the target map is activated before starting the clean to avoid reverting to a global clean. (#46)
+* Additional Spot+Scrub Ai fault codes (including non-fault status updates). (#46)
+* Expected `/command/jdm` and `/status/jdm` MQTT message formats are validated, and Spot+Scrub Ai properties are polled. (#46)
+
 ## [v1.12.1] - 2026-10-08
 ### Added
 * MQTT messages using RFC8949 Concise Binary Object Representation (CBOR) are now decoded.
@@ -448,7 +454,8 @@ All notable changes to this project will be documented in this file.
 
 Copyright © 2025-2026 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.12.1...HEAD
+[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.12.2...HEAD
+[v1.12.2]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.12.1...v1.12.2
 [v1.12.1]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.12.0...v1.12.1
 [v1.12.0]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.11.1...v1.12.0
 [v1.11.1]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.11.0...v1.11.1
