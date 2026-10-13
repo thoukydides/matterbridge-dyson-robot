@@ -28,7 +28,7 @@ import {
 } from './dyson-air-types.js';
 import { DysonAirCurrentSensorData } from './dyson-air-sensor-types.js';
 import { DysonAirProductState } from './dyson-air-state-types.js';
-import { DysonMsgAny } from './dyson-mqtt-parse.js';
+import { DysonMsgAny, validateDysonMsgTypeSuite } from './dyson-mqtt-parse.js';
 import { DysonModeReason } from './dyson-types.js';
 import { DeviceConfigMqtt } from './dyson-mqtt-client-live.js';
 import NodePersist from 'node-persist';
@@ -47,6 +47,9 @@ const DYSON_MQTT_CONFIG_AIR: DysonMqttConfig<DysonMsgMapAir> = {
         checkers:   dysonMsgCheckersAir
     }
 };
+
+// Ensure that the type names all match their message names
+validateDysonMsgTypeSuite(DYSON_MQTT_CONFIG_AIR.messages);
 
 // Dyson air treatment machine product data status
 type ProductStateNumericEnumKeys = 'cflr' | 'fnsp' | 'nmdv' | 'sltm';

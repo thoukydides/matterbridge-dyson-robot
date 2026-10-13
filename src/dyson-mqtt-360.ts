@@ -24,6 +24,7 @@ import {
 import { DysonModeReason } from './dyson-types.js';
 import { DeviceConfigMqtt } from './dyson-mqtt-client-live.js';
 import NodePersist from 'node-persist';
+import { validateDysonMsgTypeSuite } from './dyson-mqtt-parse.js';
 
 // Configuration of a Dyson MQTT client for robot vacuums
 export const DYSON_MQTT_CONFIG_360: DysonMqttConfig<DysonMsgMap360> = {
@@ -39,6 +40,9 @@ export const DYSON_MQTT_CONFIG_360: DysonMqttConfig<DysonMsgMap360> = {
     }
 };
 
+// Ensure that the type names all match their message names
+validateDysonMsgTypeSuite(DYSON_MQTT_CONFIG_360.messages);
+
 // Dyson robot vacuum status
 export type DysonMqttStatus360 =
     Omit<Dyson360MsgCurrentStateState, 'msg' | 'time'>
@@ -48,7 +52,7 @@ export type DysonMqttStatus360 =
 export type DysonMqtt360Action = 'START' | 'PAUSE' | 'RESUME' | 'ABORT';
 
 // Dyson MQTT client for robot vacuums
-export class DysonMqtt360 extends DysonMqtt<DysonMsgMap360, DysonMqttStatus360> {
+export class DysonMqtt360<E extends unknown[] = []> extends DysonMqtt<DysonMsgMap360, DysonMqttStatus360, E> {
 
     // Construct a new MQTT client
     constructor(

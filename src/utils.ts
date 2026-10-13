@@ -13,9 +13,11 @@ export const MS = 1000;
 export type Constructor        <T = object> =          new (...args: any[]) => T;
 export type AbstractConstructor<T = object> = abstract new (...args: any[]) => T;
 
-// Convert a union type into an intersection
-export type UnionToIntersection<U> =
-    (U extends unknown ? (x: U) => unknown : never) extends (x: infer I) => unknown ? I : never;
+// Distribute utility types over unions
+export type DistributiveExtract<T, K extends PropertyKey> =
+    T extends unknown ? Extract<T, K> : never;
+export type DistributiveOmit<T, K extends PropertyKey> =
+    T extends unknown ? Omit<T, K> : never;
 
 // Type assertions
 export function assertIsDefined<Type>(value: Type): asserts value is NonNullable<Type> {
@@ -164,7 +166,9 @@ export function tryListener<T extends unknown[]>(
 }
 
 // Convert a string enum to a string literal type
-type EnumToUnion<T> = T extends string ? `${T}` : T;
+type EnumToUnion<T> =
+    T extends string ? `${T}`
+    : T extends number ? number : T;
 
 // Recursive mapped type handling objects, arrays, and tuples
 export type DeepMapEnumsToUnions<T> =
@@ -175,5 +179,5 @@ export type DeepMapEnumsToUnions<T> =
         ? [DeepMapEnumsToUnions<Head>, ...DeepMapEnumsToUnions<Tail>]
         : DeepMapEnumsToUnions<U>[]
       : T extends object
-    ? { [K in keyof T]: DeepMapEnumsToUnions<T[K]> }
-    : EnumToUnion<T>;
+        ? { [K in keyof T]: DeepMapEnumsToUnions<T[K]> }
+        : EnumToUnion<T>;

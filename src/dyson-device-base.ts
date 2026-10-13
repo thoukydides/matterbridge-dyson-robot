@@ -35,15 +35,6 @@ export type DysonDeviceConstructorParams<MQTT extends DysonMqttLike = DysonMqttL
     api?:   DysonCloudAPIDevice
 ];
 
-// Dyson device constructor type
-export interface DysonDeviceConstructor<
-    MQTT    extends DysonMqttLike       = DysonMqttLike,
-    Device  extends DysonDevice<MQTT>   = DysonDevice<MQTT>
-> {
-    new (...args: DysonDeviceConstructorParams<MQTT>): Device;
-    readonly mqttConstructor: Constructor<MQTT>;
-}
-
 // A Dyson robot vacuum or air treatment device
 export abstract class DysonDevice<MQTT extends DysonMqttLike = DysonMqttLike> {
 

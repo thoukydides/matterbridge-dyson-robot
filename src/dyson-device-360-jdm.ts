@@ -17,15 +17,18 @@ import {
     Dyson360PersistentMapMetadataResponseV2,
     Dyson360PersistentMapMetadataV2
 } from './dyson-360-cloud-types.js';
-import { DysonMqtt360, DysonMqttStatus360 } from './dyson-mqtt-360.js';
-import { assertIsDefined, formatList, MS, plural } from './utils.js';
+import { DysonMqttStatus360 } from './dyson-mqtt-360.js';
+import { assertIsDefined, formatList, MS, plural, tryListener } from './utils.js';
 import { DysonDeviceConstructorParams } from './dyson-device-base.js';
 import { DysonMqttStatus } from './dyson-mqtt.js';
 import { PeriodicOp } from './periodic-op.js';
-import { DysonMqtt360Jdm } from './dyson-mqtt-360-jdm.js';
+import { DysonMqtt360Jdm, DysonMqtt360JdmEventArgs } from './dyson-mqtt-360-jdm.js';
 import { Endpoint360, EndpointOptions360, UpdateRvcOperationalState360 } from './endpoint-360.js';
 import { Dyson360MappedFaults } from './dyson-device-360-faults.js';
 import { DysonDevice360CommandHandlers } from './dyson-device-360-commands.js';
+import { ifValueChanged } from './decorator-changed.js';
+import { Dyson360JdmPropValues } from './dyson-360-jdm-props-types.js';
+import { logError } from './log-error.js';
 
 // Spot+Scrub Ai status polling behaviour
 const POLL_STATUS_MS                =  30 * MS; // 30 seconds
@@ -33,7 +36,7 @@ const POLL_STATUS_RAPID_MS          =   1 * MS; //  1 second
 const POLL_LIVE_MAPS_CLEANING_MS    = 3.5 * MS; // 3½ seconds
 
 // Common base class for Dyson post-360 robot vacuum devices (excluding mop)
-export abstract class DysonDevice360JdmBase extends DysonDevice360ZonesMixin(DysonDevice360Base) {
+export abstract class DysonDevice360JdmBase extends DysonDevice360ZonesMixin(DysonDevice360Base<DysonMqtt360Jdm>) {
 
     // The MQTT client and status update listener with JDM endpoints
     static readonly mqttConstructor = DysonMqtt360Jdm;
@@ -49,6 +52,9 @@ export abstract class DysonDevice360JdmBase extends DysonDevice360ZonesMixin(Dys
     override getDefaultPowerLevel = () => this.mqtt.status.defaultCleaningStrategy;
     override getCurrentPowerLevel = () => this.mqtt.status.currentCleaningStrategy;
 
+    // Status update listener
+    mqttJdmPropListener: (...args: DysonMqtt360JdmEventArgs) => void;
+
     // Add dock emptying dustbin capability
     getEndpointOptions(): EndpointOptions360 {
         const endpointOptions = super.getEndpointOptions();
@@ -61,37 +67,31 @@ export abstract class DysonDevice360JdmBase extends DysonDevice360ZonesMixin(Dys
     pollCleaning:   PeriodicOp;
 
     // Construct a new Dyson device instance
-    constructor(...args: DysonDeviceConstructorParams<DysonMqtt360>) {
+    constructor(...args: DysonDeviceConstructorParams<DysonMqtt360Jdm>) {
         super(...args);
 
         // Enable online fault code lookup
         this.faultMapper.lookupOnline = faultCode => this.findFaultOnline(faultCode);
 
-        // Poll device status via MQTT
+        // Prepare listener for MQTT JDM updates
+        this.mqttJdmPropListener = tryListener(this.mqtt, (event, ..._rest) => {
+            if (event === 'jdm_props_updated') this.updateJdmProps(this.mqtt.jdmProps);
+        });
+
+        // Poll device status via MQTT (using both traditional and JDM commands)
         this.pollStatus = new PeriodicOp(this.log, {
             name:           'Current status poll',
             interval:       POLL_STATUS_MS,
             intervalRapid:  POLL_STATUS_RAPID_MS,
-            op:             () => {
-                if (this.mqtt.status.reachable) {
-                    return this.mqtt.publish('REQUEST-CURRENT-STATE', {});
-                }
-            }}
-        );
+            op:             this.pollStatusOp.bind(this)
+        });
 
         // Use the live map to update the zone status
         this.pollCleaning = new PeriodicOp(this.log, {
             name:           'Live cleaning maps poll',
             interval:       POLL_LIVE_MAPS_CLEANING_MS,
-            op:             async () => {
-                if (!this.api) return; // (mock devices do not support this)
-                const cleaningMode = this.mqtt.status.currentCleaningMode;
-                assertIsDefined(cleaningMode);
-                const live = await this.api.getLiveMapsCleaning360V1();
-                const zoneStatus = live.zones.map(({ id, cleanStatus }) => ({ zoneId: id, cleanStatus }));
-                await this.updateZoneStatus({ mapId: live.id, cleaningMode, zoneStatus });
-            }}
-        );
+            op:             this.pollCleaningOp.bind(this)
+        });
     }
 
     // Attach command handlers to the endpoint
@@ -99,6 +99,27 @@ export abstract class DysonDevice360JdmBase extends DysonDevice360ZonesMixin(Dys
         const handlers = super.attachCommandHandlers(endpoint);
         handlers.rapidPollRequest = this.pollStatus.requestRapid.bind(this.pollStatus);
         return handlers;
+    }
+
+    // Poll device status via MQTT (using both traditional and JDM commands)
+    async pollStatusOp(): Promise<void> {
+        if (this.mqtt.status.reachable) {
+            await Promise.all([
+                this.mqtt.publish('REQUEST-CURRENT-STATE', {}),
+                this.mqtt.pollJdmProps()
+            ]);
+        }
+    }
+
+    // Use the live map to update the zone status
+    async pollCleaningOp(): Promise<void> {
+        if (!this.api) return; // (mock devices do not support this)
+        const cleaningMode = this.mqtt.status.currentCleaningMode;
+        assertIsDefined(cleaningMode);
+        const live = await this.api.getLiveMapsCleaning360V1();
+        const zoneStatus = live.zones.map(({ id, cleanStatus }) => ({ zoneId: id, cleanStatus }));
+        await this.updateZoneStatus({ mapId: live.id, cleaningMode, zoneStatus });
+
     }
 
     // Update cluster attributes when the MQTT status is updated
@@ -114,26 +135,44 @@ export abstract class DysonDevice360JdmBase extends DysonDevice360ZonesMixin(Dys
         if (!this.pollCleaning.isActive) await this.updateZoneStatus();
     }
 
+    // Monitor MQTT JDM property status changes
+    @ifValueChanged
+    updateJdmProps(_props: Dyson360JdmPropValues): void {
+        // HERE - log props.work_mode with related values
+    }
+
     // Attempt to convert selected areas into a Dyson cleaning programme
     override async makeCleaningProgramme(areaIds: number[]): Promise<DysonDevice360ZoneCommand> {
         const programme = await super.makeCleaningProgramme(areaIds);
         const { command, cleaningProgramme } = programme;
-
-        // Select and order the zones before the clean is started
-        const map = this.mapFromMatter.values().find(m => m.id === cleaningProgramme.persistentMapId) as
-            Dyson360PersistentMapMetadataV2 | undefined;
-        assertIsDefined(map);
-        let changed = false;
-        for (const zone of map.zones) {
-            const isSelected = cleaningProgramme.unorderedZones.includes(zone.id);
-            if (zone.isSelected === isSelected) continue;
-            zone.isSelected = isSelected;
-            changed = true;
-        }
         const preCommand = async (): Promise<void> => {
-            if (changed) {
+            const { persistentMapId } = cleaningProgramme;
+            const map = this.mapFromMatter.values().find(m => m.id === persistentMapId) as Dyson360PersistentMapMetadataV2 | undefined;
+            assertIsDefined(map);
+
+            // Ensure that the required map is active
+            if (!map.isCurrentMap) {
+                try {
+                    this.log.info(`Changing active map ${this.mqtt.status.persistentMapId ?? 'unknown'} to ${persistentMapId}`);
+                    await this.mqtt.publishJdmCommand('service.set_cur_map', { map_id: Number(persistentMapId) });
+                } catch (error) {
+                    logError(this.log, 'Failed to select map (but ignoring)', error);
+                }
+            } else {
+                this.log.info(`Target map ${persistentMapId} is already selected`);
+            }
+
+            // Select and order the zones before the clean is started
+            let zoneSelectionChanged = false;
+            for (const zone of map.zones) {
+                const isSelected = cleaningProgramme.unorderedZones.includes(zone.id);
+                if (zone.isSelected === isSelected) continue;
+                zone.isSelected = isSelected;
+                zoneSelectionChanged = true;
+            }
+            if (zoneSelectionChanged) {
                 this.log.info('Updating persistent map with zone selection');
-                await this.api?.setPersistentMapMetadata360V2(cleaningProgramme.persistentMapId, map.zones);
+                await this.api?.setPersistentMapMetadata360V2(persistentMapId, map.zones);
             } else {
                 this.log.info('Zone selection does not require any change to the persistent map');
             }
@@ -145,8 +184,7 @@ export abstract class DysonDevice360JdmBase extends DysonDevice360ZonesMixin(Dys
             command:    async () => {
                 await preCommand();
                 await command();
-            },
-            cleaningProgramme
+            }
         };
     }
 
@@ -159,11 +197,14 @@ export abstract class DysonDevice360JdmBase extends DysonDevice360ZonesMixin(Dys
     override async start(): Promise<void> {
         await super.start();
         this.pollStatus.start();
+        this.mqtt.on('event', this.mqttJdmPropListener);
     }
 
     // Stop the device when Matterbridge is shutting down
     override async stop(): Promise<void> {
         this.pollStatus.stop();
+        this.pollCleaning.stop();
+        this.mqtt.off('event', this.mqttJdmPropListener);
         await super.stop();
     }
 

@@ -82,9 +82,9 @@ export class DysonMqttClientMock extends DysonMqttClient {
             await setTimeout(INITIALISE_INTERVAL);
             this.log.debug('Resuming MQTT log file playback');
         } else {
-            // Assume all messages come from the status topic
+            // Assume all messages come from the status topic(s)
             await setTimeout(MESSAGE_INTERVAL);
-            const topic = this.topic;
+            const topic = isJDM(line) ? `${this.topic}/jdm` : this.topic;
             const payload = Buffer.from(line);
             const packet: IPublishPacket = { cmd: 'publish', topic, payload, qos: 0, dup: false, retain: false };
             this.emit('message', topic, payload, packet);
@@ -122,5 +122,17 @@ export class DysonMqttClientMock extends DysonMqttClient {
         this.log.debug('Stopping mock MQTT client');
         this.lines = [];
         return Promise.resolve();
+    }
+}
+
+// Should a message be routed to the JDM status topic
+function isJDM(line: string): boolean {
+    try {
+        const json: unknown = JSON.parse(line);
+        return json !== null && typeof json === 'object'
+            && ('msgId' in json) && !('msg' in json);
+    } catch {
+        // Assume anything non-parseable is not a JDM message
+        return false;
     }
 }

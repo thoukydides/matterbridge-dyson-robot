@@ -6,7 +6,7 @@ import { DYSON_DEVICE_TYPES_360 } from './dyson-device-360.js';
 import { DYSON_DEVICE_TYPES_AIR } from './dyson-device-air.js';
 import { Config } from './config-types.js';
 import { AnsiLogger } from 'matterbridge/logger';
-import { MS, UnionToIntersection, formatList, plural } from './utils.js';
+import { MS, formatList, plural } from './utils.js';
 import { logError } from './log-error.js';
 import NodePersist from 'node-persist';
 import CONFIG_SCHEMA from '../matterbridge-dyson-robot.schema.json' with { type: 'json' };
@@ -45,7 +45,7 @@ export async function createDysonDevice(
     await mqtt.waitUntilInitialised(MQTT_CACHE_FALLBACK_DELAY);
 
     // Create the Dyson device itself
-    return new deviceClass(log, config, device, mqtt as UnionToIntersection<typeof mqtt>, device.api);
+    return new deviceClass(log, config, device, mqtt as never, device.api);
 }
 
 // Test whether a specific model is supported

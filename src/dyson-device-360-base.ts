@@ -8,7 +8,14 @@ import {
 } from './dyson-device-base.js';
 import { DysonMqtt360, DysonMqttStatus360 } from './dyson-mqtt-360.js';
 import { EntityName } from './config-types.js';
-import { assertIsDefined, formatMilliseconds, formatSeconds, MS, plural, tryListener } from './utils.js';
+import {
+    assertIsDefined,
+    formatMilliseconds,
+    formatSeconds,
+    MS,
+    plural,
+    tryListener
+} from './utils.js';
 import { DysonMqttStatus } from './dyson-mqtt.js';
 import { BasicInformation } from 'matterbridge/matter/clusters';
 import { ifValueChanged } from './decorator-changed.js';
@@ -128,8 +135,8 @@ const BATTERY_THRESHOLD_WARNING  = 25;
 const BATTERY_THRESHOLD_FULL     = 100;
 
 // A Dyson robot vacuum device
-export abstract class DysonDevice360Base
-    extends DysonDevice<DysonMqtt360> {
+export abstract class DysonDevice360Base<T extends DysonMqtt360 = DysonMqtt360>
+    extends DysonDevice<T> {
 
     // The MQTT client and status update listener
     static readonly mqttConstructor = DysonMqtt360;
@@ -146,7 +153,7 @@ export abstract class DysonDevice360Base
     runMode = RvcRunMode360.Idle;
 
     // Construct a new Dyson device instance
-    constructor(...args: DysonDeviceConstructorParams<DysonMqtt360>) {
+    constructor(...args: DysonDeviceConstructorParams<T>) {
         super(...args);
 
         // Prepare the fault code mapper

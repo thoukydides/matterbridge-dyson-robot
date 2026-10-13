@@ -2,14 +2,29 @@
 // Copyright © 2025-2026 Alexander Thoukydides
 
 import { AnsiLogger, LogLevel } from 'matterbridge/logger';
-import { assertIsDefined, getValidationTree } from './utils.js';
-import { CheckerT, IErrorDetail } from 'ts-interface-checker';
+import {
+    assertIsDefined,
+    formatList,
+    getValidationTree,
+    plural
+} from './utils.js';
+import {
+    CheckerT,
+    ICheckerSuite,
+    IErrorDetail,
+    TIface,
+    TIntersection,
+    TLiteral,
+    TType,
+    TUnion
+} from 'ts-interface-checker';
 import { checkers as dysonMsgCheckers } from './ti/dyson-types.js';
 import { DysonMsg } from './dyson-types.js';
 import { INSPECT_VERBOSE } from './logger-options.js';
 import { inspect } from 'util';
 import { decode, TagDecoder, TagNumber } from 'cbor2';
 import 'cbor2/types';
+import { TName, TypeSpec } from 'ts-interface-checker/dist/types.js';
 
 // Message types and checkers
 export type DysonMsgAny<T> = {
@@ -154,4 +169,83 @@ function normaliseKeys(obj: unknown): unknown {
             [kebabToCamelCase(key), normaliseKeys(value)]));
     }
     return obj;
+}
+
+// Ensure that the type names all match their message names
+export function validateDysonMsgTypeSuite<T>({ prefix, checkers }: DysonMqttParserConfig<T>): void {
+    const makeTypename = (msg: string) => `${prefix}${kebabToPascalCase(msg)}`;
+    validateDysonTypeSuiteCore(checkers, 'msg', makeTypename);
+}
+
+// Core validation logic for Dyson type suites
+export function validateDysonTypeSuiteCore(suite: ICheckerSuite, key: string, valueToTypeName: (value: string) => string): void {
+    // Generate map of type names to message names
+    const actualToName = new Map<string, string>();
+    for (const [actual, checker] of Object.entries(suite)) {
+        const name = typeToPropName(suite, checker.getType(), key);
+        if (!name) continue; // (ignore types that don't have the specified property)
+        actualToName.set(actual, name);
+    }
+
+    // Check that each value maps to the type that references it
+    const mismatched: [string, string, string | undefined][] = [];
+    for (const name of new Set<string>(actualToName.values())) {
+        const generated = valueToTypeName(name);
+        const mapped = actualToName.get(generated);
+        if (!mapped || mapped !== name) mismatched.push([name, generated, mapped]);
+    }
+
+    // Report any problems found
+    if (mismatched.length) {
+        const details = mismatched
+            .sort((a, b) => a[0].localeCompare(b[0]))
+            .map(([name, generated, mapped]) => `'${name}' (${generated}${mapped ? `→'${mapped}'` : ''})`);
+        throw new Error(`${plural(mismatched.length, 'Dyson MQTT message type name mismatch')}: ${formatList(details)}`);
+    }
+}
+
+// Recursively find literal values for a named property within a type hierarchy
+function typeToPropName(suite: ICheckerSuite, type: TType, key: string): string | undefined {
+    // Lookup a type by name or direct reference
+    const getType = (typeOrName: TypeSpec): TType | undefined => {
+        if (typeOrName instanceof TName) typeOrName = typeOrName.name;
+        if (typeof typeOrName !== 'string') return typeOrName;
+        return suite[typeOrName]?.getType();
+    };
+
+    // Collect values from a list of types
+    const getValuesFromTypes = (types: TypeSpec[]): Set<string | undefined> =>
+        types.reduce((acc, t) => {
+            const type = getType(t);
+            return type ? acc.add(typeToPropName(suite, type, key)) : acc;
+        }, new Set<string | undefined>());
+
+    // Check that a value is unique (or that there are no values)
+    const assertUnique = (name: string, values: Iterable<string | undefined>): string | undefined => {
+        const strings = [...values].map(v => v === undefined ? 'undefined' : `'${v}'`).sort();
+        if (1 < strings.length) throw new Error(`Multiple values for ${key} in ${name}: ${formatList(strings)}`);
+        return [...values][0];
+    };
+
+    // Process this type instance
+    if (type instanceof TIface) {
+        // Collect values from any base classes and the interface itself
+        const values = getValuesFromTypes(type.bases);
+        values.delete(undefined); // (only require a single class to define the property)
+        const prop = type.props.find(p => p.name === key);
+        if (prop && prop.ttype instanceof TLiteral && typeof prop.ttype.value === 'string') values.add(prop.ttype.value);
+        return assertUnique('type hierarchy', values);
+    } else if (type instanceof TUnion) {
+        // Collect values from each union member
+        const values = getValuesFromTypes(type.ttypes);
+        return assertUnique('union type', values);
+    } else if (type instanceof TIntersection) {
+        // Collect values from each intersection member
+        const values = getValuesFromTypes(type.ttypes);
+        values.delete(undefined); // (only require a single member to define the property)
+        return assertUnique('intersection type', values);
+    } else {
+        // No other types can define the property
+        return undefined;
+    }
 }

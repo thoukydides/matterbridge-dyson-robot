@@ -92,15 +92,15 @@ export interface Dyson360MsgCurrentStatePosition extends DysonMsg {
 export interface Dyson360MsgCurrentStateState extends DysonMsg {
     msg:                                'CURRENT-STATE';
     activeFaults?:                      Dyson360ActiveFault[];
-    airDryFrequency?:                   number; // e.g. 4
-    alarm?:                             boolean;
-    backWashFrequency?:                 number; // Minutes
-    backWashTime?:                      number; // e.g. 15
+    airDryFrequency?:                   number; // hours
+    alarm?:                             boolean; // find-my-robot chime
+    backWashFrequency?:                 number; // minutes
+    backWashTime?:                      number; // minutes
     backWashType?:                      Dyson360BackWashType;
     batteryChargeLevel?:                number; // Percent remaining
     channel?:                           string; // Wi-Fi channel number
     childLock?:                         boolean;
-    cleanDuration?:                     number; // Seconds
+    cleanDuration?:                     number; // seconds
     cleanId?:                           string; // UUID
     cleaningProgramme?:                 Dyson360CleaningProgramme;
     cleaningState?:                     Dyson360CleaningState;
@@ -131,7 +131,7 @@ export interface Dyson360MsgCurrentStateState extends DysonMsg {
     state:                              Dyson360State;
     traverseTargetId?:                  string; // e.g. '1'
     voiceLanguage?:                     string; // e.g. 'jp-JP'
-    volume?:                            number;
+    volume?:                            number; // %
     washMopBeforeClean?:                boolean;
     zoneId?:                            string; // e.g. '1'
     zonesDefinitionVersion?:            string; // e.g. '2024-09-17T23:08:23.9939605Z'
@@ -145,7 +145,7 @@ export interface Dyson360MsgStateChange extends DysonMsg {
     activeFaults?:                      Dyson360ActiveFault[];
     batteryChargeLevel?:                number; // Percent remaining
     channel?:                           string; // Wi-Fi channel number
-    cleanDuration?:                     number; // Seconds
+    cleanDuration?:                     number; // seconds
     cleanId?:                           string; // UUID
     cleaningProgramme?:                 Dyson360CleaningProgramme;
     currentCleaningMode?:               Dyson360CleaningMode;
@@ -226,7 +226,7 @@ export interface Dyson360MsgTelemetryData extends DysonMsg {
     id:                                 string; // e.g. '41280000'
 }
 
-export interface Dyson360MsgRequestVoiceDownloadStatus extends DysonMsg {
+export interface Dyson360MsgVoiceDownloadStatus extends DysonMsg {
     msg:                                'VOICE-DOWNLOAD-STATUS';
     state:                              Dyson360VoiceDownloadStatus;
     language:                           string; // e.g. 'en-GB'
@@ -334,7 +334,7 @@ export interface Dyson360MsgSetVoiceLanguage extends DysonMsg {
     language:                           string; // e.g. 'en-GB'
 }
 
-export interface Dyson360MsgVoiceDownloadStatus extends DysonMsg {
+export interface Dyson360MsgRequestVoiceDownloadStatus extends DysonMsg {
     msg:                                'REQUEST-VOICE-DOWNLOAD-STATUS';
     'mode-reason':                      DysonModeReason;
 }

@@ -244,7 +244,7 @@ export enum Dyson360VacuumMode {
     Mixed                               = 'mixed'       // (360 Heurist only)
 }
 
-// Dyson robot vacuum repetitions (Spot+Scrub Ai only)
+// Dyson robot vacuum and mop repetitions (Spot+Scrub Ai only)
 export type Dyson360VacuumPasses        = 1 | 2;
 export type Dyson360MopPasses           = 1 | 2;
 
@@ -344,30 +344,30 @@ export enum Dyson360ZoneType {
 
 // Dyson robot vacuum furniture type (Spot+Scrub Ai only)
 export enum Dyson360FurnitureType {
-    Bookshelf                           = 'bookshelf',
-    Cabinet                             = 'cabinet',
-    Closet                              = 'wardrobe',
-    Desk                                = 'desk',
-    DiningTable                         = 'diningTableAndChairs',
-    DoubleBed                           = 'doubleBed',
-    FloorMirror                         = 'standingMirror',
-    LShapeSofaLeft                      = 'lShapedSofaLeft',
-    LShapeSofaRight                     = 'lShapedSofaRight',
-    Nightstand                          = 'bedsideTable',
-    OneSeaterSofa                       = 'singleSeaterSofa',
-    Plant                               = 'indoorPlant',
-    Refrigerator                        = 'refrigerator',
-    ShoeCabinet                         = 'shoeCabinet',
-    SingleBed                           = 'singleBed',
-    SmallTableRectangular               = 'squareCoffeeTable',
-    SmallTableRound                     = 'roundCoffeeTable',
-    StorageCabinet                      = 'storageCabinet',
-    Stove                               = 'cabinetWithStove',
-    ThreeSeaterSofa                     = 'threeSeaterSofa',
-    ToiletBowl                          = 'toilet',
-    TvCabinet                           = 'tvStand',
-    TwoSeaterSofa                       = 'twoSeaterSofa',
-    WashingMachine                      = 'washingMachine'
+    Bookshelf                           = 'bookshelf',              // 0.4 × 1.4 m
+    Cabinet                             = 'cabinet',                // 0.9 × 2.1 m
+    Closet                              = 'wardrobe',               // 1.0 × 1.8 m
+    Desk                                = 'desk',                   // 1.4 × 1.6 m
+    DiningTable                         = 'diningTableAndChairs',   // 1.4 × 2.0 m
+    DoubleBed                           = 'doubleBed',              // 2.1 × 1.8 m
+    FloorMirror                         = 'standingMirror',         // 0.5 × 0.7 m
+    LShapeSofaLeft                      = 'lShapedSofaLeft',        // 1.7 × 2.4 m
+    LShapeSofaRight                     = 'lShapedSofaRight',       // 1.8 × 2.4 m
+    Nightstand                          = 'bedsideTable',           // 0.6 × 0.8 m
+    OneSeaterSofa                       = 'singleSeaterSofa',       // 1.0 × 0.9 m
+    Plant                               = 'indoorPlant',            // 0.5 × 0.5 m
+    Refrigerator                        = 'refrigerator',           // 0.8 × 0.8 m
+    ShoeCabinet                         = 'shoeCabinet',            // 0.4 × 1.4 m
+    SingleBed                           = 'singleBed',              // 2.1 × 1.2 m
+    SmallTableRectangular               = 'squareCoffeeTable',      // 0.5 × 1.1 m
+    SmallTableRound                     = 'roundCoffeeTable',       // 1.1 × 1.1 m
+    StorageCabinet                      = 'storageCabinet',         // 0.4 × 1.4 m
+    Stove                               = 'cabinetWithStove',       // 0.6 × 0.6 m
+    ThreeSeaterSofa                     = 'threeSeaterSofa',        // 1.1 × 2.5 m
+    ToiletBowl                          = 'toilet',                 // 0.7 × 0.5 m
+    TvCabinet                           = 'tvStand',                // 0.6 × 2.3 m
+    TwoSeaterSofa                       = 'twoSeaterSofa',          // 1.1 × 1.8 m
+    WashingMachine                      = 'washingMachine'          // 1.0 × 0.9 m
 }
 
 // Dyson robot vacuum restriction behaviour (Spot+Scrub Ai only)

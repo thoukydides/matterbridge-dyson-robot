@@ -4,7 +4,7 @@
 import { AnsiLogger } from 'matterbridge/logger';
 import { INSPECT_SINGLE_LINE, MM, MP, MR, RD, SR, ST } from './logger-options.js';
 import { Config } from './config-types.js';
-import { MS, tryListener } from './utils.js';
+import { DistributiveOmit, MS, tryListener } from './utils.js';
 import EventEmitter from 'events';
 import { DysonMsg } from './dyson-types.js';
 import { checkers as dysonMsgCheckers } from './ti/dyson-types.js';
@@ -56,13 +56,12 @@ export interface DysonMqttEventMapBase {
     status:         [];                 // State updated (not necessarily changed)
     update:         [];                 // CURRENT-STATE/STATE-CHANGE update
 }
-export interface DysonMqttEventMap<T> extends DysonMqttEventMapBase {
+export interface DysonMqttEventMap<T, E extends unknown[]> extends DysonMqttEventMapBase {
     message:        [DysonMsgAny<T>];   // MQTT message received and checked
+    event:          E;                  // Additional event for derived classes
 }
 
 // Tuple of parameters for publishing a message
-type DistributiveOmit<T, K extends PropertyKey> =
-    T extends unknown ? Omit<T, K> : never;
 export type PublishArgs<T, O extends string> = {
     [K in keyof T]: T[K] extends DysonMsg
         ? (DistributiveOmit<T[K], O | 'msg'> extends Record<string, never>
@@ -84,8 +83,8 @@ export interface DysonMqttLike extends EventEmitter {
 }
 
 // Dyson MQTT client for all device types
-export abstract class DysonMqtt<T, S>
-    extends AsyncEventEmitter<DysonMqttEventMap<T>> implements DysonMqttLike {
+export abstract class DysonMqtt<T, S, E extends unknown[] = []>
+    extends AsyncEventEmitter<DysonMqttEventMap<T, E>> implements DysonMqttLike {
 
     // The MQTT client
     private mqtt:           DysonMqttClient;
@@ -259,6 +258,14 @@ export abstract class DysonMqtt<T, S>
         // Publish to the command topic
         const topic = this.mqttSubscribe.commandTopic;
         this.logPayload('publish', topic, fullMsg);
+        await this.mqtt.publishAsync(topic, payload, { qos: 1, retain: false });
+    }
+
+    // Publish on a command subtopic
+    async publishTo(subtopic: `/${string}`, msg: unknown): Promise<void> {
+        const payload = JSON.stringify(msg);
+        const topic = this.mqttSubscribe.commandTopic + subtopic;
+        this.logPayload('publish', topic, msg);
         await this.mqtt.publishAsync(topic, payload, { qos: 1, retain: false });
     }
 
