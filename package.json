@@ -59,17 +59,17 @@
     "main": "dist/index.js",
     "engines": {
         "node": "^26.10.0 || ^24.21.0 || ^22.23.2",
-        "matterbridge": "^3.10.12"
+        "matterbridge": "^3.10.13"
     },
     "dependencies": {
         "@types/pngjs": "^6.0.5",
         "cbor2": "^2.4.0",
-        "mqtt": "^5.16.0",
+        "mqtt": "^5.16.1",
         "node-persist": "^4.0.4",
         "pngjs": "^7.0.0",
         "semver": "^7.8.5",
         "ts-interface-checker": "^1.0.2",
-        "undici": "^8.11.2"
+        "undici": "^8.12.1"
     },
     "devDependencies": {
         "@actions/core": "^3.0.1",
@@ -87,7 +87,7 @@
         "ts-interface-builder": "^0.3.3",
         "tsx": "^4.23.15",
         "typescript": "npm:@typescript/typescript6@^6.0.2",
-        "typescript-eslint": "^8.71.1"
+        "typescript-eslint": "^8.71.2"
     },
     "overrides": {
         "typescript-eslint": {
