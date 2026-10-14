@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v1.12.3] - 2026-10-14
+### Removed
+* Explicit set of Spot+Scrub Ai active map for zone clean; this is handled automatically. (#46)
+### Changed
+* More robust handling of `/command/jdm` and `/status/jdm` MQTT messages. (#46)
+* Updated dependencies.
+
 ## [v1.12.2] - 2026-10-13
 ### Added
 * When starting a zone clean on a Spot+Scrub Ai the target map is activated before starting the clean to avoid reverting to a global clean. (#46)
@@ -454,7 +461,8 @@ All notable changes to this project will be documented in this file.
 
 Copyright © 2025-2026 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.12.2...HEAD
+[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.12.3...HEAD
+[v1.12.3]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.12.2...v1.12.3
 [v1.12.2]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.12.1...v1.12.2
 [v1.12.1]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.12.0...v1.12.1
 [v1.12.0]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.11.1...v1.12.0
