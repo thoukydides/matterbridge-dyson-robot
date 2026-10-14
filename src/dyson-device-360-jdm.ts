@@ -28,7 +28,6 @@ import { Dyson360MappedFaults } from './dyson-device-360-faults.js';
 import { DysonDevice360CommandHandlers } from './dyson-device-360-commands.js';
 import { ifValueChanged } from './decorator-changed.js';
 import { Dyson360JdmPropValues } from './dyson-360-jdm-props-types.js';
-import { logError } from './log-error.js';
 
 // Spot+Scrub Ai status polling behaviour
 const POLL_STATUS_MS                =  30 * MS; // 30 seconds
@@ -149,18 +148,6 @@ export abstract class DysonDevice360JdmBase extends DysonDevice360ZonesMixin(Dys
             const { persistentMapId } = cleaningProgramme;
             const map = this.mapFromMatter.values().find(m => m.id === persistentMapId) as Dyson360PersistentMapMetadataV2 | undefined;
             assertIsDefined(map);
-
-            // Ensure that the required map is active
-            if (!map.isCurrentMap) {
-                try {
-                    this.log.info(`Changing active map ${this.mqtt.status.persistentMapId ?? 'unknown'} to ${persistentMapId}`);
-                    await this.mqtt.publishJdmCommand('service.set_cur_map', { map_id: Number(persistentMapId) });
-                } catch (error) {
-                    logError(this.log, 'Failed to select map (but ignoring)', error);
-                }
-            } else {
-                this.log.info(`Target map ${persistentMapId} is already selected`);
-            }
 
             // Select and order the zones before the clean is started
             let zoneSelectionChanged = false;
