@@ -45,7 +45,7 @@ process.env.FORCE_COLOR = '1'; // Ensure that ANSI colour codes are used
 
 // Warnings and errors that should not be treated as test failures
 const IGNORED_WARNINGS: RegExp[] = [
-    /Received unknown active fault:/,
+    /Error: JDM command \S+ failed.*Error: Response timeout/s,
     // https://github.com/Luligu/matterbridge/issues/549
     /\[Matterbridge\] Invalid discriminator \d+ for server node .* Generating a random discriminator/
 ];

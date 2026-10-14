@@ -8,8 +8,9 @@ export type Dyson360JdmVersion                  = '1.0.1';
 export const JDM_VERSION: Dyson360JdmVersion    = '1.0.1';
 
 // Dyson robot vacuum JDM messages require a method for validation
-export interface Dyson360JdmMsg {
-    method:                         string;
+export interface Dyson360JdmMsgBase {
+    msgId:                          string;     // 32-bit integer as string
+    method?:                        string;
 }
 
 // Dyson robot vacuum JDM empty params or data
@@ -206,10 +207,10 @@ export enum Dyson360JdmDockAction {
 
 // Dyson robot vacuum JDM water level
 export enum Dyson360JdmWaterLevel {
-    // VeryLow                         = ?,
     Low                             = 0,
     Medium                          = 1,
-    High                            = 2
+    High                            = 2,
+    VeryLow                         = 99
 }
 
 // Dyson robot vacuum JDM vacuum and mop repetitions
@@ -267,10 +268,11 @@ export type Dyson360JdmSplitLine = [
 
 // Dyson robot vacuum JDM spot zone rectangle corners
 export type Dyson360JdmSpotZonePoints = [
-    number, number,                         // (x[0], y[0])     Top-right
-    number, number,                         // (x[1], y[1])     Top-left
-    number, number,                         // (x[2], y[2])     Bottom-left
-    number, number                          // (x[3], y[3])     Bottom-right
+    // Corners, clockwise or anticlockwise
+    number, number,                         // (x[0], y[0])
+    number, number,                         // (x[1], y[1])
+    number, number,                         // (x[2], y[2])
+    number, number                          // (x[3], y[3])
 ];
 
 // Dyson robot vacuum JDM room UV scan
@@ -300,7 +302,7 @@ export type Dyson360JdmRoomPreference = [
 ];
 export type Dyson360JdmRoomPreferenceSet = [
     number,                                 // = zones[].id
-    string,                                 // = zones[].name or JSON encoded Dyson360JdmRoomWithType
+    string,                                 // = zones[].name; replace any JSON on writes
     0,                                      // Set to 0 on writes (returns zones[].type)
     Dyson360JdmCleanType,                   // = cleanType
     Dyson360JdmVacuumMode,                  // = vacuumPowerMode
@@ -324,11 +326,11 @@ export enum Dyson360JdmRestrictionBehaviour {
 export type Dyson360JdmRestriction = [
     number,                                 // = restrictions[].id
     Dyson360JdmRestrictionBehaviour,        // = restrictions[].type
-                                            // = restrictions[].points
-    number, number,                         // (x[0], y[0])     Top-left
-    number, number,                         // (x[1], y[1])     Bottom-left
-    number, number,                         // (x[2], y[2])     Bottom-right
-    number, number                          // (x[3], y[3])     Top-right
+    // = restrictions[].points (corners, clockwise or anticlockwise)
+    number, number,                         // (x[0], y[0])
+    number, number,                         // (x[1], y[1])
+    number, number,                         // (x[2], y[2])
+    number, number                          // (x[3], y[3])
 ];
 
 // Dyson robot vacuum JDM furniture
@@ -362,11 +364,11 @@ export type Dyson360JdmFurniture = [
     number,                                 // = furniture[].id
     Dyson360JdmFurnitureType,               // = furniture[].type
     Dyson360JdmBoolean,                     // ?
-                                            // = furniture[].points
-    number, number,                         // (x[0], y[0])     Top-left
-    number, number,                         // (x[1], y[1])     Bottom-left
-    number, number,                         // (x[2], y[2])     Bottom-right
-    number, number                          // (x[3], y[3])     Top-right
+    // = furniture[].points (corners, clockwise or anticlockwise)
+    number, number,                         // (x[0], y[0])
+    number, number,                         // (x[1], y[1])
+    number, number,                         // (x[2], y[2])
+    number, number                          // (x[3], y[3])
 ];
 
 // Dyson robot vacuum JDM privacy policy

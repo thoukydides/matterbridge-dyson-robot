@@ -8,7 +8,6 @@ import NodePersist from 'node-persist';
 import { DeviceConfigMqtt } from './dyson-mqtt-client-live.js';
 import { DysonMqttConfig } from './dyson-mqtt.js';
 import { TypeMap as DysonMsgMap360 } from './ti/dyson-360-msg-types.js';
-import { checkers as dysonJdmCheckers360 } from './ti/dyson-360-jdm-types.js';
 import {
     checkers as dysonJdmCommandCheckers360,
     TypeMap as Dyson360JdmCommandRawTypeMap
@@ -19,10 +18,16 @@ import {
 } from './ti/dyson-360-jdm-status-types.js';
 import { DysonMqttTopic } from './dyson-mqtt-subscribe.js';
 import { CheckerT, ICheckerSuite } from 'ts-interface-checker';
-import { logCheckerValidation, validateDysonTypeSuiteCore } from './dyson-mqtt-parse.js';
-import { Dyson360JdmResponseCode, Dyson360JdmResponseResult, JDM_VERSION } from './dyson-360-jdm-types.js';
-import { Dyson360JdmProp, Dyson360JdmPropValues } from './dyson-360-jdm-props-types.js';
-import { assertIsDefined, formatList, MS, plural } from './utils.js';
+import {
+    logCheckerValidation,
+    validateDysonTypeSuiteCore
+} from './dyson-mqtt-parse.js';
+import { Dyson360JdmMsgBase, JDM_VERSION } from './dyson-360-jdm-types.js';
+import {
+    Dyson360JdmProp,
+    Dyson360JdmPropValues
+} from './dyson-360-jdm-props-types.js';
+import { MS } from './utils.js';
 import { Dyson360JdmMapStatus } from './dyson-360-jdm-status-types.js';
 import { DysonMqttFiltered } from './dyson-mqtt-filter.js';
 import { isDeepStrictEqual } from 'node:util';
@@ -43,9 +48,6 @@ const DYSON_MQTT_CONFIG_360_JDM: DysonMqttConfig<DysonMsgMap360> = {
         ]
     }
 };
-
-// Timeout when waiting for a JDM response to a command
-const JDM_COMMAND_TIMEOUT = 10 * MS;    // 10 seconds
 
 // Properties to poll
 const POLL_PROPS_360_JDM: Dyson360JdmProp[] = [
@@ -100,13 +102,15 @@ const POLL_PROPS_360_JDM: Dyson360JdmProp[] = [
 ];
 
 // Sanitised JDM command and status type maps
-type MessagesInTypeMap<T> = { [K in keyof T as T[K] extends { method: string } ? K : never]: T[K] };
+type MessagesInTypeMap<T> = {
+    [K in keyof T as T[K] extends { method?: infer M } ? (string extends M ? never : K) : never]: T[K]
+};
 export type Dyson360JdmCommandTypeMap   = MessagesInTypeMap<Dyson360JdmCommandRawTypeMap>;
 export type Dyson360JdmStatusTypeMap    = MessagesInTypeMap<Dyson360JdmStatusRawTypeMap>;
 
 // Method name to message type maps
-type MessagesByMethod<T extends Record<string, { method: string }>> = {
-    [K in keyof T as T[K]['method']]: T[K];
+type MessagesByMethod<T extends Record<string, { method?: string }>> = {
+    [K in keyof T as NonNullable<T[K]['method']>]: T[K];
 }
 export type Dyson360JdmCommandMap       = MessagesByMethod<Dyson360JdmCommandTypeMap>;
 export type Dyson360JdmStatusMap        = MessagesByMethod<Dyson360JdmStatusTypeMap>;
@@ -115,18 +119,23 @@ export type Dyson360JdmStatusMap        = MessagesByMethod<Dyson360JdmStatusType
 export type Dyson360JdmCommandMethod    = keyof Dyson360JdmCommandMap;
 export type Dyson360JdmStatusMethod     = keyof Dyson360JdmStatusMap;
 export type Dyson360JdmEventMethod      = Extract<Dyson360JdmStatusMethod, `event.${string}`>;
+export type Dyson360JdmResponseMethod   = Extract<Dyson360JdmStatusMethod, `service.${string}` | 'prop.get' | 'prop.set'>;
 
 // JDM command and status messages
-export type Dyson360JdmCommand<M extends Dyson360JdmCommandMethod = Dyson360JdmCommandMethod> = Dyson360JdmCommandMap[M];
-export type Dyson360JdmStatus <M extends Dyson360JdmStatusMethod  = Dyson360JdmStatusMethod > = Dyson360JdmStatusMap [M];
-export type Dyson360JdmEvent  <M extends Dyson360JdmEventMethod   = Dyson360JdmEventMethod  > = Dyson360JdmStatusMap [M];
-export type Dyson360JdmMsg = Dyson360JdmCommand | Dyson360JdmStatus;
+export type Dyson360JdmCommand  <M extends Dyson360JdmCommandMethod = Dyson360JdmCommandMethod> = Dyson360JdmCommandMap[M];
+export type Dyson360JdmStatus   <M extends Dyson360JdmStatusMethod  = Dyson360JdmStatusMethod > = Dyson360JdmStatusMap [M];
+export type Dyson360JdmEvent    = Dyson360JdmStatus<Dyson360JdmEventMethod>;
+export type Dyson360JdmMsg      = Dyson360JdmCommand | Dyson360JdmStatus;
+
+// JDM response messages that actually include a data payload
+export type Dyson360JdmResponse<M extends Dyson360JdmResponseMethod = Dyson360JdmResponseMethod> = {
+    [K in M]: Dyson360JdmStatusMap[K] & Required<Pick<Dyson360JdmStatusMap[K], 'data'>>;
+}[M];
 
 // Sanity check that the definitions are consistent
 type Equal<A, B> = [A] extends [B] ? ([B] extends [A] ? true : never) : never;
 const _PropsInSync: Equal<Dyson360JdmProp, keyof Dyson360JdmPropValues> = true;
-type ResponseMethods = Extract<Dyson360JdmStatusMethod, `service.${string}` | 'prop.get' | 'prop.set'>;
-const _MethodsInSync: Equal<Dyson360JdmCommandMethod, ResponseMethods> = true;
+const _MethodsInSync: Equal<Dyson360JdmCommandMethod, Dyson360JdmResponseMethod> = true;
 
 // Events that can be emitted by the JDM MQTT client (using the 'event' event)
 export type DysonMqtt360JdmEventArgs =
@@ -137,8 +146,18 @@ export type DysonMqtt360JdmEventArgs =
   | ['jdm_map_status',      msg:    Dyson360JdmMapStatus];
 export type DysonMqtt360JdmMqttEvent = DysonMqtt360JdmEventArgs[0];
 
-// Number of recent messages to keep for duplicate filtering
-const JDM_RECENT_MESSAGES = 10;
+// Timeout when waiting for a JDM response to a command
+const JDM_COMMAND_TIMEOUT = 10 * MS;        // 10 seconds
+
+// Details of recent messages for duplicate detection and method identification
+const JDM_RECENT_MAX_AGE = 5 * 60 * MS;     // 5 minutes
+type JdmTopicType = 'command' | 'status';
+interface RecentJdmMsg {
+    type:       JdmTopicType;
+    msg:        Dyson360JdmMsg;
+    time:       number;
+    received?:  boolean;
+}
 
 // Dyson MQTT client for robot vacuums with JDM MQTT topics
 export class DysonMqtt360Jdm extends DysonMqtt360<DysonMqtt360JdmEventArgs> {
@@ -147,7 +166,10 @@ export class DysonMqtt360Jdm extends DysonMqtt360<DysonMqtt360JdmEventArgs> {
     readonly jdmProps: Dyson360JdmPropValues = {};
 
     // Recent JDM messages for duplicate filtering
-    readonly jdmRecentMsgs: { command: Dyson360JdmMsg[], status: Dyson360JdmMsg[] } = { command: [], status: [] };
+    readonly jdmRecentMsgs: RecentJdmMsg[] = [];
+
+    // Awaited JDM responses (keyed on MsgId)
+    readonly jdmAwaitedResponses = new Map<string, (result: Dyson360JdmStatus | Error) => void>();
 
     // Construct a new MQTT client
     constructor(log: AnsiLogger, config: Config, persist: NodePersist.LocalStorage, device: DeviceConfigMqtt) {
@@ -157,17 +179,30 @@ export class DysonMqtt360Jdm extends DysonMqtt360<DysonMqtt360JdmEventArgs> {
     // Parse a received message
     override parseReceived(topic: string, topicStatus: DysonMqttTopic, msg: unknown): void {
         if (topic.endsWith('/command/jdm')) {
-            // Validate, log, and emit JDM commands
-            const checker = this.getCheckerForJdm<Dyson360JdmCommandTypeMap>(dysonJdmCommandCheckers360, 'Dyson360JdmCommand', topic, msg);
-            this.assertIsJdm(checker, topic, msg);
-            const filter = this.filterJdm('command', msg);
+            // Validate a received JDM command
+            this.assertIsJdmType(dysonJdmCommandCheckers360, 'Dyson360JdmCommandBase', topic, msg, false);
+            this.assertIsJdmMsg<Dyson360JdmCommandTypeMap>(
+                dysonJdmCommandCheckers360, 'Dyson360JdmCommand', topic, msg);
+
+            // Filter, log, and emit an event for the validated command message
+            const filter = this.filterJdmMsg('command', msg);
             this.logPayload('receive', topic, msg, filter);
             if (!filter) this.emit('event', 'jdm_command', msg);
         } else if (topic.endsWith('/status/jdm')) {
             // Validate, log, and emit JDM status updates
-            const checker = this.getCheckerForJdm<Dyson360JdmStatusTypeMap>(dysonJdmStatusCheckers360, 'Dyson360JdmStatus', topic, msg);
-            this.assertIsJdm(checker, topic, msg);
-            const filter = this.filterJdm('status', msg);
+            this.assertIsJdmType(dysonJdmStatusCheckers360, 'Dyson360JdmStatusBase', topic, msg, false);
+            const resolveAwaited = this.jdmAwaitedResponses.get(msg.msgId);
+            try {
+                this.assertIsJdmMsg<Dyson360JdmStatusTypeMap>(
+                    dysonJdmStatusCheckers360, 'Dyson360JdmStatus', topic, msg);
+                resolveAwaited?.(msg);
+            } catch (cause) {
+                resolveAwaited?.(new Error('Response failed validation', { cause }));
+                throw cause;
+            }
+
+            // Filter, log, and emit events for the validated status message
+            const filter = this.filterJdmMsg('status', msg);
             this.logPayload('receive', topic, msg, filter);
             if (!filter) {
                 // If this is a prop.get or prop.post then update cached properties
@@ -180,7 +215,7 @@ export class DysonMqtt360Jdm extends DysonMqtt360<DysonMqtt360JdmEventArgs> {
             }
         } else if (topic.endsWith('/status/jdm/map')) {
             // Validate and log JDM map status updates
-            this.assertIsJdm(dysonJdmStatusCheckers360.Dyson360JdmMapStatus, topic, msg);
+            this.assertIsJdmType(dysonJdmStatusCheckers360, 'Dyson360JdmMapStatus', topic, msg);
             this.logPayload('receive', topic, msg);
             this.emit('event', 'jdm_map_status', msg);
         } else {
@@ -195,25 +230,18 @@ export class DysonMqtt360Jdm extends DysonMqtt360<DysonMqtt360JdmEventArgs> {
         this.emit('event', 'jdm_props_updated');
     }
 
-    // Map a message name to the corresponding type checker
-    getCheckerForJdm<T extends Record<string, unknown>>(
-        checkers:   { [K in keyof T]: CheckerT<T[K]> },
+    // Map a message method to its type name
+    assertIsJdmMsg<T extends Record<string, Dyson360JdmMsgBase>>(
+        checkers:   Record<keyof T, CheckerT<unknown>>,
         prefix:     string,
         topic:      string,
-        msg:        unknown
-    ): CheckerT<T[keyof T]> {
-        // Check that the message is of the general form expected
-        const baseChecker = dysonJdmCheckers360.Dyson360JdmMsg;
-        if (!baseChecker.test(msg)) {
-            baseChecker.setReportedPath('Dyson360JdmWithMethod');
-            const validation = baseChecker.validate(msg);
-            assertIsDefined(validation);
-            logCheckerValidation(this.log, LogLevel.ERROR, topic, msg, validation);
-            throw new Error('JDM message does not include a method name');
-        }
+        msg:        Dyson360JdmMsgBase
+    ): asserts msg is T[keyof T] {
+        // Attempt to determine the method for this message
+        const method = msg.method ?? this.getJdmMethodFromMsgId(msg.msgId);
 
         // Construct the type name for this message
-        const msgPascalCase = methodToPascalCase(msg.method);
+        const msgPascalCase = methodToPascalCase(method);
         const typeName = `${prefix}${msgPascalCase}`;
         const assertIsTypeName: (name: string) => asserts name is Extract<keyof T, string> = (name): void => {
             if (name in checkers) return;
@@ -222,43 +250,64 @@ export class DysonMqtt360Jdm extends DysonMqtt360<DysonMqtt360JdmEventArgs> {
         };
         assertIsTypeName(typeName);
 
-        // Return the type checker
-        const checker = checkers[typeName];
-        checker.setReportedPath(typeName);
-        return checker;
+        // Use the selected checker to validate the message
+        this.assertIsJdmType(checkers, typeName, topic, msg);
     };
 
     // Validate a message using a specific checker
-    assertIsJdm<T>(checker: CheckerT<T>, topic: string, msg: unknown): asserts msg is T {
+    assertIsJdmType<K extends string, T extends Record<K, CheckerT<unknown>>>(
+        checkers: T, typeName: K, topic: string, msg: unknown, strict = true
+    ): asserts msg is T[K] extends CheckerT<infer R> ? R : never {
+        // Select and prepare the checker
+        const checker = checkers[typeName];
+        checker.setReportedPath(typeName);
+
+        // Use the checker to validate the message
         const validation = checker.validate(msg);
         if (validation) {
             logCheckerValidation(this.log, LogLevel.ERROR, topic, msg, validation);
             throw new Error('Unexpected structure of JDM message');
         }
         const strictValidation = checker.strictValidate(msg);
-        if (strictValidation) {
+        if (strict && strictValidation) {
             logCheckerValidation(this.log, LogLevel.WARN, topic, msg, strictValidation);
             // (Continue processing messages that include unexpected properties)
         }
     }
 
+    // Add a message to the recent history if not already included
+    getOrAddRecentJdmMsg(type: JdmTopicType, msg: Dyson360JdmMsg): RecentJdmMsg {
+        // Prune old messages from the history
+        const keepIndex = this.jdmRecentMsgs.findIndex(r => Date.now() <= r.time + JDM_RECENT_MAX_AGE);
+        if (0 < keepIndex) this.jdmRecentMsgs.splice(0, keepIndex);
+
+        // Check whether the message is already in the history
+        const matchingMsgId = this.jdmRecentMsgs.filter(r => r.type === type && r.msg.msgId === msg.msgId);
+        let recentMsg = matchingMsgId.find(r => isDeepStrictEqual(r.msg, msg));
+        if (!recentMsg) {
+            if (matchingMsgId.length) this.log.warn(`Duplicate JDM msgId detected: ${msg.msgId}`);
+            recentMsg = { type, msg, time: Date.now() };
+            this.jdmRecentMsgs.push(recentMsg);
+        }
+        return recentMsg;
+    }
+
+    // Attempt to determine method from a msgId
+    getJdmMethodFromMsgId(msgId: string): string {
+        const methods = new Set(this.jdmRecentMsgs
+            .filter(r => r.type === 'command' && r.msg.msgId === msgId)
+            .map(r => r.msg.method));
+        if (1 < methods.size) throw new Error(`Unable to determine JDM method (multiple commands found with msgId ${msgId})`);
+        const method = methods.values().next().value;
+        if (!method) throw new Error(`Unable to determine JDM method (no command found with msgId ${msgId})`);
+        return method;
+    }
+
     // Filter duplicate messages
-    filterJdm(type: 'command' | 'status', msg: Dyson360JdmMsg): DysonMqttFiltered | undefined {
-        const recent = this.jdmRecentMsgs[type];
-
-        // Check whether any recent messages match (all fields identical)
-        if (recent.some((recentMsg) => isDeepStrictEqual(recentMsg, msg))) {
-            return 'duplicate';
-        }
-
-        // Check for msgId collisions
-        if (recent.some((recentMsg) => recentMsg.msgId === msg.msgId)) {
-            this.log.warn(`JDM ${type} message identifier duplicated: msgId=${msg.msgId}`);
-        }
-
-        // Add to the list of recent messages (discarding the oldest)
-        if (JDM_RECENT_MESSAGES <= recent.length) recent.shift();
-        recent.push(msg);
+    filterJdmMsg(type: JdmTopicType, msg: Dyson360JdmMsg): DysonMqttFiltered | undefined {
+        const recent = this.getOrAddRecentJdmMsg(type, msg);
+        if (recent.received) return 'duplicate';
+        recent.received = true;
     }
 
     // Poll standard property values
@@ -272,107 +321,61 @@ export class DysonMqtt360Jdm extends DysonMqtt360<DysonMqtt360JdmEventArgs> {
     // Publish a JDM command, wait for the response, and check its status
     async jdmCommand<M extends Dyson360JdmCommandMethod>(
         method: M, params: Dyson360JdmCommand<M>['params']
-    ): Promise<Dyson360JdmStatus<M>> {
+    ): Promise<Dyson360JdmResponse<M>> {
+        // Publish the command, ensuring that any response is captured
+        const msgId = this.makeJdmMsgId();
+        const responsePromise = this.waitForJdmResponse(msgId);
         try {
-            const msgId = await this.publishJdmCommand(method, params);
-            if ('filename' in this.deviceConfig) {
-                // Fake immediate success when using a mock MQTT client
-                return { method, msgId, code: Dyson360JdmResponseCode.Success } as Dyson360JdmStatus<M>;
-            }
-            const response = await this.waitForJdmResponse(method, msgId);
-            this.assertJdmStatusSuccess(response);
+            await this.publishJdmCommandRaw(msgId, method, params);
+
+            // Wait for the response and verify that its method matches
+            const response = await responsePromise;
+            const assertIsResponse: (msg: Dyson360JdmStatus) => asserts msg is Dyson360JdmResponse<M> = (msg): void => {
+                if (msg.method && msg.method !== method) throw new Error(`Method mismatch (${response.method} ≠ ${method})`);
+                if (msg.data === undefined)              throw new Error('No data in response');
+            };
+            assertIsResponse(response);
             return response;
         } catch (cause) {
-            const reason = cause instanceof Error
-            ? cause.name === 'AbortError' ? 'timed out' : cause.message : String(cause);
-            throw new Error(`JDM command ${method}: ${reason}`, { cause });
+            throw new Error(`JDM command ${method} failed`, { cause });
+        } finally {
+            // Cancel waiting for a response (if publishing failed)
+            this.jdmAwaitedResponses.get(msgId)?.(new Error('Abandoned'));
         }
     }
 
-    // Publish a JDM command, returning the message ID
-    async publishJdmCommand<M extends Dyson360JdmCommandMethod>(
-        method: M, params: Dyson360JdmCommand<M>['params']
-    ): Promise<string> {
-        // Construct the full command message
-        const common: Omit<Dyson360JdmCommand, 'method' | 'params'> = {
-            version:    JDM_VERSION,
-            msgId:      makeMsgId()
-        };
-        const payload = JSON.stringify({ ...common, method, params });
-
-        // Publish to the JDM command topic
-        await this.publishTo('/jdm', payload);
-        return common.msgId;
-    }
-
-    // Wait for a JDM response (throwing AbortError if timeout occurs)
-    async waitForJdmResponse<M extends Dyson360JdmCommandMethod>(
-        method: M, msgId: string
-    ): Promise<Dyson360JdmStatus<M>> {
-        const signal = AbortSignal.timeout(JDM_COMMAND_TIMEOUT);
+    // Generate a random message identifier
+    makeJdmMsgId(): string {
         for (;;) {
-            // Wait for a JDM status message
-            const [type, msg] = await this.onceAsync('event', signal);
-            if (type !== 'jdm_status')  continue;
-
-            // If it is the expected response then return it
-            if (msg.msgId !== msgId)    continue;
-            if (msg.method === method)  return msg as Dyson360JdmStatus<M>;
-            this.log.warn(`JDM command response mismatch for msgId=${msgId} (${msg.method} ≠ ${method})`);
+            // Ensure the msgId is unique and non-zero
+            const msgId = (1 + Math.floor(Math.random() * (2 ** 32 - 1))).toString();
+            if (!this.jdmRecentMsgs.some(r => r.msg.msgId === msgId)) return msgId;
         }
     }
 
-    // Throw an error if a JDM status message indicates failure
-    assertJdmStatusSuccess(msg: Dyson360JdmStatus): void {
-        const description = `JDM ${msg.method} failed`;
-        if ('code' in msg && msg.code !== undefined) {
-            // Check the envelope code
-            if (msg.code !== Dyson360JdmResponseCode.Success) {
-                switch (msg.method) {
-                case 'prop.get':                    // At least one property is missing (null)
-                case 'service.set_areas_start':     // Always returns code=1?
-                case 'service.start_station_act':   // Always returns code=1?
-                    this.log.debug(`Ignoring ${description}: code=${msg.code}`);
-                    break;
-                default:
-                    throw new Error(`${description}: code=${msg.code}`);
-                }
-            }
-        }
-        if ('data' in msg && msg.data) {
-            if ('result' in msg.data && msg.data.result !== undefined) {
-                // Check data.result (service.* methods)
-                if (msg.data.result !== Dyson360JdmResponseResult.Success) {
-                    switch (msg.method) {
-                    case 'service.set_areas_start':     // Always returns result=1?
-                    case 'service.start_station_act':   // Always returns result=1?
-                        this.log.debug(`Ignoring ${description}: result=${msg.data.result}`);
-                        break;
-                    default:
-                        throw new Error(`${description}: result=${msg.data.result}`);
-                    }
-                }
-            }
+    // Publish a JDM command
+    async publishJdmCommandRaw<M extends Dyson360JdmCommandMethod>(
+        msgId: string, method: M, params: Dyson360JdmCommand<M>['params']
+    ): Promise<void> {
+        const msg = { msgId, method, version: JDM_VERSION, params } as Dyson360JdmCommand;
+        this.getOrAddRecentJdmMsg('command', msg);
+        await this.publishTo('/jdm', JSON.stringify(msg));
+    }
 
-            // Additional payload checks for some command responses
-            switch (msg.method) {
-            case 'prop.set': {
-                // Each prop.set property written has its own result
-                const failures = msg.data.property
-                    .filter((prop) => prop.code !== Dyson360JdmResponseCode.Success)
-                    .map((prop) => prop.prop);
-                if (failures.length) {
-                    throw new Error(`${description} for ${plural(failures.length, 'property')}: ${formatList(failures)}`);
-                }
-            }
-                break;
-            }
-        } else {
-            if (msg.method.startsWith('service.')) {
-                // A service response without data is a failure
-                throw new Error(`${description}: no data`);
-            }
-        }
+    // Wait for a JDM response (with a timeout)
+    async waitForJdmResponse(msgId: string): Promise<Dyson360JdmStatus> {
+        const promise = new Promise<Dyson360JdmStatus>((resolve, reject) => {
+            const settle = (result: Dyson360JdmStatus | Error): void => {
+                clearTimeout(timeout);
+                this.jdmAwaitedResponses.delete(msgId);
+                if (result instanceof Error)    reject(result);
+                else                            resolve(result);
+            };
+            const timeout = setTimeout(() => { settle(new Error('Response timeout')); }, JDM_COMMAND_TIMEOUT);
+            this.jdmAwaitedResponses.set(msgId, settle);
+        });
+        promise.catch(() => undefined); // (prevent unhandled rejection)
+        return promise;
     }
 }
 
@@ -384,15 +387,9 @@ function validateDysonJdmTypeSuite(suite: ICheckerSuite, prefix: string): void {
     validateDysonTypeSuiteCore(suite, 'method', makeTypename);
 }
 
-// Generate a random message identifier
-function makeMsgId(): string {
-    const id = 1 + Math.floor(Math.random() * (2 ** 32 - 1)); // (avoid 0)
-    return id.toString();
-}
-
 // Is a status message an event
 function isJdmEvent(msg: Dyson360JdmStatus): msg is Dyson360JdmEvent {
-    return msg.method.startsWith('event.');
+    return msg.method?.startsWith('event.') ?? false;
 }
 
 // Convert a string from Heterogeneous casing to PascalCase
