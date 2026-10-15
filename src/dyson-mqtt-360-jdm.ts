@@ -22,12 +22,12 @@ import {
     logCheckerValidation,
     validateDysonTypeSuiteCore
 } from './dyson-mqtt-parse.js';
-import { Dyson360JdmMsgBase, JDM_VERSION } from './dyson-360-jdm-types.js';
+import { Dyson360JdmMsgBase, Dyson360JdmResponseCode, JDM_VERSION } from './dyson-360-jdm-types.js';
 import {
     Dyson360JdmProp,
     Dyson360JdmPropValues
 } from './dyson-360-jdm-props-types.js';
-import { MS } from './utils.js';
+import { formatList, MS, plural, tryListener } from './utils.js';
 import { Dyson360JdmMapStatus } from './dyson-360-jdm-status-types.js';
 import { DysonMqttFiltered } from './dyson-mqtt-filter.js';
 import { isDeepStrictEqual } from 'node:util';
@@ -49,8 +49,8 @@ const DYSON_MQTT_CONFIG_360_JDM: DysonMqttConfig<DysonMsgMap360> = {
     }
 };
 
-// Properties to poll
-const POLL_PROPS_360_JDM: Dyson360JdmProp[] = [
+// All known properties (must match Dyson360JdmProp)
+const JDM_PROPS_ALL = [
     'airdry_frequency',
     'alarm',
     'auto_water_complete_flag',
@@ -61,14 +61,14 @@ const POLL_PROPS_360_JDM: Dyson360JdmProp[] = [
     'charge_state',
     'child_lock',
     'clean_wash_attachment',
-    // 'cleaning_area',
+    'cleaning_area',
     'cleaning_time',
-    // 'cur_path',
+    'cur_path',
     'current_map_id',
     'detergent_consumed',
     'detergent',
     'dock_hypa',
-    // 'dust_action',
+    'dust_action',
     'dust_auto_state',
     'empty_bin_time',
     'empty_bin_type',
@@ -82,7 +82,8 @@ const POLL_PROPS_360_JDM: Dyson360JdmProp[] = [
     'mop_life',
     'mop_pad_life',
     'oob_state',
-    // 'order_total',
+    'order_total',
+    'privacy',
     'quantity',
     'quiet_begin_time',
     'quiet_end_time',
@@ -97,9 +98,25 @@ const POLL_PROPS_360_JDM: Dyson360JdmProp[] = [
     'voice_type',
     'volume',
     'wash_back_frequency',
-    'work_mode'
-    // 'work_time'
+    'work_mode',
+    'work_time'
+] as const satisfies Dyson360JdmProp[];
+
+// Properties to never poll
+const JDM_PROPS_EXCLUDE: Dyson360JdmProp[] = [
+    'cur_path'          // Incrementally pushed (or request if required)
 ];
+
+// Properties to only poll once when (re)connected
+const JDM_PROPS_ONCE: Dyson360JdmProp[] = [
+    'back_to_wash',     // Value pushed when it changes
+    'order_total',      // Only relevant to schedules (request if required)
+    'work_time'         // Value pushed when it changes
+];
+
+// Sets of properties to poll
+const JDM_PROPS_POLL_CONNECTED = JDM_PROPS_ALL           .filter(prop => !JDM_PROPS_EXCLUDE.includes(prop));
+const JDM_PROPS_POLL_PERIODIC  = JDM_PROPS_POLL_CONNECTED.filter(prop => !JDM_PROPS_ONCE   .includes(prop));
 
 // Sanitised JDM command and status type maps
 type MessagesInTypeMap<T> = {
@@ -134,8 +151,9 @@ export type Dyson360JdmResponse<M extends Dyson360JdmResponseMethod = Dyson360Jd
 
 // Sanity check that the definitions are consistent
 type Equal<A, B> = [A] extends [B] ? ([B] extends [A] ? true : never) : never;
-const _PropsInSync: Equal<Dyson360JdmProp, keyof Dyson360JdmPropValues> = true;
-const _MethodsInSync: Equal<Dyson360JdmCommandMethod, Dyson360JdmResponseMethod> = true;
+const _PropTypesInSync:     Equal<Dyson360JdmProp, keyof Dyson360JdmPropValues> = true;
+const _PropValuesInSync:    Equal<Dyson360JdmProp, (typeof JDM_PROPS_ALL)[number]> = true;
+const _MethodsInSync:       Equal<Dyson360JdmCommandMethod, Dyson360JdmResponseMethod> = true;
 
 // Events that can be emitted by the JDM MQTT client (using the 'event' event)
 export type DysonMqtt360JdmEventArgs =
@@ -174,6 +192,12 @@ export class DysonMqtt360Jdm extends DysonMqtt360<DysonMqtt360JdmEventArgs> {
     // Construct a new MQTT client
     constructor(log: AnsiLogger, config: Config, persist: NodePersist.LocalStorage, device: DeviceConfigMqtt) {
         super(log, config, persist, device, DYSON_MQTT_CONFIG_360_JDM);
+
+        // Handle MQTT events
+        this.on('subscribed', tryListener(this, async () => {
+            // Request the current status when (re)connected
+            await this.getJdmProps(JDM_PROPS_POLL_CONNECTED);
+        }));
     }
 
     // Parse a received message
@@ -191,13 +215,20 @@ export class DysonMqtt360Jdm extends DysonMqtt360<DysonMqtt360JdmEventArgs> {
         } else if (topic.endsWith('/status/jdm')) {
             // Validate, log, and emit JDM status updates
             this.assertIsJdmType(dysonJdmStatusCheckers360, 'Dyson360JdmStatusBase', topic, msg, false);
-            const resolveAwaited = this.jdmAwaitedResponses.get(msg.msgId);
+            const settleAwaited = this.jdmAwaitedResponses.get(msg.msgId);
             try {
                 this.assertIsJdmMsg<Dyson360JdmStatusTypeMap>(
                     dysonJdmStatusCheckers360, 'Dyson360JdmStatus', topic, msg);
-                resolveAwaited?.(msg);
+
+                // If this is a prop.get or prop.post then update cached properties
+                if (msg.method === 'prop.get')  this.updateJdmProps(msg.data);
+                if (msg.method === 'prop.post') this.updateJdmProps(msg.params);
+
+                // Resolve any promise waiting for this response
+                settleAwaited?.(msg);
             } catch (cause) {
-                resolveAwaited?.(new Error('Response failed validation', { cause }));
+                // Reject any promise waiting for this response
+                settleAwaited?.(new Error('Response failed validation', { cause }));
                 throw cause;
             }
 
@@ -205,10 +236,6 @@ export class DysonMqtt360Jdm extends DysonMqtt360<DysonMqtt360JdmEventArgs> {
             const filter = this.filterJdmMsg('status', msg);
             this.logPayload('receive', topic, msg, filter);
             if (!filter) {
-                // If this is a prop.get or prop.post then update cached properties
-                if (msg.method === 'prop.get')  this.updateJdmProps(msg.data);
-                if (msg.method === 'prop.post') this.updateJdmProps(msg.params);
-
                 // Emit an event for JDM events
                 this.emit('event', 'jdm_status', msg);
                 if (isJdmEvent(msg)) this.emit('event', 'jdm_event', msg);
@@ -310,12 +337,49 @@ export class DysonMqtt360Jdm extends DysonMqtt360<DysonMqtt360JdmEventArgs> {
         recent.received = true;
     }
 
-    // Poll standard property values
-    async pollJdmProps(): Promise<void> {
-        // Send the command and wait for the response
-        const property = POLL_PROPS_360_JDM;
-        const _response = await this.jdmCommand('prop.get', { property });
+    // Modify property values (with read back afterwards to verify)
+    async setJdmProps(setPropValues: Partial<Dyson360JdmPropValues>): Promise<void> {
+        const property = Object.keys(setPropValues).sort() as Dyson360JdmProp[];
+
+        // Perform the write and read back the new property values
+        const setResponse = await this.jdmCommand('prop.set', setPropValues);
+        // (setResponse.code=1 indicates a requested value is null)
+        const getResponse = await this.jdmCommand('prop.get', { property });
         // (Cached values are updated via parseReceived and updateJdmProps)
+
+        // Check the status and new value for each property written
+        const failures: string[] = [];
+        for (const prop of property) {
+            // Did the prop.set return success for this property?
+            const fail: string[] = [];
+            const result = setResponse.data.property.find(p => p.prop === prop);
+            if (!result) fail.push('set result missing');
+            else if (result.code !== Dyson360JdmResponseCode.Success) fail.push(`result ${result.code}`);
+
+            // Did the prop.get return the value written for this property?
+            const value = getResponse.data[prop];
+            if (value === undefined) fail.push('get value missing');
+            else if (!isDeepStrictEqual(value, setPropValues[prop])) {
+                fail.push(`value mismatch (${JSON.stringify(setPropValues[prop])} ≠ ${JSON.stringify(value)})`);
+            }
+            if (fail.length) failures.push(`${prop} (${formatList(fail)})`);
+        }
+        if (failures.length) {
+            throw new Error(`Failed to set ${plural(failures.length, 'JDM property')}: ${formatList(failures)}`);
+        }
+    }
+
+    // Retrieve current property values (updating cached values from result)
+    async getJdmProps(props: Dyson360JdmProp[] = JDM_PROPS_POLL_PERIODIC): Promise<Dyson360JdmPropValues> {
+        // Request the specified properties and verify they were returned
+        const property = [...new Set(props)].sort();
+        const response = await this.jdmCommand('prop.get', { property });
+        // (Cached values are updated via parseReceived and updateJdmProps)
+        const missing = property.filter(prop => response.data[prop] === undefined);
+        if (missing.length) {
+            throw new Error(`Failed to get ${plural(missing.length, 'JDM property')}: ${formatList(missing)}`);
+        }
+        return response.data;
     }
 
     // Publish a JDM command, wait for the response, and check its status

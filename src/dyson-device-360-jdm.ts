@@ -105,7 +105,7 @@ export abstract class DysonDevice360JdmBase extends DysonDevice360ZonesMixin(Dys
         if (this.mqtt.status.reachable) {
             await Promise.all([
                 this.mqtt.publish('REQUEST-CURRENT-STATE', {}),
-                this.mqtt.pollJdmProps()
+                this.mqtt.getJdmProps()
             ]);
         }
     }
