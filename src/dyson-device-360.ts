@@ -173,8 +173,8 @@ export class DysonDevice360VisNav extends DysonDevice360ZonesMixin(DysonDevice36
             } else if (zoneStatus) {
                 // Live zone status available
                 const { persistentMapId: mapId, zonesDefinitionVersion: mapVersion } = status;
-                assertIsDefined(mapId);
-                cleaningStatus = { cleaningMode, mapId, mapVersion, zoneStatus };
+                // (persistent map might be cleared first at the end of a clean)
+                if (mapId) cleaningStatus = { cleaningMode, mapId, mapVersion, zoneStatus };
             } else if (cleaningProgramme && 'orderedZones' in cleaningProgramme) {
                 // No live zone status, so synthesise from cleaning programme
                 const zones = new Set([
