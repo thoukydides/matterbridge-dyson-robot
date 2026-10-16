@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v1.12.4] - 2026-10-16
+### Fixed
+* Handle 360 Vis Nav removing current map from its status reports before removing the zone cleaning status. (#49)
+### Changed
+* Updated dependencies.
+
 ## [v1.12.3] - 2026-10-14
 ### Removed
 * Explicit set of Spot+Scrub Ai active map for zone clean; this is handled automatically. (#46)
@@ -461,7 +467,8 @@ All notable changes to this project will be documented in this file.
 
 Copyright © 2025-2026 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.12.3...HEAD
+[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.12.4...HEAD
+[v1.12.4]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.12.3...v1.12.4
 [v1.12.3]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.12.2...v1.12.3
 [v1.12.2]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.12.1...v1.12.2
 [v1.12.1]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.12.0...v1.12.1
