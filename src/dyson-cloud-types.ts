@@ -113,7 +113,8 @@ export enum DysonManifestCapability {
     PersonalDaylight            = 'PersonalDaylight',
     ReadyOffDock                = 'ReadyOffDock',
     Restrictions                = 'Restrictions',
-    Scheduling                  = 'Scheduling'
+    Scheduling                  = 'Scheduling',
+    SelfCleanOptionsV           = 'SelfCleanOptionsV2'
 };
 export interface DysonManifestFirmware {
     autoUpdateEnabled:          boolean;
