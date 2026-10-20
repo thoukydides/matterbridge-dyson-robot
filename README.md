@@ -421,6 +421,7 @@ This plugin has been tested with the following devices:
 | Dyson 360 Eye robot vacuum                | RB01      | `N223`          | `11.3.5.10`                             | ✅ Developer
 | Dyson 360 Vis Nav robot vacuum            | RB03      | `277`           | `RB03PR.01.08.006.5079`                 | ✅ Developer
 | Dyson Spot+Scrub Ai robot vacuum          | RB05      | `RB05`          | `RB05PR.01.109.6314.260713_D1.6.314-78` | 📄 MQTT logs [JupiterZen](https://github.com/JupiterZen) ([#46](https://github.com/thoukydides/matterbridge-dyson-robot/issues/46))
+| Dyson R2 Nurovi Wash+Dry robot vacuum     | RB07      | `RB07`          | `RB07PR.01.334.4336.260909_1.6.130`     | 📄 MQTT logs [elkanibal](https://github.com/elkanibal) ([#50](https://github.com/thoukydides/matterbridge-dyson-robot/issues/50))
 | Dyson Pure Humidify+Cool                  | PH01      | `358`           |                                         | 📄 MQTT logs
 | Dyson Pure Humidify+Cool Cryptomic        | PH02      | `358`           | `ECG2PF.46.00.007.0003`                 | 📄 MQTT logs
 | Dyson Purifier Humidify+Cool Formaldehyde | PH04      | `358E`          | `ECG2PF.47.01.000.0005`                 | 📄 MQTT logs

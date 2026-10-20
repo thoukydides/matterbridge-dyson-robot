@@ -57,8 +57,18 @@ There is a high likelihood of warnings, errors, or missing functionality.
 
 ${DYSON360_COMPATIBILITY_COMMON}`;
 
-const DYSON360_COMPATIBILITY_NUROVI =
-`Support for Dyson R1 Nurovi Dry (RB07), R2 Nurovi Wash+Dry (RB07) and R3 Nurovi Spot+Scrub UV (RB05), is incomplete.
+const DYSON360_COMPATIBILITY_R2_NUROVI =
+`Support for Dyson 2 Nurovi Wash+Dry (RB07) is incomplete.
+
+Experimental support has been added based on the details provided in issue #50:
+    https://github.com/thoukydides/matterbridge-dyson-robot/issues/50
+
+There is a high likelihood of warnings, errors, or missing functionality.
+
+${DYSON360_COMPATIBILITY_COMMON}`;
+
+const DYSON360_COMPATIBILITY_R1R3_NUROVI =
+`Support for Dyson R1 Nurovi Dry (RB07) and R3 Nurovi Spot+Scrub UV (RB05), is incomplete.
 
 These devices are currently treated similarly to a Dyson Spot+Scrub Ai. There is a high likelihood of warnings, errors, or missing functionality.
 
@@ -242,8 +252,6 @@ export abstract class DysonDevice360NuroviBase extends DysonDevice360JdmBase {
         finish:         BasicInformation.ProductFinish.Matte,
         primaryColor:   BasicInformation.Color.White
     });
-
-    override get compatibilityWarning() { return DYSON360_COMPATIBILITY_NUROVI; }
 }
 
 // -----------------------------------------------------------------------------
@@ -252,18 +260,24 @@ export abstract class DysonDevice360NuroviBase extends DysonDevice360JdmBase {
 export class DysonDevice360R1NuroviDry extends DysonDevice360NuroviBase {
     static readonly model = { type: 'RB07', number: 'RB07', variants: [''], name: 'R1 Nurovi Dry' };
     override getBatteryPartNumber = () => '976331-01';
+
+    override get compatibilityWarning() { return DYSON360_COMPATIBILITY_R1R3_NUROVI; }
 }
 
 // A Dyson R2 Nurovi Wash+Dry device
 export class DysonDevice360R2NuroviWashDry extends DysonDevice360MopMixin(DysonDevice360NuroviBase) {
     static readonly model = { type: 'RB07', number: 'RB07', variants: ['A'], name: 'R2 Nurovi Wash+Dry' };
     override getBatteryPartNumber = () => '976331-01';
+
+    override get compatibilityWarning() { return DYSON360_COMPATIBILITY_R2_NUROVI; }
 }
 
 // A Dyson R3 Nurovi Spot+Scrub UV device
 export class DysonDevice360R3NuroviSpotScrub extends DysonDevice360MopMixin(DysonDevice360NuroviBase) {
     static readonly model = { type: 'RB05', number: 'RB05', variants: ['B', 'F'], name: 'R3 Nurovi Spot+Scrub UV' };
     override getBatteryPartNumber = () => '975571-01';
+
+    override get compatibilityWarning() { return DYSON360_COMPATIBILITY_R1R3_NUROVI; }
 }
 
 // =============================================================================
