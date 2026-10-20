@@ -55,33 +55,6 @@ const JDM_PROPS_POLL_CONNECTED = JDM_PROPS_ALL.difference(new Set<Dyson360JdmPro
     'cur_path'          // Incrementally pushed (or request if required)
 ]));
 
-// Properties to poll periodically
-const JDM_PROPS_POLL_PERIODIC  = JDM_PROPS_POLL_CONNECTED.difference(new Set<Dyson360JdmProp>([
-    // Values pushed when they change
-    'back_to_wash',
-    'charge_state',
-    'cleaning_area',
-    'clean_id',
-    'cleaning_time',
-    'dock_hypa',
-    'fault',
-    'hypa',
-    'main_brush',
-    'mode',
-    'oob_state',
-    'quantity',
-    'side_brush',
-    'station_act',
-    'status',
-    'sweep_type',
-    'taskBeginTs',
-    'work_mode',
-    'work_time',
-
-    // Values that are only relevant to schedules
-    'order_total'
-]));
-
 // Checker suites for JDM MQTT messages
 type DysonMqttJdmChecker<T extends ICheckerSuite> = TiTaggedChecker<T, 'method', Dyson360JdmMsg>;
 
@@ -290,7 +263,7 @@ export class DysonMqtt360Jdm extends DysonMqtt360<DysonMqtt360JdmEventArgs> {
     }
 
     // Retrieve current property values (updating cached values from result)
-    async getJdmProps(props: Set<Dyson360JdmProp> = JDM_PROPS_POLL_PERIODIC): Promise<Dyson360JdmPropValues> {
+    async getJdmProps(props: Set<Dyson360JdmProp>): Promise<Dyson360JdmPropValues> {
         // Request the specified properties and verify they were returned
         const property = [...props].sort();
         const response = await this.jdmCommand('prop.get', { property });

@@ -77,7 +77,7 @@ export abstract class DysonDevice360JdmBase extends DysonDevice360ZonesMixin(Dys
             if (event === 'jdm_props_updated') this.updateJdmProps(this.mqtt.jdmProps);
         });
 
-        // Poll device status via MQTT (using both traditional and JDM commands)
+        // Poll device status via MQTT
         this.pollStatus = new PeriodicOp(this.log, {
             name:           'Current status poll',
             interval:       POLL_STATUS_MS,
@@ -100,13 +100,10 @@ export abstract class DysonDevice360JdmBase extends DysonDevice360ZonesMixin(Dys
         return handlers;
     }
 
-    // Poll device status via MQTT (using both traditional and JDM commands)
+    // Poll device status via MQTT
     async pollStatusOp(): Promise<void> {
         if (this.mqtt.status.reachable) {
-            await Promise.all([
-                this.mqtt.publish('REQUEST-CURRENT-STATE', {}),
-                this.mqtt.getJdmProps()
-            ]);
+            await this.mqtt.publish('REQUEST-CURRENT-STATE', {});
         }
     }
 
