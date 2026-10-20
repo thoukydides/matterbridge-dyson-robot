@@ -13,6 +13,9 @@ export const MS = 1000;
 export type Constructor        <T = object> =          new (...args: any[]) => T;
 export type AbstractConstructor<T = object> = abstract new (...args: any[]) => T;
 
+// Extract all values from an object type
+export type ValueOf<T> = T[keyof T];
+
 // Distribute utility types over unions
 export type DistributiveExtract<T, K extends PropertyKey> =
     T extends unknown ? Extract<T, K> : never;

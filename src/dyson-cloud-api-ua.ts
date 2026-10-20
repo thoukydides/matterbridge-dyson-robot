@@ -4,16 +4,15 @@
 import { AnsiLogger, LogLevel } from 'matterbridge/logger';
 import { Config } from './config-types.js';
 import { Client, Dispatcher } from 'undici';
-import { columns, getValidationTree, MS } from './utils.js';
+import { columns, MS } from './utils.js';
 import { IncomingHttpHeaders } from 'undici/types/header.js';
 import { Checker, CheckerT, IErrorDetail } from 'ts-interface-checker';
-import { INSPECT_VERBOSE } from './logger-options.js';
-import { inspect } from 'util';
 import { STATUS_CODES } from 'http';
 import { PLUGIN_NAME, PLUGIN_VERSION } from './settings.js';
 import { DysonCloudError, DysonCloudStatusCodeError, RETRY_BEHAVIOUR_NON_API } from './dyson-cloud-error.js';
 import { setTimeout } from 'node:timers/promises';
 import { MaybePromise } from 'matterbridge/matter';
+import { logCheckerValidation } from './ti-tagged-checker.js';
 
 // Request types
 export type Method      = Dispatcher.HttpMethod;
@@ -250,12 +249,7 @@ export class DysonCloudAPIUserAgent {
 
     // Log checker validation errors
     logCheckerValidation(level: LogLevel, request: Request, body?: unknown, errors?: IErrorDetail[]): void {
-        this.log.log(level, `${request.method} ${request.path}:`);
-        if (errors) {
-            const validationLines = getValidationTree(errors);
-            validationLines.forEach(line => { this.log.log(level, line); });
-        }
-        const bodyLines = inspect(body, INSPECT_VERBOSE).split('\n');
-        bodyLines.forEach(line => { this.log.info(`    ${line}`); });
+        const context = `${request.method} ${request.path}`;
+        logCheckerValidation(this.log, level, context, body, errors);
     }
 }

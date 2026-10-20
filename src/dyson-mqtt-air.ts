@@ -1,11 +1,8 @@
 // Matterbridge plugin for Dyson robot vacuum and air treatment devices
 // Copyright © 2025-2026 Alexander Thoukydides
 
-import { DysonMqtt, DysonMqttConfig } from './dyson-mqtt.js';
-import {
-    checkers as dysonMsgCheckersAir,
-    TypeMap as DysonMsgMapAir
-} from './ti/dyson-air-msg-types.js';
+import { DysonMqtt, DysonMqttConfig, DysonMsgAny } from './dyson-mqtt.js';
+import { checkers as dysonMsgCheckersAir } from './ti/dyson-air-msg-types.js';
 import { Config } from './config-types.js';
 import { AnsiLogger } from 'matterbridge/logger';
 import { tryListener } from './utils.js';
@@ -28,13 +25,12 @@ import {
 } from './dyson-air-types.js';
 import { DysonAirCurrentSensorData } from './dyson-air-sensor-types.js';
 import { DysonAirProductState } from './dyson-air-state-types.js';
-import { DysonMsgAny, validateDysonMsgTypeSuite } from './dyson-mqtt-parse.js';
 import { DysonModeReason } from './dyson-types.js';
 import { DeviceConfigMqtt } from './dyson-mqtt-client-live.js';
 import NodePersist from 'node-persist';
 
 // Configuration of a Dyson MQTT client for robot vacuums
-const DYSON_MQTT_CONFIG_AIR: DysonMqttConfig<DysonMsgMapAir> = {
+const DYSON_MQTT_CONFIG_AIR: DysonMqttConfig<typeof dysonMsgCheckersAir> = {
     topics: {
         command:    '@/@/command',
         subscribe: ['@/@/status/connection',
@@ -42,14 +38,11 @@ const DYSON_MQTT_CONFIG_AIR: DysonMqttConfig<DysonMsgMapAir> = {
                     '@/@/status/faults',
                     '@/@/status/summary']
     },
-    messages: {
-        prefix:     'DysonAirMsg',
-        checkers:   dysonMsgCheckersAir
-    }
+    checkers: dysonMsgCheckersAir
 };
 
-// Ensure that the type names all match their message names
-validateDysonMsgTypeSuite(DYSON_MQTT_CONFIG_AIR.messages);
+// Dyson robot vacuum MQTT messages
+export type DysonMqttAirMsg = DysonMsgAny<typeof dysonMsgCheckersAir>;
 
 // Dyson air treatment machine product data status
 type ProductStateNumericEnumKeys = 'cflr' | 'fnsp' | 'nmdv' | 'sltm';
@@ -83,7 +76,7 @@ export type DysonMqttStatusAir =
   & Partial<Faults>;
 
 // Dyson MQTT client for air treatment machines
-export class DysonMqttAir extends DysonMqtt<DysonMsgMapAir, DysonMqttStatusAir> {
+export class DysonMqttAir extends DysonMqtt<typeof dysonMsgCheckersAir, DysonMqttStatusAir> {
 
     // Messages still required for initialisation
     private initialiseMsgs = new Set([
@@ -110,7 +103,7 @@ export class DysonMqttAir extends DysonMqtt<DysonMsgMapAir, DysonMqttStatusAir> 
     }
 
     // Update state from a received message
-    updateStateFromMessage(msg: DysonMsgAny<DysonMsgMapAir>) {
+    updateStateFromMessage(msg: DysonMqttAirMsg) {
         switch (msg.msg) {
         case 'HELLO':
             this.updateProductInfo(msg);
@@ -133,7 +126,7 @@ export class DysonMqttAir extends DysonMqtt<DysonMsgMapAir, DysonMqttStatusAir> 
     }
 
     // Check whether all required messages have been received
-    checkIfInitialised(msg: DysonMsgAny<DysonMsgMapAir>): void {
+    checkIfInitialised(msg: DysonMqttAirMsg): void {
         this.initialiseMsgs.delete(msg.msg);
         this.updateInitialised(this.initialiseMsgs.size === 0);
     }

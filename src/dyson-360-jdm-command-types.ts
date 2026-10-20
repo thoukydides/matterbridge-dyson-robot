@@ -26,14 +26,14 @@ import {
     Dyson360JdmRoomPreferenceSet,
     Dyson360JdmPreferMode,
     Dyson360JdmConsumable,
-    Dyson360JdmMsgBase
+    Dyson360JdmMsg
 } from './dyson-360-jdm-types.js';
 
 // =============================================================================
 // MQTT topic: <type>/<sn>/command/jdm
 
 // Dyson robot vacuum JDM command common fields
-export interface Dyson360JdmCommandBase extends Dyson360JdmMsgBase {
+export interface Dyson360JdmCommandBase extends Dyson360JdmMsg {
     version:                Dyson360JdmVersion;
     time?:                  string;                         // ISO datetime (from third-party integrations only?)
 }

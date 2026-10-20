@@ -3,11 +3,8 @@
 
 import { AnsiLogger } from 'matterbridge/logger';
 import { Config } from './config-types.js';
-import { DysonMqtt, DysonMqttConfig } from './dyson-mqtt.js';
-import {
-    checkers as dysonMsgCheckers360,
-    TypeMap as DysonMsgMap360
-} from './ti/dyson-360-msg-types.js';
+import { DysonMqtt, DysonMqttConfig, DysonMsgAny } from './dyson-mqtt.js';
+import { checkers as dysonMsgCheckers360 } from './ti/dyson-360-msg-types.js';
 import { tryListener } from './utils.js';
 import {
     Dyson360MsgCurrentState,
@@ -24,24 +21,20 @@ import {
 import { DysonModeReason } from './dyson-types.js';
 import { DeviceConfigMqtt } from './dyson-mqtt-client-live.js';
 import NodePersist from 'node-persist';
-import { validateDysonMsgTypeSuite } from './dyson-mqtt-parse.js';
 
 // Configuration of a Dyson MQTT client for robot vacuums
-export const DYSON_MQTT_CONFIG_360: DysonMqttConfig<DysonMsgMap360> = {
+export const DYSON_MQTT_CONFIG_360: DysonMqttConfig<typeof dysonMsgCheckers360> = {
     topics: {
         command:    '@/@/command',
         subscribe: ['@/@/status'],
         other:     ['@/initialconnection/credentials',
                     '@/initialconnection/status']
     },
-    messages: {
-        prefix:     'Dyson360Msg',
-        checkers:   dysonMsgCheckers360
-    }
+    checkers: dysonMsgCheckers360
 };
 
-// Ensure that the type names all match their message names
-validateDysonMsgTypeSuite(DYSON_MQTT_CONFIG_360.messages);
+// Dyson robot vacuum MQTT messages
+export type DysonMqtt360Msg = DysonMsgAny<typeof dysonMsgCheckers360>;
 
 // Dyson robot vacuum status
 export type DysonMqttStatus360 =
@@ -52,7 +45,7 @@ export type DysonMqttStatus360 =
 export type DysonMqtt360Action = 'START' | 'PAUSE' | 'RESUME' | 'ABORT';
 
 // Dyson MQTT client for robot vacuums
-export class DysonMqtt360<E extends unknown[] = []> extends DysonMqtt<DysonMsgMap360, DysonMqttStatus360, E> {
+export class DysonMqtt360<E extends unknown[] = []> extends DysonMqtt<typeof dysonMsgCheckers360, DysonMqttStatus360, E> {
 
     // Construct a new MQTT client
     constructor(

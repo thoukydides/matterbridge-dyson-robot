@@ -8,7 +8,7 @@ export type Dyson360JdmVersion                  = '1.0.1';
 export const JDM_VERSION: Dyson360JdmVersion    = '1.0.1';
 
 // Dyson robot vacuum JDM messages require a method for validation
-export interface Dyson360JdmMsgBase {
+export interface Dyson360JdmMsg {
     msgId:                          string;     // 32-bit integer as string
     method?:                        string;
 }

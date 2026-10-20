@@ -4,17 +4,11 @@
 import { AnsiLogger } from 'matterbridge/logger';
 import { INSPECT_SINGLE_LINE, MM, MP, MR, RD, SR, ST } from './logger-options.js';
 import { Config } from './config-types.js';
-import { DistributiveOmit, MS, tryListener } from './utils.js';
+import { DistributiveOmit, MS, tryListener, ValueOf } from './utils.js';
 import EventEmitter from 'events';
 import { DysonMsg } from './dyson-types.js';
 import { checkers as dysonMsgCheckers } from './ti/dyson-types.js';
-import {
-    DysonMqttParserConfig,
-    DysonMsgAny,
-    dysonMqttParseJSON,
-    assertIsDysonMsg,
-    dysonMqttParseCBOR
-} from './dyson-mqtt-parse.js';
+import { dysonMqttParseJSON, dysonMqttParseCBOR } from './dyson-mqtt-parse.js';
 import {
     DysonMqttSubscribe,
     DysonMqttSubscribeConfig,
@@ -33,11 +27,17 @@ import { DysonMqttClientMock } from './dyson-mqtt-client-mock.js';
 import { DysonMqttClient } from './dyson-mqtt-client-base.js';
 import NodePersist from 'node-persist';
 import { DysonMqttCache } from './dyson-mqtt-cache.js';
+import { ICheckerSuite } from 'ts-interface-checker';
+import { TiSuiteTag, TiSuiteTypeFor } from './ti-tagged-utils.js';
+import { TiTaggedChecker } from './ti-tagged-checker.js';
+
+// Checker suites for MQTT messages
+export type DysonMqttTaggedChecker<T extends ICheckerSuite> = TiTaggedChecker<T, 'msg', DysonMsg>;
 
 // Configuration of a Dyson MQTT client
-export interface DysonMqttConfig<T> {
+export interface DysonMqttConfig<T extends ICheckerSuite> {
     topics:     DysonMqttSubscribeConfig;
-    messages:   DysonMqttParserConfig<T>;
+    checkers:   T;
 }
 
 // Status data, with device reachability
@@ -56,19 +56,20 @@ export interface DysonMqttEventMapBase {
     status:         [];                 // State updated (not necessarily changed)
     update:         [];                 // CURRENT-STATE/STATE-CHANGE update
 }
-export interface DysonMqttEventMap<T, E extends unknown[]> extends DysonMqttEventMapBase {
+export interface DysonMqttEventMap<T extends ICheckerSuite, E extends unknown[]> extends DysonMqttEventMapBase {
     message:        [DysonMsgAny<T>];   // MQTT message received and checked
     event:          E;                  // Additional event for derived classes
 }
 
+// Dyson MQTT message types
+export type DysonMsgAny<T extends ICheckerSuite> = TiSuiteTypeFor<T, 'msg'> & DysonMsg;
+
 // Tuple of parameters for publishing a message
-export type PublishArgs<T, O extends string> = {
-    [K in keyof T]: T[K] extends DysonMsg
-        ? (DistributiveOmit<T[K], O | 'msg'> extends Record<string, never>
-           ? [T[K]['msg']]
-           : [T[K]['msg'], DistributiveOmit<T[K], O | 'msg'>])
-        : never
-}[keyof T];
+export type PublishArgs<T extends ICheckerSuite> = ValueOf<{
+    [K in TiSuiteTag<T, 'msg'>]:
+        DistributiveOmit<TiSuiteTypeFor<T, 'msg', K>, 'msg' | 'time'> extends Record<string, never>
+        ? [K] : [K, DistributiveOmit<TiSuiteTypeFor<T, 'msg', K>, 'msg' | 'time'> ];
+}>;
 
 // Minimum disconnection time before indicating device not reachable
 const MIN_DOWN_TIME = 5 * MS; // 5 seconds
@@ -83,7 +84,7 @@ export interface DysonMqttLike extends EventEmitter {
 }
 
 // Dyson MQTT client for all device types
-export abstract class DysonMqtt<T, S, E extends unknown[] = []>
+export abstract class DysonMqtt<T extends ICheckerSuite, S, E extends unknown[] = []>
     extends AsyncEventEmitter<DysonMqttEventMap<T, E>> implements DysonMqttLike {
 
     // The MQTT client
@@ -92,6 +93,9 @@ export abstract class DysonMqtt<T, S, E extends unknown[] = []>
     private mqttSubscribe:  DysonMqttSubscribe;
     private mqttFilter:     DysonMqttFilter;
     private mqttCache:      DysonMqttCache<DysonMqttStatus<S>>;
+
+    // MQTT message checkers
+    private checkerSuite:   DysonMqttTaggedChecker<T>;
 
     // The current status
     readonly status = {
@@ -108,6 +112,9 @@ export abstract class DysonMqtt<T, S, E extends unknown[] = []>
         readonly mqttConfig:    DysonMqttConfig<T>
     ) {
         super({ captureRejections: true });
+
+        // Create the checker suite
+        this.checkerSuite = this.makeCheckerSuite(mqttConfig.checkers);
 
         // Create the MQTT client
         if ('password' in deviceConfig) {
@@ -138,8 +145,9 @@ export abstract class DysonMqtt<T, S, E extends unknown[] = []>
             // Check the received topic and attempt to parse as JSON
             const topicStatus = this.mqttSubscribe.checkTopic(topic);
             const normalise = topicStatus !== 'command';
-            const rawMsg = dysonMqttParseJSON(this.log, topic, normalise, payload);
-            const msg = dysonMqttParseCBOR(this.log, topic, normalise, rawMsg);
+            const context   = `MQTT topic '${topic}'`;
+            const rawMsg    = dysonMqttParseJSON(this.log, context, normalise, payload);
+            const msg       = dysonMqttParseCBOR(this.log, context, normalise, rawMsg);
             this.parseReceived(topic, topicStatus, msg);
         }));
 
@@ -236,7 +244,9 @@ export abstract class DysonMqtt<T, S, E extends unknown[] = []>
     // Parse a received message
     parseReceived(topic: string, topicStatus: DysonMqttTopic, msg: unknown): void {
         // Validate the received message
-        assertIsDysonMsg<T>(this.log, this.mqttConfig.messages, topic, msg);
+        const context = `MQTT topic '${topic}'`;
+        this.checkerSuite.assertIsTagged(context, msg);
+        this.checkerSuite.assertIsTag(context, msg);
         const filter = this.mqttFilter.filter(msg);
 
         // Dispatch the validated message and indicate a status update
@@ -249,7 +259,7 @@ export abstract class DysonMqtt<T, S, E extends unknown[] = []>
     }
 
     // Publish a command
-    async publish(...[msg, params]: PublishArgs<T, 'time'>): Promise<void> {
+    async publish(...[msg, params]: PublishArgs<T>): Promise<void> {
         // Construct the full message
         const time = new Date().toISOString();
         const fullMsg = { msg, ...params, time };
@@ -304,5 +314,18 @@ export abstract class DysonMqtt<T, S, E extends unknown[] = []>
             this.log.debug(filter ? `MQTT ${direction}: ${ST}${object}${SR} (${filter})`
                                   : `MQTT ${direction}: ${object} topic '${topic}'`);
         }
+    }
+
+    // Create checker suites
+    makeCheckerSuite(checkers: T): DysonMqttTaggedChecker<T> {
+        return new TiTaggedChecker(this.log, {
+            description:    'Dyson MQTT message',
+            checkerSuite:   checkers,
+            tagged: {
+                path:       'DysonMsg',
+                checker:    dysonMsgCheckers.DysonMsg,
+                key:        'msg'
+            }
+        });
     }
 }

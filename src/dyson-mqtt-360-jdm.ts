@@ -1,28 +1,24 @@
 // Matterbridge plugin for Dyson robot vacuum and air treatment devices
 // Copyright © 2026 Alexander Thoukydides
 
-import { AnsiLogger, LogLevel } from 'matterbridge/logger';
+import { AnsiLogger } from 'matterbridge/logger';
 import { DYSON_MQTT_CONFIG_360, DysonMqtt360 } from './dyson-mqtt-360.js';
 import { Config } from './config-types.js';
 import NodePersist from 'node-persist';
 import { DeviceConfigMqtt } from './dyson-mqtt-client-live.js';
 import { DysonMqttConfig } from './dyson-mqtt.js';
-import { TypeMap as DysonMsgMap360 } from './ti/dyson-360-msg-types.js';
-import {
-    checkers as dysonJdmCommandCheckers360,
-    TypeMap as Dyson360JdmCommandRawTypeMap
-} from './ti/dyson-360-jdm-command-types.js';
-import {
-    checkers as dysonJdmStatusCheckers360,
-    TypeMap as Dyson360JdmStatusRawTypeMap
-} from './ti/dyson-360-jdm-status-types.js';
+import { checkers as dysonMsgCheckers360 } from './ti/dyson-360-msg-types.js';
+import { checkers as dysonJdmCheckers360 } from './ti/dyson-360-jdm-types.js';
+import { checkers as dysonJdmPropsCheckers360 } from './ti/dyson-360-jdm-props-types.js';
+import { checkers as dysonJdmCommandCheckers360 } from './ti/dyson-360-jdm-command-types.js';
+import { checkers as dysonJdmStatusCheckers360 } from './ti/dyson-360-jdm-status-types.js';
 import { DysonMqttTopic } from './dyson-mqtt-subscribe.js';
-import { CheckerT, ICheckerSuite } from 'ts-interface-checker';
+import { ICheckerSuite } from 'ts-interface-checker';
 import {
-    logCheckerValidation,
-    validateDysonTypeSuiteCore
-} from './dyson-mqtt-parse.js';
-import { Dyson360JdmMsgBase, Dyson360JdmResponseCode, JDM_VERSION } from './dyson-360-jdm-types.js';
+    Dyson360JdmMsg,
+    Dyson360JdmResponseCode,
+    JDM_VERSION
+} from './dyson-360-jdm-types.js';
 import {
     Dyson360JdmProp,
     Dyson360JdmPropValues
@@ -31,9 +27,11 @@ import { formatList, MS, plural, tryListener } from './utils.js';
 import { Dyson360JdmMapStatus } from './dyson-360-jdm-status-types.js';
 import { DysonMqttFiltered } from './dyson-mqtt-filter.js';
 import { isDeepStrictEqual } from 'node:util';
+import { getTiStringUnion, TiSuiteTagType } from './ti-tagged-utils.js';
+import { assertWithChecker, TiTaggedChecker } from './ti-tagged-checker.js';
 
 // Add JDM topic subscriptions to MQTT configuration
-const DYSON_MQTT_CONFIG_360_JDM: DysonMqttConfig<DysonMsgMap360> = {
+const DYSON_MQTT_CONFIG_360_JDM: DysonMqttConfig<typeof dysonMsgCheckers360> = {
     ...DYSON_MQTT_CONFIG_360,
     topics: {
         ...DYSON_MQTT_CONFIG_360.topics,
@@ -49,68 +47,16 @@ const DYSON_MQTT_CONFIG_360_JDM: DysonMqttConfig<DysonMsgMap360> = {
     }
 };
 
-// All known properties (must match Dyson360JdmProp)
-const JDM_PROPS_ALL = [
-    'airdry_frequency',
-    'alarm',
-    'auto_water_complete_flag',
-    'auto_water_self_check',
-    'back_to_wash',
-    'back_wash_time',
-    'back_wash_type',
-    'charge_state',
-    'child_lock',
-    'clean_id',
-    'clean_wash_attachment',
-    'cleaning_area',
-    'cleaning_time',
-    'cur_path',
-    'current_map_id',
-    'detergent_consumed',
-    'detergent',
-    'dock_hypa',
-    'dust_action',
-    'dust_auto_state',
-    'empty_bin_time',
-    'empty_bin_type',
-    'fault',
-    'global_clean_status',
-    'hot_water_mop',
-    'hot_water_switch',
-    'hypa',
-    'ioniser',
-    'main_brush',
-    'mode',
-    'mop_life',
-    'mop_pad_life',
-    'oob_state',
-    'order_total',
-    'privacy',
-    'quantity',
-    'quiet_begin_time',
-    'quiet_end_time',
-    'quiet_is_open',
-    'robot_auto_updown_type',
-    'side_brush',
-    'station_act',
-    'status',
-    'store_demo_mode',
-    'sweep_type',
-    'taskBeginTs',
-    'voice_type',
-    'volume',
-    'wash_back_frequency',
-    'work_mode',
-    'work_time'
-] as const satisfies Dyson360JdmProp[];
+// All known properties
+const JDM_PROPS_ALL = getTiStringUnion(dysonJdmPropsCheckers360, 'Dyson360JdmProp') as Set<Dyson360JdmProp>;
 
-// Properties to never poll
-const JDM_PROPS_EXCLUDE: Dyson360JdmProp[] = [
+// Properties to poll once when (re)connected
+const JDM_PROPS_POLL_CONNECTED = JDM_PROPS_ALL.difference(new Set<Dyson360JdmProp>([
     'cur_path'          // Incrementally pushed (or request if required)
-];
+]));
 
-// Properties to only poll once when (re)connected
-const JDM_PROPS_ONCE: Dyson360JdmProp[] = [
+// Properties to poll periodically
+const JDM_PROPS_POLL_PERIODIC  = JDM_PROPS_POLL_CONNECTED.difference(new Set<Dyson360JdmProp>([
     // Values pushed when they change
     'back_to_wash',
     'charge_state',
@@ -134,25 +80,14 @@ const JDM_PROPS_ONCE: Dyson360JdmProp[] = [
 
     // Values that are only relevant to schedules
     'order_total'
-];
+]));
 
-// Sets of properties to poll
-const JDM_PROPS_POLL_CONNECTED = JDM_PROPS_ALL           .filter(prop => !JDM_PROPS_EXCLUDE.includes(prop));
-const JDM_PROPS_POLL_PERIODIC  = JDM_PROPS_POLL_CONNECTED.filter(prop => !JDM_PROPS_ONCE   .includes(prop));
-
-// Sanitised JDM command and status type maps
-type MessagesInTypeMap<T> = {
-    [K in keyof T as T[K] extends { method?: infer M } ? (string extends M ? never : K) : never]: T[K]
-};
-export type Dyson360JdmCommandTypeMap   = MessagesInTypeMap<Dyson360JdmCommandRawTypeMap>;
-export type Dyson360JdmStatusTypeMap    = MessagesInTypeMap<Dyson360JdmStatusRawTypeMap>;
+// Checker suites for JDM MQTT messages
+type DysonMqttJdmChecker<T extends ICheckerSuite> = TiTaggedChecker<T, 'method', Dyson360JdmMsg>;
 
 // Method name to message type maps
-type MessagesByMethod<T extends Record<string, { method?: string }>> = {
-    [K in keyof T as NonNullable<T[K]['method']>]: T[K];
-}
-export type Dyson360JdmCommandMap       = MessagesByMethod<Dyson360JdmCommandTypeMap>;
-export type Dyson360JdmStatusMap        = MessagesByMethod<Dyson360JdmStatusTypeMap>;
+export type Dyson360JdmCommandMap       = TiSuiteTagType<typeof dysonJdmCommandCheckers360, 'method'>;
+export type Dyson360JdmStatusMap        = TiSuiteTagType<typeof dysonJdmStatusCheckers360,  'method'>;
 
 // JDM command and status message methods
 export type Dyson360JdmCommandMethod    = keyof Dyson360JdmCommandMap;
@@ -164,7 +99,7 @@ export type Dyson360JdmResponseMethod   = Extract<Dyson360JdmStatusMethod, `serv
 export type Dyson360JdmCommand  <M extends Dyson360JdmCommandMethod = Dyson360JdmCommandMethod> = Dyson360JdmCommandMap[M];
 export type Dyson360JdmStatus   <M extends Dyson360JdmStatusMethod  = Dyson360JdmStatusMethod > = Dyson360JdmStatusMap [M];
 export type Dyson360JdmEvent    = Dyson360JdmStatus<Dyson360JdmEventMethod>;
-export type Dyson360JdmMsg      = Dyson360JdmCommand | Dyson360JdmStatus;
+export type Dyson360JdmAny      = Dyson360JdmCommand | Dyson360JdmStatus;
 
 // JDM response messages that actually include a data payload
 export type Dyson360JdmResponse<M extends Dyson360JdmResponseMethod = Dyson360JdmResponseMethod> = {
@@ -173,9 +108,8 @@ export type Dyson360JdmResponse<M extends Dyson360JdmResponseMethod = Dyson360Jd
 
 // Sanity check that the definitions are consistent
 type Equal<A, B> = [A] extends [B] ? ([B] extends [A] ? true : never) : never;
-const _PropTypesInSync:     Equal<Dyson360JdmProp, keyof Dyson360JdmPropValues> = true;
-const _PropValuesInSync:    Equal<Dyson360JdmProp, (typeof JDM_PROPS_ALL)[number]> = true;
-const _MethodsInSync:       Equal<Dyson360JdmCommandMethod, Dyson360JdmResponseMethod> = true;
+const _PropInSync:      Equal<Dyson360JdmProp, keyof Dyson360JdmPropValues> = true;
+const _MethodsInSync:   Equal<Dyson360JdmCommandMethod, Dyson360JdmResponseMethod> = true;
 
 // Events that can be emitted by the JDM MQTT client (using the 'event' event)
 export type DysonMqtt360JdmEventArgs =
@@ -194,7 +128,7 @@ const JDM_RECENT_MAX_AGE = 5 * 60 * MS;     // 5 minutes
 type JdmTopicType = 'command' | 'status';
 interface RecentJdmMsg {
     type:       JdmTopicType;
-    msg:        Dyson360JdmMsg;
+    msg:        Dyson360JdmAny;
     time:       number;
     received?:  boolean;
 }
@@ -202,11 +136,15 @@ interface RecentJdmMsg {
 // Dyson MQTT client for robot vacuums with JDM MQTT topics
 export class DysonMqtt360Jdm extends DysonMqtt360<DysonMqtt360JdmEventArgs> {
 
+    // Checker suites for JDM messages
+    readonly commandCheckers:   DysonMqttJdmChecker<typeof dysonJdmCommandCheckers360>;
+    readonly statusCheckers:    DysonMqttJdmChecker<typeof dysonJdmStatusCheckers360>;
+
     // Cache of robot properties
-    readonly jdmProps: Dyson360JdmPropValues = {};
+    readonly jdmProps:          Dyson360JdmPropValues = {};
 
     // Recent JDM messages for duplicate filtering
-    readonly jdmRecentMsgs: RecentJdmMsg[] = [];
+    readonly jdmRecentMsgs:     RecentJdmMsg[] = [];
 
     // Awaited JDM responses (keyed on MsgId)
     readonly jdmAwaitedResponses = new Map<string, (result: Dyson360JdmStatus | Error) => void>();
@@ -214,6 +152,10 @@ export class DysonMqtt360Jdm extends DysonMqtt360<DysonMqtt360JdmEventArgs> {
     // Construct a new MQTT client
     constructor(log: AnsiLogger, config: Config, persist: NodePersist.LocalStorage, device: DeviceConfigMqtt) {
         super(log, config, persist, device, DYSON_MQTT_CONFIG_360_JDM);
+
+        // Create the checker suites for JDM messages
+        this.commandCheckers    = this.makeJdmCheckerSuite(dysonJdmCommandCheckers360);
+        this.statusCheckers     = this.makeJdmCheckerSuite(dysonJdmStatusCheckers360);
 
         // Handle MQTT events
         this.on('subscribed', tryListener(this, async () => {
@@ -224,11 +166,11 @@ export class DysonMqtt360Jdm extends DysonMqtt360<DysonMqtt360JdmEventArgs> {
 
     // Parse a received message
     override parseReceived(topic: string, topicStatus: DysonMqttTopic, msg: unknown): void {
+        const context = `MQTT topic '${topic}'`;
         if (topic.endsWith('/command/jdm')) {
             // Validate a received JDM command
-            this.assertIsJdmType(dysonJdmCommandCheckers360, 'Dyson360JdmCommandBase', topic, msg, false);
-            this.assertIsJdmMsg<Dyson360JdmCommandTypeMap>(
-                dysonJdmCommandCheckers360, 'Dyson360JdmCommand', topic, msg);
+            this.commandCheckers.assertIsTagged(context, msg);
+            this.commandCheckers.assertIsTag(context, msg);
 
             // Filter, log, and emit an event for the validated command message
             const filter = this.filterJdmMsg('command', msg);
@@ -236,11 +178,11 @@ export class DysonMqtt360Jdm extends DysonMqtt360<DysonMqtt360JdmEventArgs> {
             if (!filter) this.emit('event', 'jdm_command', msg);
         } else if (topic.endsWith('/status/jdm')) {
             // Validate, log, and emit JDM status updates
-            this.assertIsJdmType(dysonJdmStatusCheckers360, 'Dyson360JdmStatusBase', topic, msg, false);
+            this.statusCheckers.assertIsTagged(context, msg);
             const settleAwaited = this.jdmAwaitedResponses.get(msg.msgId);
             try {
-                this.assertIsJdmMsg<Dyson360JdmStatusTypeMap>(
-                    dysonJdmStatusCheckers360, 'Dyson360JdmStatus', topic, msg);
+                const defaultMethod = msg.method ?? this.getJdmMethodFromMsgId(msg.msgId);
+                this.statusCheckers.assertIsTag(context, msg, defaultMethod);
 
                 // If this is a prop.get or prop.post then update cached properties
                 if (msg.method === 'prop.get')  this.updateJdmProps(msg.data);
@@ -264,7 +206,8 @@ export class DysonMqtt360Jdm extends DysonMqtt360<DysonMqtt360JdmEventArgs> {
             }
         } else if (topic.endsWith('/status/jdm/map')) {
             // Validate and log JDM map status updates
-            this.assertIsJdmType(dysonJdmStatusCheckers360, 'Dyson360JdmMapStatus', topic, msg);
+            assertWithChecker(this.log, context, 'Dyson JDM map status',
+                              dysonJdmStatusCheckers360.Dyson360JdmMapStatus, msg);
             this.logPayload('receive', topic, msg);
             this.emit('event', 'jdm_map_status', msg);
         } else {
@@ -279,53 +222,8 @@ export class DysonMqtt360Jdm extends DysonMqtt360<DysonMqtt360JdmEventArgs> {
         this.emit('event', 'jdm_props_updated');
     }
 
-    // Map a message method to its type name
-    assertIsJdmMsg<T extends Record<string, Dyson360JdmMsgBase>>(
-        checkers:   Record<keyof T, CheckerT<unknown>>,
-        prefix:     string,
-        topic:      string,
-        msg:        Dyson360JdmMsgBase
-    ): asserts msg is T[keyof T] {
-        // Attempt to determine the method for this message
-        const method = msg.method ?? this.getJdmMethodFromMsgId(msg.msgId);
-
-        // Construct the type name for this message
-        const msgPascalCase = methodToPascalCase(method);
-        const typeName = `${prefix}${msgPascalCase}`;
-        const assertIsTypeName: (name: string) => asserts name is Extract<keyof T, string> = (name): void => {
-            if (name in checkers) return;
-            logCheckerValidation(this.log, LogLevel.ERROR, topic, msg);
-            throw new Error(`Unrecognised JDM message method: ${name}`);
-        };
-        assertIsTypeName(typeName);
-
-        // Use the selected checker to validate the message
-        this.assertIsJdmType(checkers, typeName, topic, msg);
-    };
-
-    // Validate a message using a specific checker
-    assertIsJdmType<K extends string, T extends Record<K, CheckerT<unknown>>>(
-        checkers: T, typeName: K, topic: string, msg: unknown, strict = true
-    ): asserts msg is T[K] extends CheckerT<infer R> ? R : never {
-        // Select and prepare the checker
-        const checker = checkers[typeName];
-        checker.setReportedPath(typeName);
-
-        // Use the checker to validate the message
-        const validation = checker.validate(msg);
-        if (validation) {
-            logCheckerValidation(this.log, LogLevel.ERROR, topic, msg, validation);
-            throw new Error('Unexpected structure of JDM message');
-        }
-        const strictValidation = checker.strictValidate(msg);
-        if (strict && strictValidation) {
-            logCheckerValidation(this.log, LogLevel.WARN, topic, msg, strictValidation);
-            // (Continue processing messages that include unexpected properties)
-        }
-    }
-
     // Add a message to the recent history if not already included
-    getOrAddRecentJdmMsg(type: JdmTopicType, msg: Dyson360JdmMsg): RecentJdmMsg {
+    getOrAddRecentJdmMsg(type: JdmTopicType, msg: Dyson360JdmAny): RecentJdmMsg {
         // Prune old messages from the history
         const keepIndex = this.jdmRecentMsgs.findIndex(r => Date.now() <= r.time + JDM_RECENT_MAX_AGE);
         if (0 < keepIndex) this.jdmRecentMsgs.splice(0, keepIndex);
@@ -353,7 +251,7 @@ export class DysonMqtt360Jdm extends DysonMqtt360<DysonMqtt360JdmEventArgs> {
     }
 
     // Filter duplicate messages
-    filterJdmMsg(type: JdmTopicType, msg: Dyson360JdmMsg): DysonMqttFiltered | undefined {
+    filterJdmMsg(type: JdmTopicType, msg: Dyson360JdmAny): DysonMqttFiltered | undefined {
         const recent = this.getOrAddRecentJdmMsg(type, msg);
         if (recent.received) return 'duplicate';
         recent.received = true;
@@ -392,9 +290,9 @@ export class DysonMqtt360Jdm extends DysonMqtt360<DysonMqtt360JdmEventArgs> {
     }
 
     // Retrieve current property values (updating cached values from result)
-    async getJdmProps(props: Dyson360JdmProp[] = JDM_PROPS_POLL_PERIODIC): Promise<Dyson360JdmPropValues> {
+    async getJdmProps(props: Set<Dyson360JdmProp> = JDM_PROPS_POLL_PERIODIC): Promise<Dyson360JdmPropValues> {
         // Request the specified properties and verify they were returned
-        const property = [...new Set(props)].sort();
+        const property = [...props].sort();
         const response = await this.jdmCommand('prop.get', { property });
         // (Cached values are updated via parseReceived and updateJdmProps)
         const missing = property.filter(prop => response.data[prop] === undefined);
@@ -464,24 +362,22 @@ export class DysonMqtt360Jdm extends DysonMqtt360<DysonMqtt360JdmEventArgs> {
         promise.catch(() => undefined); // (prevent unhandled rejection)
         return promise;
     }
-}
 
-// Ensure that the type names all match their method names
-validateDysonJdmTypeSuite(dysonJdmCommandCheckers360,  'Dyson360JdmCommand');
-validateDysonJdmTypeSuite(dysonJdmStatusCheckers360,   'Dyson360JdmStatus');
-function validateDysonJdmTypeSuite(suite: ICheckerSuite, prefix: string): void {
-    const makeTypename = (method: string) => `${prefix}${methodToPascalCase(method)}`;
-    validateDysonTypeSuiteCore(suite, 'method', makeTypename);
+    // Create checker suites
+    makeJdmCheckerSuite<T extends ICheckerSuite>(checkers: T): DysonMqttJdmChecker<T> {
+        return new TiTaggedChecker(this.log, {
+            description:    'Dyson MQTT JDM message',
+            checkerSuite:   checkers,
+            tagged: {
+                path:       'DysonJdmMsg',
+                checker:    dysonJdmCheckers360.Dyson360JdmMsg,
+                key:        'method'
+            }
+        });
+    }
 }
 
 // Is a status message an event
 function isJdmEvent(msg: Dyson360JdmStatus): msg is Dyson360JdmEvent {
     return msg.method?.startsWith('event.') ?? false;
-}
-
-// Convert a string from Heterogeneous casing to PascalCase
-function methodToPascalCase(str: string): string {
-    return str
-        .replace(/(?<![A-Za-z0-9])([a-z])/g, (_, letter: string) => letter.toUpperCase())
-        .replace(/[^A-Za-z0-9]/g, '');
 }

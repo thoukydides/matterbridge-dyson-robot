@@ -11,7 +11,7 @@ import {
     Dyson360JdmMapChange,
     Dyson360JdmMapChangeResult,
     Dyson360JdmMapListItem,
-    Dyson360JdmMsgBase,
+    Dyson360JdmMsg,
     Dyson360JdmPreferMode,
     Dyson360JdmResponseCode,
     Dyson360JdmResponseResult,
@@ -24,7 +24,7 @@ import {
 // MQTT topic: <type>/<sn>/status/jdm
 
 // Dyson robot vacuum JDM status common fields
-export interface Dyson360JdmStatusBase extends Dyson360JdmMsgBase {
+export interface Dyson360JdmStatusBase extends Dyson360JdmMsg {
     code?:                  Dyson360JdmResponseCode;
 }
 
@@ -122,46 +122,42 @@ export type Dyson360JdmDataFail =       { result:   Dyson360JdmResponseResult.Fa
 export interface Dyson360JdmDataSuccess { result?:  Dyson360JdmResponseResult.Success }
 
 // Responses without additional data
-export interface JdmStatusNoDataBase extends Dyson360JdmStatusBase {
+export interface Dyson360JdmStatusServiceNoData extends Dyson360JdmStatusBase {
+    method?:                'service.add_order'                     // Schedule created or modified
+                          | 'service.del_map'                       // Map deleted
+                          | 'service.del_order'                     // Schedule deleted
+                          | 'service.delete_room'                   // Zone deleted
+                          | 'service.erase_preference'              // Per-zone cleaning configuration deleted
+                          | 'service.find_device'                   // Tone played
+                          | 'service.rename_map'                    // Map renamed
+                          | 'service.reset_consumable'              // Consumable counter reset
+                          | 'service.set_areas_start'               // spotZoneConfigured clean configured (but not started)
+                          | 'service.set_cur_map'                   // Active map changed (duplicates data.result key)
+                          | 'service.set_preference'                // Per-zone cleaning configuration changed
+                          | 'service.set_preference_type'           // Per-zone cleaning configuration type changed
+                          | 'service.set_robot_time_zone'           // Timezone set (for schedules)
+                          | 'service.set_room_clean'                // Cleaning started or paused
+                          | 'service.start_explore'                 // Mapping started
+                          | 'service.start_recharge'                // Aborting an returning to dock
+                          | 'service.start_station_act'             // Starting or aborting dock action
+                          | 'service.stop_recharge'                 // Cancelled returning to dock
+                            // Placeholders for responses with unknown additional data
+                          | 'service.download_voice_type'           // = SET-VOICE-LANGUAGE
+                          | 'service.get_voice_download'            // = REQUEST-VOICE-DOWNLOAD-STATUS
     data:                   Dyson360JdmDataFail | Dyson360JdmDataSuccess;
 }
-/* eslint-disable max-len */
-export interface Dyson360JdmStatusServiceAddOrder           extends JdmStatusNoDataBase { method?: 'service.add_order';             } // Schedule created or modified
-export interface Dyson360JdmStatusServiceDelMap             extends JdmStatusNoDataBase { method?: 'service.del_map';               } // Map deleted
-export interface Dyson360JdmStatusServiceDelOrder           extends JdmStatusNoDataBase { method?: 'service.del_order';             } // Schedule deleted
-export interface Dyson360JdmStatusServiceDeleteRoom         extends JdmStatusNoDataBase { method?: 'service.delete_room';           } // Zone deleted
-export interface Dyson360JdmStatusServiceErasePreference    extends JdmStatusNoDataBase { method?: 'service.erase_preference';      } // Per-zone cleaning configuration deleted
-export interface Dyson360JdmStatusServiceFindDevice         extends JdmStatusNoDataBase { method?: 'service.find_device';           } // Tone played
-export interface Dyson360JdmStatusServiceRenameMap          extends JdmStatusNoDataBase { method?: 'service.rename_map';            } // Map renamed
-export interface Dyson360JdmStatusServiceResetConsumable    extends JdmStatusNoDataBase { method?: 'service.reset_consumable';      } // Consumable counter reset
-export interface Dyson360JdmStatusServiceSetAreasStart      extends JdmStatusNoDataBase { method?: 'service.set_areas_start';       } // spotZoneConfigured clean configured (but not started); returns code = data.result = 1?
-export interface Dyson360JdmStatusServiceSetCurMap          extends JdmStatusNoDataBase { method?: 'service.set_cur_map';           } // Active map changed (duplicates data.result key)
-export interface Dyson360JdmStatusServiceSetPreference      extends JdmStatusNoDataBase { method?: 'service.set_preference';        } // Per-zone cleaning configuration changed
-export interface Dyson360JdmStatusServiceSetPreferenceType  extends JdmStatusNoDataBase { method?: 'service.set_preference_type';   } // Per-zone cleaning configuration type changed
-export interface Dyson360JdmStatusServiceSetRobotTimeZone   extends JdmStatusNoDataBase { method?: 'service.set_robot_time_zone';   } // Timezone set (for schedules)
-export interface Dyson360JdmStatusServiceSetRoomClean       extends JdmStatusNoDataBase { method?: 'service.set_room_clean';        } // Cleaning started or paused
-export interface Dyson360JdmStatusServiceStartExplore       extends JdmStatusNoDataBase { method?: 'service.start_explore';         } // Mapping started
-export interface Dyson360JdmStatusServiceStartRecharge      extends JdmStatusNoDataBase { method?: 'service.start_recharge';        } // Aborting an returning to dock
-export interface Dyson360JdmStatusServiceStartStationAct    extends JdmStatusNoDataBase { method?: 'service.start_station_act';     } // Starting or aborting dock action; returns code = data.result = 1?
-export interface Dyson360JdmStatusServiceStopRecharge       extends JdmStatusNoDataBase { method?: 'service.stop_recharge';         } // Cancelled returning to dock
-// Placeholders for responses with unknown additional data
-export interface Dyson360JdmStatusServiceDownloadVoiceType  extends JdmStatusNoDataBase { method?: 'service.download_voice_type';   } // = SET-VOICE-LANGUAGE
-export interface Dyson360JdmStatusServiceGetVoiceDownload   extends JdmStatusNoDataBase { method?: 'service.get_voice_download';    } // = REQUEST-VOICE-DOWNLOAD-STATUS
-/* eslint-enable max-len */
 
 // Responses returning modified map details (data.result may be omitted success)
-export interface JdmStatusMapDataBase extends Dyson360JdmStatusBase {
+export interface Dyson360JdmStatusServiceMapEdited extends Dyson360JdmStatusBase {
+    method?:                'service.adjust_furniture'              // Furniture has been replaced on active map
+                          | 'service.arrange_room'                  // Zones have been merged
+                          | 'service.rename_room'                   // Zone has been renamed
+                          | 'service.set_virtual_wall'              // Restrictions have been replaced on active map (duplicates data keys)
+                          | 'service.split_room';                   // Zone has been split into two zones
     data:                   Dyson360JdmDataFail | Dyson360JdmMapChange & {
         result?:            Dyson360JdmResponseResult;
     };
 }
-/* eslint-disable max-len */
-export interface Dyson360JdmStatusServiceAdjustFurniture    extends JdmStatusMapDataBase { method?: 'service.adjust_furniture';     } // Furniture has been replaced on active map
-export interface Dyson360JdmStatusServiceArrangeRoom        extends JdmStatusMapDataBase { method?: 'service.arrange_room';         } // Zones have been merged
-export interface Dyson360JdmStatusServiceRenameRoom         extends JdmStatusMapDataBase { method?: 'service.rename_room';          } // Zone has been renamed
-export interface Dyson360JdmStatusServiceSetVirtualWall     extends JdmStatusMapDataBase { method?: 'service.set_virtual_wall';     } // Restrictions have been replaced on active map (duplicates data keys)
-export interface Dyson360JdmStatusServiceSplitRoom          extends JdmStatusMapDataBase { method?: 'service.split_room';           } // Zone has been split into two zones
-/* eslint-enable max-len */
 
 // Current cleaning path
 export interface Dyson360JdmStatusServiceGetCurPath extends Dyson360JdmStatusBase {

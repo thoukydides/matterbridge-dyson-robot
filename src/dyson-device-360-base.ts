@@ -6,7 +6,7 @@ import {
     DysonDeviceConstructorParams,
     DysonEntityDescription
 } from './dyson-device-base.js';
-import { DysonMqtt360, DysonMqttStatus360 } from './dyson-mqtt-360.js';
+import { DysonMqtt360, DysonMqtt360Msg, DysonMqttStatus360 } from './dyson-mqtt-360.js';
 import { EntityName } from './config-types.js';
 import {
     assertIsDefined,
@@ -46,8 +46,6 @@ import {
 import { EndpointBase } from './endpoint-base.js';
 import { MaybePromise, VendorId } from 'matterbridge/matter';
 import { setTimeout } from 'node:timers/promises';
-import { DysonMsgAny } from './dyson-mqtt-parse.js';
-import { TypeMap as DysonMsgMap360 } from './ti/dyson-360-msg-types.js';
 
 // Details of a completed clean
 export interface Dyson360CleanSummary {
@@ -141,7 +139,7 @@ export abstract class DysonDevice360Base<T extends DysonMqtt360 = DysonMqtt360>
     // The MQTT client and status update listener
     static readonly mqttConstructor = DysonMqtt360;
     mqttStatusListener:     () => void;
-    mqttMessageListener:    (msg: DysonMsgAny<DysonMsgMap360>) => void;
+    mqttMessageListener:    (msg: DysonMqtt360Msg) => void;
 
     // The RVC device endpoint
     endpoint?:              Endpoint360;
@@ -250,7 +248,7 @@ export abstract class DysonDevice360Base<T extends DysonMqtt360 = DysonMqtt360>
     abstract getCurrentPowerLevel(): Dyson360PowerLevel | undefined;
 
     // Handle a received MQTT message
-    async mqttMessageReceived(msg: DysonMsgAny<DysonMsgMap360>): Promise<void> {
+    async mqttMessageReceived(msg: DysonMqtt360Msg): Promise<void> {
         switch (msg.msg) {
         case 'MAP-UPLOAD-STATUS':
             // Spot+Scrub Ai doesn't provide cleanId in its normal status

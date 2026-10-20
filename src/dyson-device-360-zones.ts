@@ -24,8 +24,7 @@ import {
     Dyson360PersistentMapMetadataV2
 } from './dyson-360-cloud-types.js';
 import { RvcRunMode360 } from './endpoint-360-behavior.js';
-import { DysonMsgAny } from './dyson-mqtt-parse.js';
-import { TypeMap as DysonMsgMap360 } from './ti/dyson-360-msg-types.js';
+import { DysonMqtt360Msg } from './dyson-mqtt-360.js';
 
 // Mapping of Dyson area icons/names to Matter common areas
 type LocationType = number | null;
@@ -144,7 +143,7 @@ export function DysonDevice360ZonesMixin<TBase extends AbstractConstructor<Dyson
         }
 
         // Handle a received MQTT message
-        async mqttMessageReceived(msg: DysonMsgAny<DysonMsgMap360>): Promise<void> {
+        async mqttMessageReceived(msg: DysonMqtt360Msg): Promise<void> {
             switch (msg.msg) {
             case 'PERSISTENT-MAP-MANIFEST-UPDATED':
                 // Force a map refresh after they have been updated
