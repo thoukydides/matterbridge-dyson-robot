@@ -479,7 +479,8 @@ All notable changes to this project will be documented in this file.
 
 Copyright © 2025-2026 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.12.5...HEAD
+[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.13.0...HEAD
+[v1.13.0]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.12.5...v1.13.0
 [v1.12.5]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.12.4...v1.12.5
 [v1.12.4]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.12.3...v1.12.4
 [v1.12.3]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.12.2...v1.12.3
