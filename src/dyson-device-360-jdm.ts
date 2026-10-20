@@ -18,7 +18,7 @@ import {
     Dyson360PersistentMapMetadataV2
 } from './dyson-360-cloud-types.js';
 import { DysonMqttStatus360 } from './dyson-mqtt-360.js';
-import { assertIsDefined, formatList, MS, plural, tryListener } from './utils.js';
+import { assertIsDefined, formatList, formatMilliseconds, MS, plural, tryListener } from './utils.js';
 import { DysonDeviceConstructorParams } from './dyson-device-base.js';
 import { DysonMqttStatus } from './dyson-mqtt.js';
 import { PeriodicOp } from './periodic-op.js';
@@ -33,6 +33,9 @@ import { Dyson360JdmPropValues } from './dyson-360-jdm-props-types.js';
 const POLL_STATUS_MS                =  30 * MS; // 30 seconds
 const POLL_STATUS_RAPID_MS          =   1 * MS; //  1 second
 const POLL_LIVE_MAPS_CLEANING_MS    = 3.5 * MS; // 3½ seconds
+
+// Delay transitions to INACTIVE_* to mask incorrect state reports
+const MASK_INACTIVE_TRANSITION_MS   =   2 * MS; //  2 seconds
 
 // Common base class for Dyson post-360 robot vacuum devices (excluding mop)
 export abstract class DysonDevice360JdmBase extends DysonDevice360ZonesMixin(DysonDevice360Base<DysonMqtt360Jdm>) {
@@ -64,6 +67,9 @@ export abstract class DysonDevice360JdmBase extends DysonDevice360ZonesMixin(Dys
     // Polled updates
     pollStatus:     PeriodicOp;
     pollCleaning:   PeriodicOp;
+
+    // Transition to inactive debouncing
+    inactiveStart:  number | undefined = 0;
 
     // Construct a new Dyson device instance
     constructor(...args: DysonDeviceConstructorParams<DysonMqtt360Jdm>) {
@@ -120,6 +126,19 @@ export abstract class DysonDevice360JdmBase extends DysonDevice360ZonesMixin(Dys
 
     // Update cluster attributes when the MQTT status is updated
     override async updateClusterAttributes(status: DysonMqttStatus<DysonMqttStatus360>): Promise<void> {
+        // Suppress INACTIVE_DISCHARGING state between mop wash and clean start
+        if (status.state.startsWith('INACTIVE_')) {
+            this.inactiveStart ??= Date.now();
+            const remainingDelay = this.inactiveStart + MASK_INACTIVE_TRANSITION_MS - Date.now();
+            if (0 < remainingDelay) {
+                this.log.info(`Delaying transition to ${status.state} for ${formatMilliseconds(remainingDelay)}`);
+                return;
+            }
+        } else if (status.state.startsWith('FULL_CLEAN_')) {
+            this.inactiveStart = undefined;
+        }
+
+        // Update the standard clusters
         await super.updateClusterAttributes(status);
 
         // Start or stop live map polling when cleaning
