@@ -297,7 +297,7 @@ export class DysonMqtt360Jdm extends DysonMqtt360<DysonMqtt360JdmEventArgs> {
         // (Cached values are updated via parseReceived and updateJdmProps)
         const missing = property.filter(prop => response.data[prop] === undefined);
         if (missing.length) {
-            throw new Error(`Failed to get ${plural(missing.length, 'JDM property')}: ${formatList(missing)}`);
+            this.log.debug(`Failed to get ${plural(missing.length, 'JDM property')}: ${formatList(missing)}`);
         }
         return response.data;
     }
