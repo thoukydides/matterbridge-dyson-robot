@@ -75,8 +75,12 @@ export enum Dyson360RouteUpdate {
 export interface Dyson360PointPath extends Dyson360Point {
     update:                             Dyson360RouteUpdate;
 }
-export interface Dyson360PointRobot extends Dyson360PointRotated {
+export interface Dyson360RobotLocation extends Dyson360PointRotated {
     id:                                 string;         // Incrementing index as string
+    update:                             Dyson360RouteUpdate;
+}
+export interface Dyson360RobotGlobalPosition extends Dyson360PointRotated {
+    id:                                 number;         // Incrementing index
     update:                             Dyson360RouteUpdate;
 }
 

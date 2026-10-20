@@ -22,7 +22,7 @@ import {
     Dyson360PointRotated,
     Dyson360PointUnrotated,
     Dyson360PointPath,
-    Dyson360PointRobot,
+    Dyson360RobotLocation,
     Dyson360DirtType
 } from './dyson-360-types.js';
 import {
@@ -245,7 +245,7 @@ export interface Dyson360LiveMapCleaningResponseV1 {
     obstacles:                          Dyson360Point[];
     orientation:                        number;
     restrictions:                       Dyson360PersistentMapRestrictionV2[];
-    robotLocation:                      Dyson360PointRobot;
+    robotLocation:                      Dyson360RobotLocation;
     spotZones:                          [];
     swingDoors:                         [];
     taskBeginTime:                      number;             // seconds since epoch
@@ -258,7 +258,7 @@ export interface Dyson360LiveMapMappingResponseV1 {
     dockLocation:                       Dyson360PointRotated;
     mapData:                            number[];
     orientation:                        number;
-    robotLocation:                      Dyson360PointRobot;
+    robotLocation:                      Dyson360RobotLocation;
     taskBeginTime:                      number;             // milliseconds since epoch
 }
 

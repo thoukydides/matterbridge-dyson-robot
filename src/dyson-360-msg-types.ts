@@ -23,11 +23,11 @@ import {
     Dyson360State,
     Dyson360ZoneStatus,
     Dyson360Coordinate,
-    Dyson360PointRobot,
     Dyson360CleaningProgrammeSpot,
     Dyson360CleaningProgrammeZones,
     Dyson360CleaningProgrammeGlobal,
-    Dyson360VoiceDownloadStatus
+    Dyson360VoiceDownloadStatus,
+    Dyson360RobotGlobalPosition
 } from './dyson-360-types.js';
 import { DysonMsgCommand, DysonMsg } from './dyson-types.js';
 
@@ -96,7 +96,7 @@ export interface Dyson360MsgImBack extends DysonMsg {
 
 export interface Dyson360MsgCurrentStatePosition extends DysonMsg {
     msg:                                'CURRENT-STATE';
-    globalPosition:                     Dyson360PointRobot[];
+    globalPosition:                     Dyson360RobotGlobalPosition[];
 }
 export interface Dyson360MsgCurrentStateState extends DysonMsg {
     msg:                                'CURRENT-STATE';
