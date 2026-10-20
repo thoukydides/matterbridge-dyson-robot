@@ -191,8 +191,17 @@ export class DysonMqtt360Jdm extends DysonMqtt360<DysonMqtt360JdmEventArgs> {
 
     // Update cached properties and emit an event
     updateJdmProps(newProps: Dyson360JdmPropValues): void {
+        // Update the cached values
         Object.assign(this.jdmProps, newProps);
         this.emit('event', 'jdm_props_updated');
+
+        // If interesting values were provided then update the main status too
+        let statusUpdated = false;
+        if (typeof newProps.quantity === 'number') {
+            this.status.batteryChargeLevel = newProps.quantity;
+            statusUpdated = true;
+        }
+        if (statusUpdated) this.emit('update');
     }
 
     // Add a message to the recent history if not already included
