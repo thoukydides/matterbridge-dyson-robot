@@ -141,7 +141,7 @@ export enum Dyson360JdmConsumable {
     // CleaningSolution                = ?
     // DockFilter                      = ?,    // prop dock_hypa
     // IoniserCartridge                = ?,    // prop ioniser
-    // MopPad                          = ?,    // prop mop_life
+    // MopPad                          = ?,    // prop mop_pad_life
 }
 
 // Dyson robot vacuum JDM action during a clean (no REST API equivalent)
