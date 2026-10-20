@@ -24,7 +24,9 @@ import {
 // MQTT topic: <type>/<sn>/status/jdm
 
 // Dyson robot vacuum JDM status common fields
-export type Dyson360JdmStatusBase = Dyson360JdmMsgBase;
+export interface Dyson360JdmStatusBase extends Dyson360JdmMsgBase {
+    code?:                  Dyson360JdmResponseCode;
+}
 
 // -----------------------------------------------------------------------------
 // Events: event.*
@@ -95,7 +97,6 @@ export interface Dyson360JdmStatusEventUnableAllAreaRechargePost extends Dyson36
 // Requested property values (all requested properties returned)
 export interface Dyson360JdmStatusPropGet extends Dyson360JdmStatusBase {
     method:                 'prop.get';
-    code?:                  Dyson360JdmResponseCode;                // (1 indicates some values null)
     data:                   Dyson360JdmPropValues;
 }
 
@@ -108,7 +109,6 @@ export interface Dyson360JdmStatusPropPost extends Dyson360JdmStatusBase {
 // Result of setting property values
 export interface Dyson360JdmStatusPropSet extends Dyson360JdmStatusBase {
     method:                 'prop.set';
-    code?:                  Dyson360JdmResponseCode;
     data?: {
         property:           Dyson360JdmPropResult[];
     }
@@ -118,14 +118,11 @@ export interface Dyson360JdmStatusPropSet extends Dyson360JdmStatusBase {
 // Other command responses: service.*
 
 // Service method responses can indicate failure as either code=1 or data.result=1
-export interface Dyson360JdmStatusServiceBase extends Dyson360JdmStatusBase {
-    code?:                  Dyson360JdmResponseCode;
-}
 export type Dyson360JdmDataFail =       { result:   Dyson360JdmResponseResult.Failure } | undefined;
 export interface Dyson360JdmDataSuccess { result?:  Dyson360JdmResponseResult.Success }
 
 // Responses without additional data
-export interface JdmStatusNoDataBase extends Dyson360JdmStatusServiceBase {
+export interface JdmStatusNoDataBase extends Dyson360JdmStatusBase {
     data:                   Dyson360JdmDataFail | Dyson360JdmDataSuccess;
 }
 /* eslint-disable max-len */
@@ -153,7 +150,7 @@ export interface Dyson360JdmStatusServiceGetVoiceDownload   extends JdmStatusNoD
 /* eslint-enable max-len */
 
 // Responses returning modified map details (data.result may be omitted success)
-export interface JdmStatusMapDataBase extends Dyson360JdmStatusServiceBase {
+export interface JdmStatusMapDataBase extends Dyson360JdmStatusBase {
     data:                   Dyson360JdmDataFail | Dyson360JdmMapChange & {
         result?:            Dyson360JdmResponseResult;
     };
@@ -167,7 +164,7 @@ export interface Dyson360JdmStatusServiceSplitRoom          extends JdmStatusMap
 /* eslint-enable max-len */
 
 // Current cleaning path
-export interface Dyson360JdmStatusServiceGetCurPath extends Dyson360JdmStatusServiceBase {
+export interface Dyson360JdmStatusServiceGetCurPath extends Dyson360JdmStatusBase {
     method?:                'service.get_cur_path'
     data:                   Dyson360JdmDataFail | Dyson360JdmDataSuccess & {
         cur_path:           number[];                               // (see cur_path property)
@@ -175,7 +172,7 @@ export interface Dyson360JdmStatusServiceGetCurPath extends Dyson360JdmStatusSer
 }
 
 // List of all maps
-export interface Dyson360JdmStatusServiceGetMapList extends Dyson360JdmStatusServiceBase {
+export interface Dyson360JdmStatusServiceGetMapList extends Dyson360JdmStatusBase {
     method?:                'service.get_map_list'
     data:                   Dyson360JdmDataFail | Dyson360JdmDataSuccess & {
         map_list:           Dyson360JdmMapListItem[];
@@ -183,7 +180,7 @@ export interface Dyson360JdmStatusServiceGetMapList extends Dyson360JdmStatusSer
 }
 
 // Signature of schedules
-export interface Dyson360JdmStatusServiceGetOrder extends Dyson360JdmStatusServiceBase {
+export interface Dyson360JdmStatusServiceGetOrder extends Dyson360JdmStatusBase {
     method?:                'service.get_order'
     data:                   Dyson360JdmDataFail | Dyson360JdmDataSuccess & {
         order_data_lite: {
@@ -196,7 +193,7 @@ export interface Dyson360JdmStatusServiceGetOrder extends Dyson360JdmStatusServi
 }
 
 // Per-zone cleaning configuration
-export interface Dyson360JdmStatusServiceGetPreference extends Dyson360JdmStatusServiceBase {
+export interface Dyson360JdmStatusServiceGetPreference extends Dyson360JdmStatusBase {
     method?:                'service.get_preference'
     data:                   Dyson360JdmDataFail | Dyson360JdmDataSuccess & {
         room?:              Dyson360JdmRoomPreference[];

@@ -28,6 +28,7 @@ export interface Dyson360JdmPropValues {
     back_wash_type?:            Dyson360JdmBackWashType;        // = backWashType
     charge_state?:              Dyson360JdmBoolean;             // On dock charging contacts
     child_lock?:                Dyson360JdmBoolean;             // = childLock
+    clean_id?:                  string;                         // = cleanId
     clean_wash_attachment?:     null;                           // ?
     cleaning_area?:             number;                         // Area cleaned                                 dm²
     cleaning_time?:             number;                         // = cleanDuration                              (but minutes, not seconds)
@@ -47,6 +48,7 @@ export interface Dyson360JdmPropValues {
     hypa?:                      number;                         // = consumables[{ type: 'robotFilter' }]       (% used?, absent = -1)
     ioniser?:                   number;                         // = consumables[{ type: 'ioniserCartridge' }]  (% used?, absent = -1)
     main_brush?:                number;                         // = consumables[{ type: 'brushBar' }]          (% used?, absent = -1)
+    mode?:                      0 | 1;                          // ?
     mop_life?:                  number;                         // = consumables[{ type: 'mopRoller' }]         (% used?, absent = -1)
     mop_pad_life?:              number | null;                  // = consumables[{ type: 'mopPad' }]            (% used?, absent = -1)
     oob_state?:                 Dyson360JdmOutOfBoxState;       // = outOfBoxState
@@ -62,7 +64,7 @@ export interface Dyson360JdmPropValues {
     status?:                    Dyson360JdmStatusValue;         // ≈ state (secondary signal; use work_mode)
     store_demo_mode?:           Dyson360JdmBoolean | null;      // ?
     sweep_type?:                Dyson360JdmSweepType;           // ?
-    taskBeginTs?:               null;                           // ?
+    taskBeginTs?:               number | null;                  // = taskBeginTime                              (seconds since epoch)
     voice_type?:                Dyson360JdmLanguage;            // = voiceLanguage
     volume?:                    number;                         // = volume                                     0-100%
     wash_back_frequency?:       number;                         // = backWashFrequency
@@ -81,6 +83,7 @@ export type Dyson360JdmProp = // keyof Dyson360JdmPropValues
   | 'back_wash_type'
   | 'charge_state'
   | 'child_lock'
+  | 'clean_id'
   | 'clean_wash_attachment'
   | 'cleaning_area'
   | 'cleaning_time'
@@ -100,6 +103,7 @@ export type Dyson360JdmProp = // keyof Dyson360JdmPropValues
   | 'hypa'
   | 'ioniser'
   | 'main_brush'
+  | 'mode'
   | 'mop_life'
   | 'mop_pad_life'
   | 'oob_state'

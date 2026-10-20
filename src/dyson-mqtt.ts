@@ -262,7 +262,7 @@ export abstract class DysonMqtt<T, S, E extends unknown[] = []>
     }
 
     // Publish on a command subtopic
-    async publishTo(subtopic: `/${string}`, msg: unknown): Promise<void> {
+    async publishTo(subtopic: `/${string}`, msg: object): Promise<void> {
         const payload = JSON.stringify(msg);
         const topic = this.mqttSubscribe.commandTopic + subtopic;
         this.logPayload('publish', topic, msg);

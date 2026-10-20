@@ -74,21 +74,22 @@ export enum Dyson360JdmPreferMode {
 
 // Dyson robot vacuum JDM language (REST API uses locale code)
 export enum Dyson360JdmLanguage {
-    SimplifiedChinese               = 0,    // zh-CN
-    SimplifiedChineseAlternate      = 1,    // zh-CN / zh-SG
-    AmericanEnglish                 = 2,    // en-US
+    ChineseSimplified               = 0,    // zh-CN
+    ChineseSimplifiedAlternate      = 1,    // zh-CN / zh-SG
+    EnglishAmerican                 = 2,    // en-US
     Spanish                         = 3,    // es-ES / es-US
     German                          = 4,    // de-DE
     French                          = 5,    // fr-FR
     Polish                          = 6,    // pl-PL
     Italian                         = 7,    // it-IT
     Russian                         = 8,    // ru-RU
-    TraditionalChineseHongKong      = 9,    // zh-HK
+    ChineseTraditionalHongKong      = 9,    // zh-HK
     Thai                            = 10,   // th-TH
     Korean                          = 11,   // ko-KR
-    BritishEnglish                  = 12,   // en-GB
+    EnglishBritish                  = 12,   // en-GB
     Portuguese                      = 13,   // pt-PT / pt-BR
-    TraditionalChineseTaiwan        = 14    // zh-TW
+    ChineseTraditionalTaiwan        = 14,   // zh-TW
+    FrenchCanadian                  = 36    // fr-CA
 }
 
 // Dyson robot vacuum JDM initial setup state
@@ -168,6 +169,7 @@ export enum Dyson360JdmStatusValue {
     WashingFinished                 = 7,
     WashingOnDock                   = 9,
     DryingOnDock                    = 10,
+    Unknown11                       = 11,
     Unknown12                       = 12
 }
 

@@ -60,6 +60,7 @@ const JDM_PROPS_ALL = [
     'back_wash_type',
     'charge_state',
     'child_lock',
+    'clean_id',
     'clean_wash_attachment',
     'cleaning_area',
     'cleaning_time',
@@ -79,6 +80,7 @@ const JDM_PROPS_ALL = [
     'hypa',
     'ioniser',
     'main_brush',
+    'mode',
     'mop_life',
     'mop_pad_life',
     'oob_state',
@@ -109,9 +111,29 @@ const JDM_PROPS_EXCLUDE: Dyson360JdmProp[] = [
 
 // Properties to only poll once when (re)connected
 const JDM_PROPS_ONCE: Dyson360JdmProp[] = [
-    'back_to_wash',     // Value pushed when it changes
-    'order_total',      // Only relevant to schedules (request if required)
-    'work_time'         // Value pushed when it changes
+    // Values pushed when they change
+    'back_to_wash',
+    'charge_state',
+    'cleaning_area',
+    'clean_id',
+    'cleaning_time',
+    'dock_hypa',
+    'fault',
+    'hypa',
+    'main_brush',
+    'mode',
+    'oob_state',
+    'quantity',
+    'side_brush',
+    'station_act',
+    'status',
+    'sweep_type',
+    'taskBeginTs',
+    'work_mode',
+    'work_time',
+
+    // Values that are only relevant to schedules
+    'order_total'
 ];
 
 // Sets of properties to poll
@@ -421,9 +443,10 @@ export class DysonMqtt360Jdm extends DysonMqtt360<DysonMqtt360JdmEventArgs> {
     async publishJdmCommandRaw<M extends Dyson360JdmCommandMethod>(
         msgId: string, method: M, params: Dyson360JdmCommand<M>['params']
     ): Promise<void> {
-        const msg = { msgId, method, version: JDM_VERSION, params } as Dyson360JdmCommand;
+        const time = new Date().toISOString();
+        const msg = { msgId, method, time, version: JDM_VERSION, params } as Dyson360JdmCommand;
         this.getOrAddRecentJdmMsg('command', msg);
-        await this.publishTo('/jdm', JSON.stringify(msg));
+        await this.publishTo('/jdm', msg);
     }
 
     // Wait for a JDM response (with a timeout)

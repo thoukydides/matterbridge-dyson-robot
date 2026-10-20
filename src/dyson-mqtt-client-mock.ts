@@ -32,7 +32,7 @@ export class DysonMqttClientMock extends DysonMqttClient {
     private lines: string[] = [];
 
     // MQTT topic for the device status
-    private topic = '';
+    private statusTopic = '';
 
     // Construct a new MQTT client
     constructor(log: AnsiLogger, config: Config, readonly deviceConfig: DeviceConfigMock) {
@@ -84,7 +84,7 @@ export class DysonMqttClientMock extends DysonMqttClient {
         } else {
             // Assume all messages come from the status topic(s)
             await setTimeout(MESSAGE_INTERVAL);
-            const topic = isJDM(line) ? `${this.topic}/jdm` : this.topic;
+            const topic = this.getTopicForPayload(line);
             const payload = Buffer.from(line);
             const packet: IPublishPacket = { cmd: 'publish', topic, payload, qos: 0, dup: false, retain: false };
             this.emit('message', topic, payload, packet);
@@ -110,7 +110,7 @@ export class DysonMqttClientMock extends DysonMqttClient {
         // Select one of the topics as the device status topic
         const statusTopic = topics.find(t => t.includes('status'));
         assertIsDefined(statusTopic);
-        this.topic = statusTopic;
+        this.statusTopic = statusTopic;
 
         // Return a successful subscription grant for each topic
         const grant: ISubscriptionGrant[] = topics.map(topic => ({ topic, qos: 0 }));
@@ -123,16 +123,26 @@ export class DysonMqttClientMock extends DysonMqttClient {
         this.lines = [];
         return Promise.resolve();
     }
-}
 
-// Should a message be routed to the JDM status topic
-function isJDM(line: string): boolean {
-    try {
-        const json: unknown = JSON.parse(line);
-        return json !== null && typeof json === 'object'
-            && ('msgId' in json) && !('msg' in json);
-    } catch {
-        // Assume anything non-parseable is not a JDM message
-        return false;
+    // Choose the appropriate topic for a message
+    getTopicForPayload(line: string): string {
+        try {
+            const topicBase = this.statusTopic.replace(/\/status.*/, '');
+            const json: unknown = JSON.parse(line);
+            if (json === null || typeof json !== 'object') throw new Error('Not an object');
+            if ('msg' in json && typeof json.msg === 'string') {
+                // Normal (non-JDM) format command of status message
+                const isCommand = 'mode-reason' in json && !['CURRENT-STATE', 'STATE-CHANGE'].includes(json.msg);
+                if (isCommand)  return `${topicBase}/command`;
+            } else if ('msgId' in json) {
+                // JDM format command or status message
+                const isCommand = 'time' in json || 'version' in json;
+                if (isCommand)  return `${topicBase}/command/jdm`;
+                else            return `${topicBase}/status/jdm`;
+            }
+        } catch { /* empty */ }
+
+        // Default to the status topic
+        return this.statusTopic;
     }
 }

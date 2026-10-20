@@ -29,7 +29,7 @@ import {
     Dyson360CleaningProgrammeGlobal,
     Dyson360VoiceDownloadStatus
 } from './dyson-360-types.js';
-import { DysonModeReason, DysonMsg } from './dyson-types.js';
+import { DysonMsgCommand, DysonMsg } from './dyson-types.js';
 
 // MQTT topic: <type>/initialconnection/credentials
 
@@ -61,12 +61,21 @@ export interface Dyson360MsgHello extends DysonMsg {
     serial:                             string; // e.g. 'AB1-CD-EFG2345H'
     sessionId?:                         string; // UUID
     version:                            string; // e.g. '11.3.5.10'
+    voiceLanguagePackageMd5?:           string; // MD5 hash
+    voiceLanguageType?:                 number; // e.g. 0
 }
 
 export interface Dyson360MsgGoodbye extends DysonMsg {
     msg:                                'GOODBYE';
     reason:                             Dyson360GoodbyeReason;
     sessionId?:                         string; // UUID
+}
+
+export interface Dyson360MsgUpdateLocalBrokerConfig extends DysonMsg {
+    msg:                                'UPDATE-LOCAL-BROKER-CONFIG',
+    configref:                          string; // Serial number and ISO date
+    localpwd:                           string;
+    time:                               string; // ISO data
 }
 
 export interface Dyson360MsgAuthoriseVerifiedUser extends DysonMsg {
@@ -129,6 +138,7 @@ export interface Dyson360MsgCurrentStateState extends DysonMsg {
     rssi?:                              string; // Wi-Fi RSSI dBm
     sessionId?:                         string; // UUID
     state:                              Dyson360State;
+    taskBeginTime?:                     number; // seconds since epoch
     traverseTargetId?:                  string; // e.g. '1'
     voiceLanguage?:                     string; // e.g. 'jp-JP'
     volume?:                            number; // %
@@ -235,14 +245,12 @@ export interface Dyson360MsgVoiceDownloadStatus extends DysonMsg {
 
 // MQTT topic: <type>/<sn>/command
 
-export interface Dyson360MsgRequestCurrentState extends DysonMsg {
+export interface Dyson360MsgRequestCurrentState extends DysonMsgCommand {
     msg:                                'REQUEST-CURRENT-STATE';
-    'mode-reason'?:                     DysonModeReason;
 }
 
-export interface Dyson360MsgStateSet extends DysonMsg {
+export interface Dyson360MsgStateSet extends DysonMsgCommand {
     msg:                                'STATE-SET';
-    'mode-reason':                      DysonModeReason;
     data?: {
         defaultVacuumPowerMode: Dyson360PowerMode;
     }
@@ -251,9 +259,8 @@ export interface Dyson360MsgStateSet extends DysonMsg {
     }
 }
 
-export interface Dyson360MsgStartBase extends DysonMsg {
+export interface Dyson360MsgStartBase extends DysonMsgCommand {
     msg:                                'START';
-    'mode-reason'?:                     DysonModeReason;
     fullCleanType?:                     Dyson360CleaningType;
     cleanId?:                           string; // UUID
 }
@@ -277,64 +284,60 @@ export type Dyson360MsgStart =
   | Dyson360MsgStartZones
   | Dyson360MsgStartSpot;
 
-export interface Dyson360MsgPause extends DysonMsg {
+export interface Dyson360MsgPause extends DysonMsgCommand {
     msg:                                'PAUSE';
-    'mode-reason':                      DysonModeReason;
     cleaningMode?:                      Dyson360CleaningMode;
 }
 
-export interface Dyson360MsgResume extends DysonMsg {
+export interface Dyson360MsgResume extends DysonMsgCommand {
     msg:                                'RESUME';
-    'mode-reason':                      DysonModeReason;
 }
 
-export interface Dyson360MsgAbort extends DysonMsg {
+export interface Dyson360MsgAbort extends DysonMsgCommand {
     msg:                                'ABORT'; // GoHome
-    'mode-reason':                      DysonModeReason;
     cleaningMode?:                      Dyson360CleaningMode;
     state?:                             Dyson360State;
 }
 
-export interface Dyson360MsgAbortDockAction extends DysonMsg {
+export interface Dyson360MsgAbortDockAction extends DysonMsgCommand {
     msg:                                'ABORT-DOCK-ACTION';
-    'mode-reason':                      DysonModeReason;
     action:                             Dyson360DockAction;
     delay?:                             number;
 }
 
-export interface Dyson360MsgSkipCurrentZone extends DysonMsg {
+export interface Dyson360MsgSkipCurrentZone extends DysonMsgCommand {
     msg:                                'SKIP-CURRENT-ZONE';
-    'mode-reason':                      DysonModeReason;
 }
 
-export interface Dyson360MsgStartDockAction extends DysonMsg {
+export interface Dyson360MsgStartDockAction extends DysonMsgCommand {
     msg:                                'START-DOCK-ACTION';
-    'mode-reason':                      DysonModeReason;
     action:                             Dyson360DockAction;
 }
 
-export interface Dyson360MsgStartMapping extends DysonMsg {
+export interface Dyson360MsgStartMapping extends DysonMsgCommand {
     msg:                                'START-MAPPING';
-    'mode-reason':                      DysonModeReason;
 }
 
-export interface Dyson360MsgPersistentMapManifestUpdated extends DysonMsg {
+export interface Dyson360MsgPersistentMapManifestUpdated extends DysonMsgCommand {
     msg:                                'PERSISTENT-MAP-MANIFEST-UPDATED'
 }
 
-export interface Dyson360MsgAcknowledgeFault extends DysonMsg {
+export interface Dyson360MsgAcknowledgeFault extends DysonMsgCommand {
     msg:                                'ACKNOWLEDGE-FAULT';
-    'mode-reason':                      DysonModeReason;
     faultCode:                          string; // e.g. '19.12.-1'
 }
 
-export interface Dyson360MsgSetVoiceLanguage extends DysonMsg {
+export interface Dyson360MsgChangeVoiceLanguage extends DysonMsgCommand {
+    msg:                                'CHANGE-VOICE-LANGUAGE',
+    voiceLanguagePackageMd5:            string; // MD5 hash
+    voiceLanguageType:                  number; // e.g. 0
+}
+
+export interface Dyson360MsgSetVoiceLanguage extends DysonMsgCommand {
     msg:                                'SET-VOICE-LANGUAGE';
-    'mode-reason':                      DysonModeReason;
     language:                           string; // e.g. 'en-GB'
 }
 
-export interface Dyson360MsgRequestVoiceDownloadStatus extends DysonMsg {
+export interface Dyson360MsgRequestVoiceDownloadStatus extends DysonMsgCommand {
     msg:                                'REQUEST-VOICE-DOWNLOAD-STATUS';
-    'mode-reason':                      DysonModeReason;
 }

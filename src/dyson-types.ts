@@ -7,6 +7,15 @@ export interface DysonMsg {
     time?:                  string; // e.g. '2025-04-28T12:33:27.003Z'
 }
 
+// Extra fields in commands
+export interface DysonMsgCommand extends DysonMsg {
+    'mode-reason'?:         DysonModeReason;
+    // Extra fields sometimes included with Spot+Scrub Ai and later
+    f?:                     string; // MQTT root topic
+    g?:                     string; // Serial number
+    h?:                     string; // MQTT command topic
+}
+
 // Messages encoded using RFC8949 Concise Binary Object Representation (CBOR)
 export interface DysonMsgCBOR { // Does NOT extend DysonMsg
     time:                   string;

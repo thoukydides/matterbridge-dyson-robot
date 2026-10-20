@@ -25,7 +25,8 @@ import {
 } from './dyson-air-types.js';
 import {
     DysonModeReason,
-    DysonMsg
+    DysonMsg,
+    DysonMsgCommand
 } from './dyson-types.js';
 
 // MQTT topic: <type>/<sn>/status/connection
@@ -149,24 +150,20 @@ export interface DysonAirMsgEnvData extends DysonMsg {
 
 // MQTT topic: <type>/<sn>/command
 
-export interface DysonAirMsgRequestCurrentFaults extends DysonMsg {
+export interface DysonAirMsgRequestCurrentFaults extends DysonMsgCommand {
     msg:                    'REQUEST-CURRENT-FAULTS';
-    'mode-reason'?:         DysonModeReason;
 }
 
-export interface DysonAirMsgRequestCurrentState extends DysonMsg {
+export interface DysonAirMsgRequestCurrentState extends DysonMsgCommand {
     msg:                    'REQUEST-CURRENT-STATE';
-    'mode-reason'?:         DysonModeReason;
 }
 
-export interface DysonAirMsgRequestProductEnvironmentCurrentSensorData extends DysonMsg {
+export interface DysonAirMsgRequestProductEnvironmentCurrentSensorData extends DysonMsgCommand {
     msg:                    'REQUEST-PRODUCT-ENVIRONMENT-CURRENT-SENSOR-DATA';
-    'mode-reason'?:         DysonModeReason;
 }
 
-export interface DysonAirMsgStateSet extends DysonMsg {
+export interface DysonAirMsgStateSet extends DysonMsgCommand {
     msg:                    'STATE-SET';
-    'mode-reason'?:         DysonModeReason;
     data:                   DysonAirProductState & {
         rstf?:              DysonAirResetFilterLife;
         rhtf?:              DysonAirResetHEPAFilterLife;
@@ -175,12 +172,12 @@ export interface DysonAirMsgStateSet extends DysonMsg {
     }
 }
 
-export interface DysonAirMsgScheduleSet extends DysonMsg {
+export interface DysonAirMsgScheduleSet extends DysonMsgCommand {
     msg:                    'SCHEDULE-SET';
     version:                string; // Schedule version e.g. '80a0' or 'a770'
 }
 
-export interface DysonAirMsgUpdateSchedule extends DysonMsg {
+export interface DysonAirMsgUpdateSchedule extends DysonMsgCommand {
     msg:                    'UPDATE-SCHEDULE',
     version:                string; // Schedule version e.g. '80a0' or 'a770'
 }

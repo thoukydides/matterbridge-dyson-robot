@@ -68,13 +68,15 @@ export interface Dyson360PointUnrotated extends Dyson360Point {
 // Dyson robot vacuum route position (Spot+Scrub only)
 export enum Dyson360RouteUpdate {
     Traversing                          = 0,
-    Cleaning                            = 1
+    Vacuuming                           = 1,
+    Mopping                             = 2,
+    VacuumingAndMopping                 = 3
 }
 export interface Dyson360PointPath extends Dyson360Point {
     update:                             Dyson360RouteUpdate;
 }
 export interface Dyson360PointRobot extends Dyson360PointRotated {
-    id:                                 number;         // Incrementing index
+    id:                                 string;         // Incrementing index as string
     update:                             Dyson360RouteUpdate;
 }
 
