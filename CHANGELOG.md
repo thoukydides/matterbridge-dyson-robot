@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v1.13.0] - 2026-10-20
+### Fixed
+* Corrected MQTT types and command response checking for R2 Nurovi Wash+Dry (may also improve Spot+Scrub Ai compatibility). (#50, #51)
+### Changed
+* Improved masking of device serial numbers in the log, including when hex encoded.
+* Rewrote validation of received MQTT messages to improve maintainability.
+* Spot+Scrub Ai and R1/R2/R3 Nurovi JDM properties are only polled when a connection is (re)established. (#50)
+
 ## [v1.12.5] - 2026-10-17
 ### Added
 * Accept additional manifest capability for R2 Nurovi Wash+Dry. (#50)
