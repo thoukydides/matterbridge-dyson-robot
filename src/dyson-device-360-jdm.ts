@@ -1,7 +1,7 @@
 // Matterbridge plugin for Dyson robot vacuum and air treatment devices
 // Copyright © 2026 Alexander Thoukydides
 
-import { RvcOperationalState } from 'matterbridge/matter/clusters';
+import { PowerSource, RvcOperationalState } from 'matterbridge/matter/clusters';
 import { RvcCleanMode360, RvcRunMode360 } from './endpoint-360-behavior.js';
 import {
     Dyson360DockState,
@@ -23,11 +23,12 @@ import { DysonDeviceConstructorParams } from './dyson-device-base.js';
 import { DysonMqttStatus } from './dyson-mqtt.js';
 import { PeriodicOp } from './periodic-op.js';
 import { DysonMqtt360Jdm, DysonMqtt360JdmEventArgs } from './dyson-mqtt-360-jdm.js';
-import { Endpoint360, EndpointOptions360, UpdateRvcOperationalState360 } from './endpoint-360.js';
+import { Endpoint360, EndpointOptions360, UpdatePowerSource360, UpdateRvcOperationalState360 } from './endpoint-360.js';
 import { Dyson360MappedFaults } from './dyson-device-360-faults.js';
 import { DysonDevice360CommandHandlers } from './dyson-device-360-commands.js';
 import { ifValueChanged } from './decorator-changed.js';
 import { Dyson360JdmPropValues } from './dyson-360-jdm-props-types.js';
+import { Dyson360JdmBoolean } from './dyson-360-jdm-types.js';
 
 // Spot+Scrub Ai status polling behaviour
 const POLL_STATUS_MS                =  30 * MS; // 30 seconds
@@ -156,6 +157,17 @@ export abstract class DysonDevice360JdmBase extends DysonDevice360ZonesMixin(Dys
 
         // Update the Service Area cluster when not polling the live map
         if (!this.pollCleaning.isActive) await this.updateZoneStatus();
+    }
+
+    // Convert the battery status to Power Source cluster attributes
+    override mapBatteryStatus(status: DysonMqttStatus<DysonMqttStatus360>, faults: Dyson360MappedFaults): UpdatePowerSource360 {
+        const batteryStatus = super.mapBatteryStatus(status, faults);
+
+        // Override the state-derived charging status based on JDM properties
+        if (this.mqtt.jdmProps.charge_state === Dyson360JdmBoolean.True) {
+            batteryStatus.batChargeState = PowerSource.BatChargeState.IsCharging;
+        }
+        return batteryStatus;
     }
 
     // Monitor MQTT JDM property status changes
