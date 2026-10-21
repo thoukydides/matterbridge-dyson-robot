@@ -265,11 +265,11 @@ export enum Dyson360WaterLevel {
 // Dyson robot vacuum zone settings (Spot+Scrub Ai only)
 export interface Dyson360ZoneSettings {
     cleanType:                          Dyson360CleanType;
-    cleaningStrategy:                   Dyson360VacuumMode;
-    dryPasses:                          Dyson360VacuumPasses;
+    cleaningStrategy?:                  Dyson360VacuumMode;
+    dryPasses?:                         Dyson360VacuumPasses;
     isUvScanOn?:                        boolean;            // UV sterilisation pass
-    mopPasses:                          Dyson360MopPasses;
-    waterLevel:                         Dyson360WaterLevel;
+    mopPasses?:                         Dyson360MopPasses;
+    waterLevel?:                        Dyson360WaterLevel;
 }
 
 // Dyson robot vacuum map data (after base64 and gzip decoding) (360 Eye only)

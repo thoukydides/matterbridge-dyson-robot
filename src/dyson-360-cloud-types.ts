@@ -193,7 +193,8 @@ export interface Dyson360PersistentMapZonePresentation {
 export interface Dyson360PersistentMapZoneV2 extends Dyson360PersistentMapMetadataZoneBase {
     cleanStatus:                        Dyson360ZoneCleanStatus;
     nameLocation:                       Dyson360Point;
-    presentation:                       Dyson360PersistentMapZonePresentation[]
+    presentation:                       Dyson360PersistentMapZonePresentation[];
+    settings:                           Dyson360ZoneSettings;
     type?:                              Dyson360ZoneType;
     visited:                            Dyson360Point[];
 }
@@ -245,7 +246,7 @@ export interface Dyson360LiveMapCleaningResponseV1 {
     obstacles:                          Dyson360Point[];
     orientation:                        number;
     restrictions:                       Dyson360PersistentMapRestrictionV2[];
-    robotLocation:                      Dyson360RobotLocation;
+    robotLocation?:                     Dyson360RobotLocation;
     spotZones:                          [];
     swingDoors:                         [];
     taskBeginTime:                      number;             // seconds since epoch
@@ -258,7 +259,7 @@ export interface Dyson360LiveMapMappingResponseV1 {
     dockLocation:                       Dyson360PointRotated;
     mapData:                            number[];
     orientation:                        number;
-    robotLocation:                      Dyson360RobotLocation;
+    robotLocation?:                     Dyson360RobotLocation;
     taskBeginTime:                      number;             // milliseconds since epoch
 }
 
