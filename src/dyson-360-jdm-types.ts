@@ -374,6 +374,10 @@ export type Dyson360JdmFurniture = [
 ];
 
 // Dyson robot vacuum JDM privacy policy
-export interface Dyson360JdmPrivacy {
+export interface Dyson360JdmPrivacyStruct {
+    ai_recognize:                       Dyson360JdmBoolean;
     auto_upgrade:                       Dyson360JdmBoolean;
+    dirt_recognize:                     Dyson360JdmBoolean;
+    dirty_clean_mode:                   Dyson360JdmBoolean;
 }
+export type Dyson360JdmPrivacy = Dyson360JdmPrivacyStruct | 0;
