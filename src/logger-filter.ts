@@ -4,12 +4,15 @@
 import { AnsiLogger, LogLevel } from 'matterbridge/logger';
 import { formatList } from './utils.js';
 import { DebugFeatures } from './config-types.js';
+import { decodeLocalBrokerCredentials } from './dyson-cloud.js';
 
 // Regular expressions for different types of sensitive data
 const REGEXP_SERIAL_NUMBER = /[A-Z0-9]{3}-?[A-Z]{2}-?[A-Z]{3}[0-9]{4}[A-Z]?/g;
 const REGEXP_CLOUD_TOKEN   = /[0-9A-F]{64}-1/g;
+const REGEXP_CLOUD_TOKEN2  = /(?<=["']?(?:ClientId|TokenValue)["']?:\s*["']?)[-\w]+/g;
 const REGEXP_EMAIL         = /[\w-.]+@([\w-]+\.)+[\w-]+/g;
 const REGEXP_UUID_LIKE_HEX = /\b(?:[0-9A-F]{2,}-?){4,}\b/ig;
+const REGEXP_BASE64_LIKE   = /(?<=[^\w+/])[\w+/]{64,}(={1,2}|(?=[^\w+/]))/g;
 
 // A logger with filtering and support for an additional prefix
 export class FilterLogger extends AnsiLogger {
@@ -68,19 +71,21 @@ export class FilterLogger extends AnsiLogger {
     // Filter sensitive data within a string
     filterString(value: string): { filtered: string, redacted: boolean } {
         let filtered = value
-            .replace(REGEXP_CLOUD_TOKEN, v => maskToken('TOKEN',    v))
-            .replace(REGEXP_EMAIL,       v => maskToken('EMAIL',    v));
+            .replace(REGEXP_CLOUD_TOKEN,    v => maskToken('TOKEN',    v))
+            .replace(REGEXP_CLOUD_TOKEN2,   v => maskToken('TOKEN',    v))
+            .replace(REGEXP_EMAIL,          v => maskToken('EMAIL',    v))
+            .replace(REGEXP_BASE64_LIKE,    v => maskBase64(v));
         if (!this.config.has('Log Serial Numbers')) {
             filtered = filtered
                 .replace(REGEXP_SERIAL_NUMBER,  v => maskToken('SERIAL_NUMBER', v))
-                .replace(REGEXP_UUID_LIKE_HEX,  v => maskTokenInHex(v));
+                .replace(REGEXP_UUID_LIKE_HEX,  v => maskSerialNumberInHex(v));
         }
         return { filtered, redacted: filtered !== value };
     }
 }
 
 // Mask a serial number in a UUID-like hex string
-export function maskTokenInHex(hex: string): string {
+export function maskSerialNumberInHex(hex: string): string {
     // Convert hex to a string and look for a serial number
     const text = Buffer.from(hex.replaceAll('-', ''), 'hex').toString();
     const match = REGEXP_SERIAL_NUMBER.exec(text);
@@ -100,6 +105,24 @@ export function maskTokenInHex(hex: string): string {
 
     // Return the hex string with the serial number masked
     return `${pre}${maskToken('SERIAL_NUMBER_HEX', token)}${post}`;
+}
+
+// Mask a base64-encoded value, if required
+function maskBase64(base64: string): string {
+    // First try to decode as local MQTT broker credentials
+    try {
+        const _credentials = decodeLocalBrokerCredentials(base64);
+        return maskToken('CREDENTIALS', base64);
+    } catch { /* empty */ }
+
+    // Try to decode as a cloud MQTT token signature
+    try {
+        const value = Buffer.from(base64, 'base64');
+        if (value.length === 256) return maskToken('TOKEN_SIGNATURE', base64);
+    } catch { /* empty */ }
+
+    // Not a decodable value, to log as-is
+    return base64;
 }
 
 // Mask a token, leaving just the first and final few characters

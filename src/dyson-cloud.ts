@@ -363,7 +363,7 @@ export class DysonCloudLocal extends DysonCloud<ConfigLocalAccount> {
 }
 
 // Decode local MQTT broker credentials
-function decodeLocalBrokerCredentials(localBrokerCredentials: string): DysonLocalBrokerCredentials {
+export function decodeLocalBrokerCredentials(localBrokerCredentials: string): DysonLocalBrokerCredentials {
     // First decode as a base64 string
     const input = Buffer.from(localBrokerCredentials, 'base64');
 
