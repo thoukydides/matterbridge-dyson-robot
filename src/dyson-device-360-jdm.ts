@@ -29,6 +29,7 @@ import { DysonDevice360CommandHandlers } from './dyson-device-360-commands.js';
 import { ifValueChanged } from './decorator-changed.js';
 import { Dyson360JdmPropValues } from './dyson-360-jdm-props-types.js';
 import { Dyson360JdmBoolean } from './dyson-360-jdm-types.js';
+import { DysonCloudStatusCodeError } from './dyson-cloud-error.js';
 
 // Spot+Scrub Ai status polling behaviour
 const POLL_STATUS_MS                =  30 * MS; // 30 seconds
@@ -117,12 +118,16 @@ export abstract class DysonDevice360JdmBase extends DysonDevice360ZonesMixin(Dys
     // Use the live map to update the zone status
     async pollCleaningOp(): Promise<void> {
         if (!this.api) return; // (mock devices do not support this)
-        const cleaningMode = this.mqtt.status.currentCleaningMode;
-        assertIsDefined(cleaningMode);
-        const live = await this.api.getLiveMapsCleaning360V1();
-        const zoneStatus = live.zones.map(({ id, cleanStatus }) => ({ zoneId: id, cleanStatus }));
-        await this.updateZoneStatus({ mapId: live.id, cleaningMode, zoneStatus });
-
+        try {
+            const cleaningMode = this.mqtt.status.currentCleaningMode;
+            assertIsDefined(cleaningMode);
+            const live = await this.api.getLiveMapsCleaning360V1();
+            const zoneStatus = live.zones.map(({ id, cleanStatus }) => ({ zoneId: id, cleanStatus }));
+            await this.updateZoneStatus({ mapId: live.id, cleaningMode, zoneStatus });
+        } catch (err) {
+            // Live map is only available about 7 seconds after the clean starts
+            if (!(err instanceof DysonCloudStatusCodeError && err.statusCode === 404)) throw err;
+        }
     }
 
     // Update cluster attributes when the MQTT status is updated
@@ -152,8 +157,8 @@ export abstract class DysonDevice360JdmBase extends DysonDevice360ZonesMixin(Dys
         await super.updateClusterAttributes(status);
 
         // Start or stop live map polling when cleaning
-        if (runMode === RvcRunMode360.Cleaning) this.pollCleaning.start();
-        else                                    this.pollCleaning.stop();
+        if (status.state.startsWith('FULL_CLEAN_')) this.pollCleaning.start();
+        else                                        this.pollCleaning.stop();
 
         // Update the Service Area cluster when not polling the live map
         if (!this.pollCleaning.isActive) await this.updateZoneStatus();
