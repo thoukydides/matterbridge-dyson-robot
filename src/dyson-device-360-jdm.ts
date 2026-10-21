@@ -126,15 +126,24 @@ export abstract class DysonDevice360JdmBase extends DysonDevice360ZonesMixin(Dys
 
     // Update cluster attributes when the MQTT status is updated
     override async updateClusterAttributes(status: DysonMqttStatus<DysonMqttStatus360>): Promise<void> {
-        // Suppress INACTIVE_DISCHARGING state between mop wash and clean start
-        if (status.state.startsWith('INACTIVE_')) {
-            this.inactiveStart ??= Date.now();
-            const remainingDelay = this.inactiveStart + MASK_INACTIVE_TRANSITION_MS - Date.now();
-            if (0 < remainingDelay) {
-                this.log.info(`Delaying transition to ${status.state} for ${formatMilliseconds(remainingDelay)}`);
-                return;
+        const { runMode } = dyson360MapState(status.state);
+
+        // Suppress INACTIVE_DISCHARGING between mop wash and start of clean
+        if (runMode === RvcRunMode360.Idle) {
+            if (status.state.startsWith('INACTIVE_')) {
+                // Delay treating a new INACTIVE_* state as real
+                this.inactiveStart ??= Date.now();
+                const remainingDelay = this.inactiveStart + MASK_INACTIVE_TRANSITION_MS - Date.now();
+                if (status.state.startsWith('INACTIVE_') && 0 < remainingDelay) {
+                    this.log.info(`Delaying transition to ${status.state} for ${formatMilliseconds(remainingDelay)}`);
+                    return;
+                }
+            } else {
+                // No delay if transitioning via *_(ABANDONED|ABORTED|FINISHED)
+                this.inactiveStart = 0;
             }
-        } else if (status.state.startsWith('FULL_CLEAN_')) {
+        } else if (runMode === RvcRunMode360.Cleaning) {
+            // Prime the inactive transition suppression from active cleaning
             this.inactiveStart = undefined;
         }
 
@@ -142,7 +151,6 @@ export abstract class DysonDevice360JdmBase extends DysonDevice360ZonesMixin(Dys
         await super.updateClusterAttributes(status);
 
         // Start or stop live map polling when cleaning
-        const { runMode } = dyson360MapState(status.state);
         if (runMode === RvcRunMode360.Cleaning) this.pollCleaning.start();
         else                                    this.pollCleaning.stop();
 
