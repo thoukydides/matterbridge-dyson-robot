@@ -41,6 +41,7 @@ export class RvcOperationalStateError extends Error {
             errorStateDetails:  ''
         } : {
             errorStateId:       RvcOperationalState.ErrorState.NoError,
+            errorStateLabel:    undefined,
             errorStateDetails:  ''
         };
     }
