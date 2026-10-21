@@ -4,6 +4,19 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v1.13.1] - 2026-10-21
+### Added
+* Accept `REQUEST-CURRENT-FAULTS` command for robot vacuums. (#51)
+* Masking of AWS IoT cloud and local broker credentials in the log. (#50)
+### Fixed
+* Corrected error message for unrecognised MQTT messages. (#51)
+* Avoid triggering spurious `RvcOperationalState.operationalError` attribute change messages for robot vacuums. (#50)
+* Handle Spot+Scrub Ai and R1/R2/R3 Nurovi live cleaning map unavailability and missing fields at the start of a clean. (#50)
+* Continue polling Spot+Scrub Ai and R1/R2/R3 Nurovi live cleaning map after clean finishes. (#50)
+### Changed
+* JDM `charge_state` used to improve battery charging indication for Spot+Scrub Ai and R1/R2/R3 Nurovi. (#50)
+* Updated dependencies.
+
 ## [v1.13.0] - 2026-10-20
 ### Fixed
 * Corrected MQTT types and command response checking for R2 Nurovi Wash+Dry (may also improve Spot+Scrub Ai compatibility). (#50, #51)
@@ -479,7 +492,8 @@ All notable changes to this project will be documented in this file.
 
 Copyright © 2025-2026 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.13.0...HEAD
+[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.13.1...HEAD
+[v1.13.1]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.13.0...v1.13.1
 [v1.13.0]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.12.5...v1.13.0
 [v1.12.5]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.12.4...v1.12.5
 [v1.12.4]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.12.3...v1.12.4
