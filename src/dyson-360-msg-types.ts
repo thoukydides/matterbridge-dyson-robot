@@ -245,6 +245,10 @@ export interface Dyson360MsgVoiceDownloadStatus extends DysonMsg {
 
 // MQTT topic: <type>/<sn>/command
 
+export interface Dyson360MsgRequestCurrentFaults extends DysonMsgCommand {
+    msg:                                'REQUEST-CURRENT-FAULTS';
+}
+
 export interface Dyson360MsgRequestCurrentState extends DysonMsgCommand {
     msg:                                'REQUEST-CURRENT-STATE';
 }

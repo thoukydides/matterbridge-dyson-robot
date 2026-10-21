@@ -81,7 +81,7 @@ export class TiTaggedChecker<Checkers extends ICheckerSuite, TagKey extends stri
         const typeName = this.tagToName.get(tagValue);
         if (!typeName) {
             logCheckerValidation(this.log, LogLevel.ERROR, context, value);
-            throw new Error(`Unrecognised ${description}: ${tagName} = '${defaultTagValue}'`);
+            throw new Error(`Unrecognised ${description}: ${tagName} = '${tagValue}'`);
         }
         const checker = checkerSuite[typeName];
         assertIsDefined(checker);
