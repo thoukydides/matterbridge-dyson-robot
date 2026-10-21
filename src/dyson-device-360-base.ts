@@ -137,7 +137,7 @@ export abstract class DysonDevice360Base<T extends DysonMqtt360 = DysonMqtt360>
     extends DysonDevice<T> {
 
     // The MQTT client and status update listener
-    static readonly mqttConstructor = DysonMqtt360;
+    static override readonly mqttConstructor = DysonMqtt360;
     mqttStatusListener:     () => void;
     mqttMessageListener:    (msg: DysonMqtt360Msg) => void;
 

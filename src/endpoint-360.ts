@@ -92,9 +92,9 @@ export class Endpoint360 extends EndpointBase {
 
     // Construct a new endpoint
     constructor(
-        log:                AnsiLogger,
-        config:             Config,
-        readonly options:   EndpointOptions360
+        log:                        AnsiLogger,
+        config:                     Config,
+        override readonly options:  EndpointOptions360
     ) {
         const definition: AtLeastOne<DeviceTypeDefinition> =
             [roboticVacuumCleaner, bridgedNode, powerSource];

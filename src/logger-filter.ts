@@ -30,12 +30,12 @@ export class FilterLogger extends AnsiLogger {
     }
 
     // Get and set the log level (in the delegate logger)
-    get logLevel(): LogLevel         { return this.delegate.logLevel; }
-    set logLevel(logLevel: LogLevel) { this.delegate.logLevel = logLevel; }
+    override get logLevel(): LogLevel           { return this.delegate.logLevel; }
+    override set logLevel(logLevel: LogLevel)   { this.delegate.logLevel = logLevel; }
 
     // Get and set the log name (in the delegate logger)
-    get logName(): string            { return this.delegate.logName; }
-    set logName(logName: string)     { this.delegate.logName = logName; }
+    override get logName(): string              { return this.delegate.logName; }
+    override set logName(logName: string)       { this.delegate.logName = logName; }
 
     // Log a message with sensitive data filtered
     override log(level: LogLevel, message: string, ...parameters: unknown[]): void {

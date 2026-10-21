@@ -98,7 +98,7 @@ export namespace Behavior360 {
 export class RvcRunModeServer360 extends RvcRunModeBehavior {
 
     // ChangeToMode command handler
-    async changeToMode({ newMode }: ModeBase.ChangeToModeRequest): Promise<ModeBase.ChangeToModeResponse> {
+    override async changeToMode({ newMode }: ModeBase.ChangeToModeRequest): Promise<ModeBase.ChangeToModeResponse> {
         const { device } = this.agent.get(Behavior360).state;
         const { log } = device;
         try {
@@ -125,7 +125,7 @@ export class RvcRunModeServer360 extends RvcRunModeBehavior {
 export class RvcCleanModeServer360 extends RvcCleanModeBehavior {
 
     // ChangeToMode command handler
-    async changeToMode({ newMode }: ModeBase.ChangeToModeRequest): Promise<ModeBase.ChangeToModeResponse> {
+    override async changeToMode({ newMode }: ModeBase.ChangeToModeRequest): Promise<ModeBase.ChangeToModeResponse> {
         const { device } = this.agent.get(Behavior360).state;
         const { log } = device;
         try {

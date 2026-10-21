@@ -136,10 +136,10 @@ export class DysonCloudAuth extends DysonCloud {
 
     // Construct a new Dyson cloud API interface
     constructor(
-        log:                AnsiLogger,
-        config:             Config,
-        persist:            NodePersist.LocalStorage,
-        readonly account:   DysonAccountLogin
+        log:                        AnsiLogger,
+        config:                     Config,
+        persist:                    NodePersist.LocalStorage,
+        override readonly account:  DysonAccountLogin
     ) {
         super(log, config, persist, account);
     }

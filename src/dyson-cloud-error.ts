@@ -75,7 +75,7 @@ export class DysonCloudStatusCodeError extends DysonCloudError {
 
 
     // Can the request be retried
-    getRetryBehaviour(attempts: number): DysonCloudRetryBehaviour {
+    override getRetryBehaviour(attempts: number): DysonCloudRetryBehaviour {
         const VETO_CONDITIONS: [boolean, string][] = [
             [this.isCloudflare(this.rfc9457) && !this.rfc9457.retryable,    'Cloudflare marked request as non-retryable'],
             [NO_RETRY_STATUS_CODES.includes(this.statusCode),               `status code ${this.statusCode} is not retryable`],

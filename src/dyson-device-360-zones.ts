@@ -136,14 +136,14 @@ export function DysonDevice360ZonesMixin<TBase extends AbstractConstructor<Dyson
         }
 
         // Add map capability
-        getEndpointOptions(): EndpointOptions360 {
+        override getEndpointOptions(): EndpointOptions360 {
             const endpointOptions = super.getEndpointOptions();
             endpointOptions.supportsMaps = true;
             return endpointOptions;
         }
 
         // Handle a received MQTT message
-        async mqttMessageReceived(msg: DysonMqtt360Msg): Promise<void> {
+        override async mqttMessageReceived(msg: DysonMqtt360Msg): Promise<void> {
             switch (msg.msg) {
             case 'PERSISTENT-MAP-MANIFEST-UPDATED':
                 // Force a map refresh after they have been updated

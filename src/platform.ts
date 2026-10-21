@@ -72,7 +72,7 @@ export class PlatformDyson extends MatterbridgeDynamicPlatform {
     }
 
     // Handle action button presses in the Matterbridge frontend
-    async onAction(action: string, value?: string, id?: string, config?: PlatformConfig): Promise<void> {
+    override async onAction(action: string, value?: string, id?: string, config?: PlatformConfig): Promise<void> {
         const wssSendSnackbarMessage = getWssSendSnackbarMessage(this);
         this.log.debug(`Action ${PLUGIN_NAME}: ${action}${value ? ` with ${value}` : ''}${id ? ` for schema ${id}` : ''}`);
 

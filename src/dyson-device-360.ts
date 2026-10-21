@@ -81,7 +81,7 @@ ${DYSON360_COMPATIBILITY_COMMON}`;
 
 // A Dyson 360 Eye device
 export class DysonDevice360Eye extends DysonDevice360Base {
-    static readonly model = { type: 'N223', number: 'RB01', name: '360 Eye' };
+    static override readonly model = { type: 'N223', number: 'RB01', name: '360 Eye' };
 
     override getBatteryPartNumber = () => '968734-02';
 
@@ -120,7 +120,7 @@ export class DysonDevice360Eye extends DysonDevice360Base {
 
 // A Dyson 360 Heurist device
 export class DysonDevice360Heurist extends DysonDevice360Base {
-    static readonly model = { type: '276', number: 'RB02', name: '360 Heurist' };
+    static override readonly model = { type: '276', number: 'RB02', name: '360 Heurist' };
 
     override getBatteryPartNumber = () => '970049-01';
 
@@ -146,7 +146,7 @@ export class DysonDevice360Heurist extends DysonDevice360Base {
 
 // A Dyson 360 Vis Nav device
 export class DysonDevice360VisNav extends DysonDevice360ZonesMixin(DysonDevice360Base) {
-    static readonly model = { type: '277', number: 'RB03', name: '360 Vis Nav' };
+    static override readonly model = { type: '277', number: 'RB03', name: '360 Vis Nav' };
 
     override getBatteryPartNumber = () => '967864-02';
 
@@ -231,7 +231,7 @@ export class DysonDevice360VisNav extends DysonDevice360ZonesMixin(DysonDevice36
 
 // A Dyson Spot+Scrub Ai device
 export class DysonDevice360SpotScrub extends DysonDevice360MopMixin(DysonDevice360JdmBase) {
-    static readonly model = { type: 'RB05', number: 'RB05', variants: ['A', 'E'], name: 'Spot+Scrub Ai' };
+    static override readonly model = { type: 'RB05', number: 'RB05', variants: ['A', 'E'], name: 'Spot+Scrub Ai' };
 
     override getBatteryPartNumber = () => '975571-01';
 
@@ -258,7 +258,7 @@ export abstract class DysonDevice360NuroviBase extends DysonDevice360JdmBase {
 
 // A Dyson R1 Nurovi Dry device (no mop)
 export class DysonDevice360R1NuroviDry extends DysonDevice360NuroviBase {
-    static readonly model = { type: 'RB07', number: 'RB07', variants: [''], name: 'R1 Nurovi Dry' };
+    static override readonly model = { type: 'RB07', number: 'RB07', variants: [''], name: 'R1 Nurovi Dry' };
     override getBatteryPartNumber = () => '976331-01';
 
     override get compatibilityWarning() { return DYSON360_COMPATIBILITY_R1R3_NUROVI; }
@@ -266,7 +266,7 @@ export class DysonDevice360R1NuroviDry extends DysonDevice360NuroviBase {
 
 // A Dyson R2 Nurovi Wash+Dry device
 export class DysonDevice360R2NuroviWashDry extends DysonDevice360MopMixin(DysonDevice360NuroviBase) {
-    static readonly model = { type: 'RB07', number: 'RB07', variants: ['A'], name: 'R2 Nurovi Wash+Dry' };
+    static override readonly model = { type: 'RB07', number: 'RB07', variants: ['A'], name: 'R2 Nurovi Wash+Dry' };
     override getBatteryPartNumber = () => '976331-01';
 
     override get compatibilityWarning() { return DYSON360_COMPATIBILITY_R2_NUROVI; }
@@ -274,7 +274,7 @@ export class DysonDevice360R2NuroviWashDry extends DysonDevice360MopMixin(DysonD
 
 // A Dyson R3 Nurovi Spot+Scrub UV device
 export class DysonDevice360R3NuroviSpotScrub extends DysonDevice360MopMixin(DysonDevice360NuroviBase) {
-    static readonly model = { type: 'RB05', number: 'RB05', variants: ['B', 'F'], name: 'R3 Nurovi Spot+Scrub UV' };
+    static override readonly model = { type: 'RB05', number: 'RB05', variants: ['B', 'F'], name: 'R3 Nurovi Spot+Scrub UV' };
     override getBatteryPartNumber = () => '975571-01';
 
     override get compatibilityWarning() { return DYSON360_COMPATIBILITY_R1R3_NUROVI; }

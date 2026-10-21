@@ -67,7 +67,7 @@ const FILTER_WARNING  = 10; // %
 export abstract class DysonDeviceAirBase extends DysonDevice<DysonMqttAir> {
 
     // The MQTT client and status update listener
-    static readonly mqttConstructor = DysonMqttAir;
+    static override readonly mqttConstructor = DysonMqttAir;
     mqttListener:       () => void;
     serialise:          DysonAirSerialise;
 

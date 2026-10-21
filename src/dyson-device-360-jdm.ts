@@ -41,7 +41,7 @@ const MASK_INACTIVE_TRANSITION_MS   =   2 * MS; //  2 seconds
 export abstract class DysonDevice360JdmBase extends DysonDevice360ZonesMixin(DysonDevice360Base<DysonMqtt360Jdm>) {
 
     // The MQTT client and status update listener with JDM endpoints
-    static readonly mqttConstructor = DysonMqtt360Jdm;
+    static override readonly mqttConstructor = DysonMqtt360Jdm;
 
     override getPowerLevelMaps = (): Dyson360PowerLevelMap[] => [
         [Dyson360VacuumMode.Auto,   RvcCleanMode360.Auto,       'Auto'],
@@ -58,7 +58,7 @@ export abstract class DysonDevice360JdmBase extends DysonDevice360ZonesMixin(Dys
     mqttJdmPropListener: (...args: DysonMqtt360JdmEventArgs) => void;
 
     // Add dock emptying dustbin capability
-    getEndpointOptions(): EndpointOptions360 {
+    override getEndpointOptions(): EndpointOptions360 {
         const endpointOptions = super.getEndpointOptions();
         endpointOptions.rvcOperationalState.supportsEmptyingDustBin = true;
         return endpointOptions;

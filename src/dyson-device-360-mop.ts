@@ -25,7 +25,7 @@ export function DysonDevice360MopMixin<TBase extends AbstractConstructor<DysonDe
         mopCleanMode: RvcCleanMode360 | undefined;
 
         // Add mop cleaning capability
-        getEndpointOptions(): EndpointOptions360 {
+        override getEndpointOptions(): EndpointOptions360 {
             const endpointOptions = super.getEndpointOptions();
             endpointOptions.rvcOperationalState.supportsCleaningMop = true;
             endpointOptions.rvcCleanMode.labels.push(...MOP_CLEAN_MODE_LABELS);
@@ -33,7 +33,7 @@ export function DysonDevice360MopMixin<TBase extends AbstractConstructor<DysonDe
         }
 
         // Reject requests to enable mopping for global cleans
-        makePowerCommand(cleanMode: RvcCleanMode360): DysonDevice360Command {
+        override makePowerCommand(cleanMode: RvcCleanMode360): DysonDevice360Command {
             const isMopping = MOP_CLEAN_MODE_LABELS.some(([mode]) => mode === cleanMode);
             if (isMopping) throw new Error('Global clean mopping is not implemented');
             return super.makePowerCommand(cleanMode);
