@@ -195,7 +195,6 @@ export class Endpoint360 extends EndpointBase {
 
         // Trigger OperationCompletion event when changing from active to idle
         const { errorStateId, errorStateLabel, errorStateDetails } = operationalError;
-        const isError = errorStateId !== RvcOperationalState.ErrorState.NoError;
         if (this.changed.isChanged('isActive', isActive)) {
             if (isActive) {
                 this.log.info(`(${AN}RVC Operation Started${RI})`);
@@ -213,7 +212,7 @@ export class Endpoint360 extends EndpointBase {
 
         // Trigger OperationalError event if there is a new error
         if (this.changed.isChanged('operationalError', operationalError)) {
-            if (isError) {
+            if (errorStateId) { // !== RvcOperationalState.ErrorState.NoError
                 const errorName = RvcOperationalState.ErrorState[errorStateId];
                 let logMessage = `${AN}RVC Operational Error event${RI}:`
                                + ` ${errorName ? `${AV}${errorName}${RI} (${AV}${errorStateId}${RI})` : `${AV}${errorStateId}${RI}`}`;

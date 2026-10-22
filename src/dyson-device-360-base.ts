@@ -396,7 +396,7 @@ export abstract class DysonDevice360Base<T extends DysonMqtt360 = DysonMqtt360>
         // Ensure consistent Operational State and Operational Error
         const { operationalError } = faults;
         let { operationalState } = mappedState;
-        if (operationalError.errorStateId !== RvcOperationalState.ErrorState.NoError) {
+        if (operationalError.errorStateId) { // !== RvcOperationalState.ErrorState.NoError
             // Force Error state if an error is being reported
             operationalState = RvcOperationalState.OperationalState.Error;
         } else {
