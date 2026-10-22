@@ -127,6 +127,7 @@ export abstract class DysonDevice360JdmBase extends DysonDevice360ZonesMixin(Dys
         } catch (err) {
             // Live map is only available about 7 seconds after the clean starts
             if (!(err instanceof DysonCloudStatusCodeError && err.statusCode === 404)) throw err;
+            this.log.debug('Ignoring 404 response for live cleaning map (zone status not updated)');
         }
     }
 
