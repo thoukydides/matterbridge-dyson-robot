@@ -195,7 +195,7 @@ export interface DysonConnectionStatusResponseV1 {
 // GET /v1/pats?locale={locale}
 export interface DysonProductAttributes {
     connectionCategory:         DysonManifestConnectionCategory;
-    countryCode:                DysonProductCountryCode | '';
+    countryCode:                string;
     deviceCategory:             DysonManifestCategory;
     generation?:                number;
     model:                      string;             // e.g. 'RB01' or 'TP02'

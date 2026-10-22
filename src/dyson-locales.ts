@@ -3,7 +3,8 @@
 
 import {
     DysonCountryCode,
-    DysonCountryCodeExceptionallyReserved
+    DysonCountryCodeExceptionallyReserved,
+    DysonCountryCodeMisused
 } from './dyson-types.js';
 
 // Country codes
@@ -11,10 +12,13 @@ export type CountryCode = Uppercase<string>;
 export type LocaleCode<C extends CountryCode = CountryCode> = `${Lowercase<string>}-${C}`;
 
 // Mapping of known non country codes to valid codes
-const COUNTRY_CODE_REMAP: Record<CountryCode, CountryCode | undefined> = {
-    UK: 'GB',       // Use Great Britain to represent the United Kingdom
-    EU: 'IE'        // Use Ireland to represent the European Union
-} satisfies Record<DysonCountryCodeExceptionallyReserved, CountryCode>;
+const COUNTRY_CODE_REMAP: Record<string, CountryCode | undefined> = {
+    UK:         'GB',   // Use Great Britain to represent the United Kingdom
+    EU:         'IE',   // Use Ireland to represent the European Union
+    AZ:         'NZ',   // Use New Zealand to represent APAC/Oceania
+    'ZH-CN':    'CN',   // China (simplified Chinese is default locale)
+    'ZH-TW':    'TW'    // Taiwan (simplified Chinese is default locale)
+} satisfies Record<DysonCountryCodeExceptionallyReserved | DysonCountryCodeMisused, CountryCode>;
 
 // Locale (culture) to use for each country returned by GET /v1/supportedmarket
 const COUNTRY_LOCALE_MAP: Record<CountryCode, LocaleCode | undefined> = {
@@ -95,13 +99,13 @@ const COUNTRY_LOCALE_MAP: Record<CountryCode, LocaleCode | undefined> = {
 } satisfies { [key in DysonCountryCode]: LocaleCode<key>; };
 
 // Normalise a country code
-export function dysonNormaliseCountry(country?: string, china?: boolean): CountryCode {
+export function dysonNormaliseCountry(country = '', china = false): CountryCode {
+    // Fix known invalid country codes
+    const remapped = COUNTRY_CODE_REMAP[country.toUpperCase()];
+    if (remapped) return remapped;
+
     // Use server location if no country specified
     if (!country || !isCountryCode(country)) return china ? 'CN' : 'GB';
-
-    // Fix known invalid country codes
-    const remapped = COUNTRY_CODE_REMAP[country];
-    if (remapped) return remapped;
 
     // Anything else resembling a country code is used as-is
     return country;

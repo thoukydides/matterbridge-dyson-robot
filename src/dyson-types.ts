@@ -67,7 +67,12 @@ export type DysonCountryCode =
 // Country codes associated with Dyson products
 export type DysonCountryCodeExceptionallyReserved =
     // (ISO 3166-1 also reserves: AC CP CQ DG EA EZ FX IC SU TA UN)
-    'UK' | 'EU';
+    'EU'        // European Union
+  | 'UK';       // United Kingdom
+export type DysonCountryCodeMisused =
+    'AZ'        // Should be Azerbaijan, but appears to be used for APAC/Oceania
+  | 'ZH-CN'     // China
+  | 'ZH-TW';    // Taiwan
 export type DysonCountryCodeUserAssigned =
     // (only XB XC XD XE XF XG XH XJ XK XX currently used)
     'AA' | 'QM' | 'QN' | 'QO' | 'QP' | 'QQ' | 'QR' | 'QS' | 'QT' | 'QU' | 'QV'
@@ -75,4 +80,7 @@ export type DysonCountryCodeUserAssigned =
   | 'XH' | 'XI' | 'XJ' | 'XK' | 'XL' | 'XM' | 'XN' | 'XO' | 'XP' | 'XQ' | 'XR'
   | 'XS' | 'XT' | 'XU' | 'XV' | 'XW' | 'XX' | 'XY' | 'XZ' | 'ZZ';
 export type DysonProductCountryCode =
-    DysonCountryCode | DysonCountryCodeExceptionallyReserved | DysonCountryCodeUserAssigned;
+    DysonCountryCode
+  | DysonCountryCodeExceptionallyReserved
+  | DysonCountryCodeMisused
+  | DysonCountryCodeUserAssigned;

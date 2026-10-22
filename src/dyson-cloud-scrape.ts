@@ -10,6 +10,9 @@ import { assertIsDefined, columns, formatList, plural } from './utils.js';
 import { logError } from './log-error.js';
 import { isSupportedModel } from './dyson-device.js';
 import { Config } from './config-types.js';
+import { CheckerT } from 'ts-interface-checker';
+import { checkers } from './ti/dyson-types.js';
+import { getTiStringUnion, TI_ANY_STRING } from './ti-tagged-utils.js';
 
 // Scrape the Dyson API for any unsupported products or fault codes
 export async function dysonCloudScrape(
@@ -40,16 +43,18 @@ export async function dysonCloudScrape(
 // Check for Dyson products that are not supported by this plugin
 async function dysonCloudScrapeProducts(log: AnsiLogger, api: DysonCloudAPI): Promise<void> {
     try {
-        // Retrieve the product attributes
+        // Retrieve the supported markets and product attributes
+        const markets = await api.getSupportedMarketV1();
         const products = await api.getProductAttributesV1();
 
         // Group candidate products by MQTT root topic
         interface ProductEntry { variants: Set<string>, models: Set<string> }
         interface ProductTopic { topic: string, names: Map<string, ProductEntry> };
         const byRootTopic = new Map<string, ProductTopic>();
+        let countryCodes = new Set<string>();
         const CATEGORIES = [DysonManifestCategory.RobotVacuum, DysonManifestCategory.AirTreatment];
         for (const product of Object.values(products)) {
-            const { deviceCategory, productName, model, variant, mqttRootTopicLevel: topic } = product;
+            const { countryCode, deviceCategory, productName, productNameByMarket, model, variant, mqttRootTopicLevel: topic } = product;
 
             // Exclude products that are not relevant to this plugin
             const categoryIndex = CATEGORIES.indexOf(deviceCategory);
@@ -66,7 +71,15 @@ async function dysonCloudScrapeProducts(log: AnsiLogger, api: DysonCloudAPI): Pr
             if (!entry) nameMap.names.set(name, entry = { variants: new Set<string>(), models: new Set<string>() });
             entry.variants.add(variant);
             entry.models.add(model);
+
+            // Collect country codes
+            countryCodes.add(countryCode);
+            countryCodes = countryCodes.union(new Set(Object.keys(productNameByMarket)));
         }
+
+        // Log the supported countries
+        checkCountryCodes(log, 'supported market',      markets,        checkers.DysonCountryCode);
+        checkCountryCodes(log, 'product country code',  countryCodes,   checkers.DysonProductCountryCode);
 
         // Filter the root topics to those that are not already supported
         const topics = [...byRootTopic.keys()].sort().map(key => byRootTopic.get(key)) as ProductTopic[];
@@ -100,6 +113,23 @@ async function dysonCloudScrapeProducts(log: AnsiLogger, api: DysonCloudAPI): Pr
         }
     } catch (err) {
         logError(log, 'Get product attributes', err);
+    }
+}
+
+// Check and log a list of country codes
+function checkCountryCodes<T>(log: AnsiLogger, description: string, countryCodes: Iterable<string>, checker: CheckerT<T>): void {
+    // Retrieve the values accepted by the checker
+    const accepted = getTiStringUnion(checkers, checker.getType());
+    if (accepted.has(TI_ANY_STRING)) throw new Error(`Checker for ${description} allows arbitrary 'string' values`);
+
+    // Check for unexpected values
+    const all = [...countryCodes].sort().filter(Boolean);
+    const rejected = [...new Set<string>(countryCodes).difference(accepted)];
+    if (rejected.length) {
+        log.warn(`${rejected.length} of ${plural(all.length, description)} are unexpected: ${formatList(rejected)}`);
+        log.info(`Full list of ${plural(all.length, description, false)}: ${formatList(all)}`);
+    } else {
+        log.info(`All ${plural(all.length, description)} are expected: ${formatList(all)}`);
     }
 }
 
