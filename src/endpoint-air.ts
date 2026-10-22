@@ -281,13 +281,17 @@ export class EndpointsAir {
 
     // Create an Air Quality Sensor device
     createAirQualitySensorEndpoint(parent?: MatterbridgeEndpoint): MatterbridgeEndpoint | undefined {
+        const { sensors } = this.options;
+
         // Create the endpoint
-        const endpoint = this.createDevice('Air Quality Sensor', [airQualitySensor, temperatureSensor, humiditySensor], parent);
+        const definition: AtLeastOne<DeviceTypeDefinition> = [airQualitySensor];
+        if (sensors.temperature)    definition.push(temperatureSensor);
+        if (sensors.humidity)       definition.push(humiditySensor);
+        const endpoint = this.createDevice('Air Quality Sensor', definition, parent);
         if (!endpoint) return;
         this.airQuality.push(endpoint);
 
         // Create the device-specific clusters
-        const { sensors } = this.options;
         createAirQualityClusterServer(endpoint);
         if (sensors.temperature) {
             createTemperatureMeasurementClusterServer(endpoint);
