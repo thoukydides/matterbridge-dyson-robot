@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v1.13.2] - 2026-10-22
+### Added
+* Mapped `AZ` product country code to New Zealand for use in subsequent API requests. (#52)
+* Accept additional API request and MQTT message formats for Spot+Scrub Ai. (#51)
+### Fixed
+* The Air Quality Sensor device only include Temperature and Humidity Sensor definitions when those clusters are being included.
+* Compatibility with Matterbridge version 3.11.0.
+
 ## [v1.13.1] - 2026-10-21
 ### Added
 * Accept `REQUEST-CURRENT-FAULTS` command for robot vacuums. (#51)
@@ -492,7 +500,8 @@ All notable changes to this project will be documented in this file.
 
 Copyright © 2025-2026 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.13.1...HEAD
+[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.13.2...HEAD
+[v1.13.2]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.13.1...v1.13.2
 [v1.13.1]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.13.0...v1.13.1
 [v1.13.0]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.12.5...v1.13.0
 [v1.12.5]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.12.4...v1.12.5
