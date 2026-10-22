@@ -317,9 +317,9 @@ export const DYSON_360_FAULT_SINGLE_CODES = new Map<number, Dyson360FaultDetail>
     [2009,                      { msg: 'Scheduled clean complete',                                                                          statusOnly: true    }], // FAULT_PLAN_CLEAN_COMPLETE
     [2010,                      { msg: 'ToF sensor abnormal',                                       opError: 'NavigationSensorObscured'                         }], // FAULT_TOF_ABNORMAL
     [2100,                      { msg: 'Return-to-dock interrupted',                                opError: 'FailedToFindChargingDock'                         }], // FAULT_BROKEN_GO_HOME
-    [2101,                      { msg: 'Charging interrupted',                                      opError: 'LowBattery'                                       }], // FAULT_BROKEN_CHARING
+    [2101,                      { msg: 'Charging interrupted',                                      opError: 'LowBattery'                                       }], // FAULT_BROKEN_CHARGING
     [2102,                      { msg: 'Returning to dock...',                                                                              statusOnly: true    }], // FAULT_ROBOT_GLOBAL_GO_HOME
-    [2103,                      { msg: 'Robot state changing...',                                                                           statusOnly: true    }], // FAULT_ROBOT_CHANGING
+    [2103,                      { msg: 'Charging...',                                                                                       statusOnly: true    }], // FAULT_ROBOT_CHARGING
     [2104,                      { msg: 'Returning to dock (user-initiated)...',                                                             statusOnly: true    }], // FAULT_ROBOT_USER_GO_HOME
     [2105,                      { msg: 'Charging complete',                                                                                 statusOnly: true    }], // FAULT_ROBOT_CHARGE_FINISH
     [2106,                      { msg: 'Charging-wait interrupted',                                                                         statusOnly: true    }], // FAULT_BROKEN_CHARGING_WAIT
