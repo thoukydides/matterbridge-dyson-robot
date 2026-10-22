@@ -67,11 +67,19 @@ export interface Dyson360JdmStatusEventLocateFailPost extends Dyson360JdmStatusB
 
 // A map has been modified
 export interface Dyson360JdmStatusEventMapChangePost extends Dyson360JdmStatusBase {
-    method:                 'event.map_change.post'
+    method:                 'event.map_change.post';
     params: {
         map_change?:         Dyson360JdmMapChangeResult;
     }
-};
+}
+
+// Generated after service.set_cur_map and service.set_room_clean?
+export interface Dyson360JdmStatusEventShortcutInstructionTaskChangePost extends Dyson360JdmStatusBase {
+    method:                 'event.shortcut_instruction_task_change.post';
+    params: {
+        result:             number;
+    }
+}
 
 // Mapping has started
 export interface Dyson360JdmStatusEventStartBuildMapPost extends Dyson360JdmStatusBase {
@@ -206,4 +214,5 @@ export interface Dyson360JdmMapStatus {
     mapId?:                 number;
     message:                string;                                 // e.g. "Processing success"
     status:                 'SUCCESS';
+    time?:                  string;                                 // ISO datetime
 }

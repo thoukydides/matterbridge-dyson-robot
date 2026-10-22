@@ -375,9 +375,18 @@ export type Dyson360JdmFurniture = [
 
 // Dyson robot vacuum JDM privacy policy
 export interface Dyson360JdmPrivacyStruct {
+    ai_agent:                           Dyson360JdmBoolean;
+    ai_avoidance:                       Dyson360JdmBoolean;
+    ai_avoidance_mode:                  Dyson360JdmBoolean;
     ai_recognize:                       Dyson360JdmBoolean;
     auto_upgrade:                       Dyson360JdmBoolean;
+    carpet_avoid:                       Dyson360JdmBoolean;
+    carpet_show:                        Dyson360JdmBoolean;
+    carpet_turbo:                       Dyson360JdmBoolean;
     dirt_recognize:                     Dyson360JdmBoolean;
     dirty_clean_mode:                   Dyson360JdmBoolean;
+    map_uploads:                        Dyson360JdmBoolean;
+    pet_recognize:                      Dyson360JdmBoolean;
+    record_uploads:                     Dyson360JdmBoolean;
 }
 export type Dyson360JdmPrivacy = Dyson360JdmPrivacyStruct | 0;

@@ -28,14 +28,17 @@ export interface Dyson360JdmPropValues {
     back_wash_type?:            Dyson360JdmBackWashType;        // = backWashType
     charge_state?:              Dyson360JdmBoolean;             // On dock charging contacts
     child_lock?:                Dyson360JdmBoolean;             // = childLock
+    clean_finish?:              number;                         // Time clean completed                         (0 or seconds since epoch)
     clean_id?:                  string;                         // = cleanId
     clean_wash_attachment?:     null;                           // ?
     cleaning_area?:             number;                         // Area cleaned                                 dm²
     cleaning_time?:             number;                         // = cleanDuration                              (but minutes, not seconds)
+//    cloth_state?:               unknown;                        // ?
     cur_path?:                  number[];                       // = globalPosition [id, x[0], y[0], angle[0], update[0], ..., timestamp]
     current_map_id?:            number;                         // = persistentMapId                            (number, not string)
-    detergent_consumed?:        number;                         // ?
+    custom_type?:               Dyson360JdmBoolean;             // ?
     detergent?:                 Dyson360JdmBoolean;             // = detergent
+    detergent_consumed?:        number;                         // ?
     dock_hypa?:                 number;                         // = consumables[{ type: 'dockFilter' }]        (% used?, absent = -1)
     dust_action?:               Dyson360JdmDustAction;          // Auto-emptying dustbin on dock
     dust_auto_state?:           Dyson360JdmBoolean;             // = collectDustOnSelfClean
@@ -58,6 +61,9 @@ export interface Dyson360JdmPropValues {
     quiet_begin_time?:          number;                         // = doNotDisturbMode.startTime                 (minutes since midnight)
     quiet_end_time?:            number;                         // = doNotDisturbMode.endTime                   (minutes since midnight)
     quiet_is_open?:             Dyson360JdmBoolean;             // = doNotDisturbMode.isOn
+//    reserved_hypa?:             unknown;                        // ?
+//    reserved_main_brush?:       unknown;                        // ?
+//    reserved_side_brush?:       unknown;                        // ?
     robot_auto_updown_type?:    string | null;                  // Internal model number e.g '804A'
     side_brush?:                number;                         // = consumables[{ type: 'sideBrushes' }]       (% used?, absent = -1)
     station_act?:               Dyson360JdmDockState;           // = dockState
@@ -83,14 +89,17 @@ export type Dyson360JdmProp = // keyof Dyson360JdmPropValues
   | 'back_wash_type'
   | 'charge_state'
   | 'child_lock'
+  | 'clean_finish'
   | 'clean_id'
   | 'clean_wash_attachment'
   | 'cleaning_area'
   | 'cleaning_time'
+//  | 'cloth_state'
   | 'cur_path'
   | 'current_map_id'
-  | 'detergent_consumed'
+  | 'custom_type'
   | 'detergent'
+  | 'detergent_consumed'
   | 'dock_hypa'
   | 'dust_action'
   | 'dust_auto_state'
@@ -113,6 +122,9 @@ export type Dyson360JdmProp = // keyof Dyson360JdmPropValues
   | 'quiet_begin_time'
   | 'quiet_end_time'
   | 'quiet_is_open'
+//  | 'reserved_hypa'
+//  | 'reserved_main_brush'
+//  | 'reserved_side_brush'
   | 'robot_auto_updown_type'
   | 'side_brush'
   | 'station_act'

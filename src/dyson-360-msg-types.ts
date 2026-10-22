@@ -261,6 +261,9 @@ export interface Dyson360MsgStateSet extends DysonMsgCommand {
     defaults?: {
         defaultCleaningStrategy: Dyson360VacuumMode
     }
+    airDryFrequency?:                   number; // hours
+    backWashTime?:                      number; // minutes
+    backWashType?:                      Dyson360BackWashType;
 }
 
 export interface Dyson360MsgStartBase extends DysonMsgCommand {
