@@ -305,7 +305,7 @@ Each robot vacuum appears as a standalone Matter device with a single endpoint. 
   | `Mop`           |         |             |                         | Wash-only                    |
   | `VacuumThenMop` |         |             |                         | Vacuum and Wash              |
 
-  Detailed Dyson Spot+Scrub Ai and Dyson R1/R2/R3 Nurovi cleaning settings (vacuum repetitions, wash repetitions, hydration level, etc) are not exposed to Matter. During a clean the *CurrentMode* indicates the current activity, e.g. `Mop` when washing as part of a vacuum-and-wash.
+  Changing the *CurrentMode* before starting a clean affects global cleans only. Zone-configured cleans always use the per-zone settings configured in the MyDyson app. During an active clean the *CurrentMode* indicates the instantaneous activity, e.g. `Mop` when washing as part of a vacuum-and-wash. Detailed Dyson Spot+Scrub Ai and Dyson R1/R2/R3 Nurovi cleaning settings (vacuum repetitions, wash repetitions, hydration level, etc) are not exposed to Matter.
 
 **RVC Operational State** cluster:
   - `Pause`: Pause cleaning or mapping activity.
@@ -318,8 +318,8 @@ Each robot vacuum appears as a standalone Matter device with a single endpoint. 
   - Battery charge level and charging status.
   - Any active fault.
 
-**Service Area** cluster (currently only implemented for Dyson 360 Vis Nav):
-  - `SelectAreas`: Start a zone clean of specified areas (using the per-zone power modes configured in the MyDyson app).
+**Service Area** cluster:
+  - `SelectAreas`: The `SelectAreas` command immediately starts a zone-configured clean using the per-zone settings (vacuum power mode, mop options, etc) configured in the MyDyson app. The **RVC Clean Mode** does not affect the clean.
   - Lists of maps and zones.
   - Current zone and per-zone cleaning status.
 
@@ -499,55 +499,78 @@ All notable changes to this project are documented in [`CHANGELOG.md`](CHANGELOG
           
 If you have discovered an issue or have an idea for how to improve this project, please [open a new issue](https://github.com/thoukydides/matterbridge-dyson-robot/issues/new/choose) using the appropriate issue template.
 
-Most device-specific issues cannot be meaningfully investigated without a **debug log file**, captured with the `Log MQTT Payloads as JSON` debug option enabled. Issues related to robot vacuum devices (especially 360 Heurist, 360 Vis Nav, Spot+Scrub Ai, or R1/R2/R3 Nurovi) also require the `Log API Bodies` debug option enabled.
+Most device-specific issues cannot be investigated effectively without a **complete debug log**, captured with the following configuration options:
+* `"debug": true`
+* `"wildcardTopic": true`
+* `"debugFeatures": ["Log API Bodies", "Log MQTT Payloads as JSON", "Log Debug as Info"]`
+
+**Important notes:**
+- Use the actual log file or systemd journal (e.g. `journalctl -u matterbridge.service -n 1000 -f --output cat`). Do **not** copy log entries directly from the Matterbridge web user interface, as it mangles whitespace and structural formatting required for analysis.
+- Provide the full log as-is, starting from Matterbridge start-up. The log files are parsed by automated tools that rely on precise formatting, and full context is essential for diagnosing issues.
+- Do **not** paraphrase error messages. Precise messages, stack backtraces, API responses, and MQTT message payloads are vital.
+- Avoid using AI tools to condense or reformat logs. The original raw log formatting and content is required for automated processing and maintainer review. Restrict any use of AI to highlighting sensitive identifiers for redaction.
+- The plugin automatically redacts email addresses, authorisation tokens, and device serial numbers from its own log output. However, it cannot modify Matterbridge system logs or output from other plugins. Before posting, check that the log does not contain sensitive personal data and redact as necessary using minimal edits. Do **not** truncate or modify the structural message formatting.
+
+When reporting an issue, describe expected versus actual behaviour, steps to reproduce, and approximate timestamps of key events.
 
 <details>
-<summary>Reporting Issues with Unsupported or Recently Released Air Treatment Devices</summary>
+<summary>Reporting Unsupported or Recently Released Devices</summary>
 
-#### MQTT Log for Air Treatment Devices
+#### Manifest for Unsupported Devices
 
-Most Dyson connected products use MQTT messages to control their basic functionality and provide status. Please use the `opendyson` tool to capture a full MQTT message log whilst exercising as much of the device's functionality as possible, e.g. adjusting every setting of an air purifier:
+If your device is completely missing from the list offered by this plugin, or the plugin fails to start because the MyDyson API returns unexpected or unsupported values:
 
-- Install `opendyson`, e.g. if `Go` is installed and configured:
-  `go install github.com/libdyson-wg/opendyson`
-- Login to your MyDyson account:
-  `opendyson login`
-- Identify devices and retrieve their connection credentials:
-  `opendyson devices`
-- Capture an MQTT message log:
-  `opendyson listen SERIALNUMBER` (with the device's actual serial number substituted)
-- Paste or attach the output of `opendyson devices` and `opendyson listen` into the **Additional Information** section of the issue (as text, not a screenshot).
+1. Ensure that **provisioningMethod** is set to `Connect via AWS IoT gateway / Configure using MyDyson account` (i.e. `"provisioningMethod": "Remote Account"`), and the debug options are configured as described above.
+1. Start Matterbridge and capture a debug log that includes the `GET /v3/manifest` response and any associated validation errors or warnings.
+1. Create a new issue and attach the complete log file.
 
 </details>
 <details>
-<summary>Reporting Issues with Unsupported or Recently Released Robot Vacuums</summary>
+<summary>Reporting Issues with Air Treatment Devices</summary>
 
-#### MQTT Log for Robot Vacuums
+#### MQTT Log for Air Treatment Devices
 
-Most Dyson connected products use MQTT messages to control their basic functionality and provide status. Unfortunately, the `opendyson` tools does not subscribe to the correct `<root>/<serial>/status` topic for robot vacuums, so cannot be used to collect a useful log.
+Most Dyson connected products use MQTT messages to control basic functionality and report status:
 
-If the robot vacuum model is completely unsupported by this plugin then first [open a new issue](https://github.com/thoukydides/matterbridge-dyson-robot/issues/new/choose) providing the output of `opendyson devices`.
+1. Ensure that the plugin's debug options are configured as described above.
+1. Start Matterbridge and verify `MQTT subscribe successful: all N topics granted` appears in the log.
+1. Exercise as much of the device's functionality as possible using the MyDyson app (e.g. adjusting every available setting using all available values where practical). Keep a note of the sequence of operations performed.
+1. Create a new issue, attach the complete log file, and include the test sequence with approximate timestamps.
 
-Once the plugin recognises the model enable the `Log MQTT Payloads as JSON` and `Log API Bodies` debug options, and attach the resulting **debug log file** to the issue. Error and warning messages are expected.
+</details>
+<details>
+<summary>Reporting Issues with Robot Vacuums</summary>
 
-#### API HTTPS Log for Robot Vacuums
+#### API HTTPS and MQTT Logs for Robot Vacuums
 
-Dyson robot vacuums perform many operations (such as controlling zone cleaning and viewing cleaned area maps) via the MyDyson API instead of using MQTT messages. Please use a tool like Proxyman to capture examples of these HTTPS requests and their responses:
+Most Dyson robot vacuums use a combination of REST API requests and MQTT messages for control and status. While the plugin can subscribe to MQTT command topics to observe messages published by the MyDyson app, it cannot monitor the app's direct HTTPS REST traffic. It is therefore necessary to use a Man-In-The-Middle (MITM) proxy to capture the MyDyson app's API requests while simultaneously capturing the MQTT log.
 
-- Install [Proxyman](https://apps.apple.com/gb/app/proxyman/id1551292695). (The free edition is sufficient; the Proxyman Pro in-app purchases are not required.)
-- Run `Proxyman`, and on its **More** tab:
-  - Follow the "How to setup" instructions to install and trust the root certificate.
-  - Under **SSL Proxying List** add `appapi.cp.dyson.com` and enable it.
-  - Start the VPN. Ensure that `Ready to intercept` is displayed.
-- Launch the MyDyson app.
-- On Proxyman's **Home** tab search for and select `appapi.cp.dyson.com`. Ensure that requests are being captured and decoded.
-- Switch back to the MyDyson app and try all of the robot vacuum's basic functionality, including:
-  - Change the power level for an "All areas" clean.
-  - Start an "All areas" clean.
-  - Change the power level for a zone.
-  - Start a clean of a single zone.
-  - View the most recent cleaned area map.
-- Return to Proxyman, and click on the cog icon above the list of messages, select **Share**, and then **Save to Files**. This will create a `.proxymanlogv2` file (a Zip archive containing a JSON representation of each captured request). Attach this to the issue. (Ensure that you attach the actual file, not a screenshot.)
+Start both captures before beginning the test sequence, keep both running continuously, and record timestamps for each operation so API requests, MQTT messages, and physical vacuum behaviour can be correlated.
+
+The following instructions use the Proxyman app (available for both [iPhone/iPad](https://proxyman.com/ios) and [Android](https://proxyman.com/android)). However, alternative tools that intercept and capture the HTTPS traffic (such as [mitmproxy](https://www.mitmproxy.org/) or [Charles](https://www.charlesproxy.com/documentation/proxying/ssl-proxying/)) may be used instead.
+
+1. Prepare Proxyman to capture MyDyson API requests:
+   - Install [Proxyman for iOS](https://apps.apple.com/gb/app/proxyman/id1551292695) or [Proxyman for Android](https://play.google.com/store/apps/details?id=com.proxyman.proxymanandroid). (The free version is sufficient; Pro features are not required.)
+   - Open Proxyman and follow the **How to setup** instructions on the **More** tab to install and trust the root CA certificate.
+   - Under **SSL Proxying List**, add `appapi.cp.dyson.com` and enable it.
+   - Start the VPN proxy in Proxyman and verify `Ready to intercept` is displayed.
+   - Open the MyDyson app.
+   - In Proxyman's **Home** tab, locate `appapi.cp.dyson.com` to confirm requests are being actively captured and decrypted.
+1. Prepare Matterbridge to log MQTT messages:
+   - Ensure that the plugin's debug options are configured as described above.
+   - Start Matterbridge and verify `MQTT subscribe successful: all N topics granted` appears in the log.
+1. Exercise as much of the robot vacuum's functionality as possible using the MyDyson app, keeping a note of the sequence of operations performed. Include at least the following:
+   - Start all types of global clean (e.g. different vacuum power levels, mop settings).
+   - Abort an active global clean mid-cycle.
+   - Start zone-configured cleaning with varied settings per zone (vacuum-only, mop-only, vacuum-and-mop, vacuum-then-mop).
+   - Allow a full cleaning cycle to complete naturally (including dock departure and post-clean maintenance).
+   - Load and view the most recent cleaned area map in the app.
+1. Export HTTPS API logs:
+   - Return to Proxyman and disable the VPN.
+   - Select `appapi.cp.dyson.com` on the **Home** tab, tap the settings/cog icon, choose **Share**, and **Save to Files**. This generates a `.proxymanlogv2` archive (a Zip archive containing a JSON representation of each captured request).
+1. Create a new issue, attaching both the Matterbridge log file and the Proxyman archive alongside your timestamped sequence of test steps.
+
+*Note on Proxyman Privacy:* `.proxymanlogv2` archives contain raw API headers and MyDyson authorisation tokens. If you redact these files, state what was removed, or reach out to share the file securely/privately via email or direct link if preferred.
 </details>
 
 ### Pull Requests

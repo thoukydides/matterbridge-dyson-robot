@@ -47,30 +47,21 @@ body:
         - A relevant MQTT message log extract (see below)
         - Or link to another open source project that supports this feature
 
-        Use either of these methods to capture an MQTT message log:
+        Capture an MQTT message log:
         
-        1. Matterbridge plugin log:
+        - In the Matterbridge frontend: *Home* > *Plugins* > *matterbridge-dyson-robot* > ⚙️
+          - *debug* > ✅
+          - *wildcardTopic* > ✅
+          - *Enable advanced debug option* > *Log MQTT Payloads as JSON*
+        - Or in `matterbridge-dyson-robot.config.json`:
+          ```json
+          "debug": true,
+          "wildcardTopic": true,
+          "debugFeatures": ["Log MQTT Payloads as JSON"]
+          ```
+        - View logs with: `journalctl -u matterbridge.service -n 1000 -f --output cat`
         
-          - In the Matterbridge frontend: *Home* > *Plugins* > *matterbridge-dyson-robot* > ⚙️
-            - *debug* > ✅
-            - *Enable advanced debug option* > *Log MQTT Payloads as JSON*
-          - Or in `matterbridge-dyson-robot.config.json`:
-            ```json
-            "debug": true,
-            "debugFeatures": ["Log MQTT Payloads as JSON"]
-            ```
-          - View logs with: `journalctl -u matterbridge.service -n 1000 -f --output cat`
-        
-        2. Using the `opendyson` tool:
-
-          - Install `opendyson`, e.g. if `Go` is installed and configured:
-            `go install github.com/libdyson-wg/opendyson`
-          - Login to your MyDyson account:
-            `opendyson login`
-          - Identify devices and retrieve their connection credentials:
-            `opendyson devices`
-          - Capture an MQTT message log:
-            `opendyson listen SERIALNUMBER` (with the device's actual serial number substituted)
+        Capture the log whilst exercising as much of the device's functionality as possible, e.g. adjusting every setting of an air purifier or performing a full clean with a robot vacuum.
         
         Paste the log below or attached as a text file. Do NOT use a screenshot. Replace sensitive information (access tokens, etc) with `REDACTED`.
       placeholder: |

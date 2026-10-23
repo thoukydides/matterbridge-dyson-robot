@@ -102,18 +102,18 @@ body:
     attributes:
       label: Log File
       description: |
-        Provide relevant Matterbridge logs, either pasted below or attached as a text file. Do NOT use a screenshot. Replace sensitive information (access tokens, etc) with `REDACTED`. Logs are most useful when they are complete; include the full output around the error message and do not omit any lines.
+        Provide relevant Matterbridge logs, either pasted below or attached as a text file. Do NOT use a screenshot. Replace sensitive information (access tokens, etc) with `REDACTED`. Logs are most useful when they are complete; include the full output around the error message and do not omit any lines. Avoid using AI tools to condense or reformat logs.
 
         Enable and capture appropriate extra debug:
         
         - **For Plugin Debug Logging** (enable for most issues):
           - In Matterbridge frontend: *Home* > *Plugins* > *matterbridge-dyson-robot* > ⚙️ > *debug* > ✅
             - Or in the `matterbridge-dyson-robot.config.json` file: `"debug": true`
-          - View the log file directly (e.g. `journalctl -u matterbridge.service -n 1000 -f --output cat`); the Matterbridge frontend normally filters out debug messages.
+          - View the log file directly (e.g. `journalctl -u matterbridge.service -n 1000 -f --output cat`); the Matterbridge frontend normally filters out debug messages and mangles whitespace.
           
         - **For Dyson MQTT Logging (enable for any Dyson interoperability issues)**:
-          - In Matterbridge frontend: *Home* > *Plugins* > *matterbridge-dyson-robot* > ⚙️ > *Enable advanced debug option* > *Log MQTT Payloads as JSON*
-            - Or in the `matterbridge-dyson-robot.config.json` file: `"debugFeatures": ["Log MQTT Payloads as JSON"]`
+          - In Matterbridge frontend: *Home* > *Plugins* > *matterbridge-dyson-robot* > ⚙️ > *Enable advanced debug option* > *Log MQTT Payloads as JSON* and *wildcardTopic* > ✅
+            - Or in the `matterbridge-dyson-robot.config.json` file: `"debugFeatures": ["Log MQTT Payloads as JSON"], "wildcardTopic": true`
           
         - **For Matterbridge Logging**:
           - In Matterbridge frontend: *Settings* > *Matterbridge settings* > *Logger level* > *Debug*.
@@ -146,35 +146,23 @@ body:
       label: Additional Information
       description: |
         Provide any additional information that might assist with resolving your bug report. This could include links to product web pages, user manuals, screenshots, videos, or anything else relevant. If you have tried workarounds or debugging steps, include them here.
-
-        If the issue relates to an unsupported or recently released Dyson product the use the `opendyson` tool to capture a full MQTT message log whilst exercising as much of the device's functionality as possible, e.g. adjusting every setting of an air purifier or performing a full clean with a robot vacuum:
-
-        - Install `opendyson`, e.g. if `Go` is installed and configured:
-          `go install github.com/libdyson-wg/opendyson`
-        - Login to your MyDyson account:
-          `opendyson login`
-        - Identify devices and retrieve their connection credentials:
-          `opendyson devices`
-        - Capture an MQTT message log:
-          `opendyson listen SERIALNUMBER` (with the device's actual serial number substituted)
-        - Paste or attach the output of `opendyson devices` and `opendyson listen` here (as text, not a screenshot)
         
-        For robot vacuums, also use the Proxyman app to capture the MyDyson app's HTTPS requests:
-        
-        - Install [Proxyman](https://apps.apple.com/gb/app/proxyman/id1551292695). (The free edition is sufficient; the Proxyman Pro in-app purchases are not required.)
-        - Run `Proxyman`, and on its **More** tab:
-          - Follow the "How to setup" instructions to install and trust the root certificate.
-          - Under **SSL Proxying List** add `appapi.cp.dyson.com` and enable it.
-          - Start the VPN. Ensure that `Ready to intercept` is displayed.
-        - Launch the MyDyson app.
-        - On Proxyman's **Home** tab search for and select `appapi.cp.dyson.com`. Ensure that requests are being captured and decoded.
-        - Switch back to the MyDyson app and try all of the robot vacuum's basic functionality, including:
-          - Change the power level for an "All areas" clean.
-          - Start an "All areas" clean.
-          - Change the power level for a zone.
-          - Start a clean of a single zone.
-          - View the most recent cleaned area map.
-        - Return to Proxyman, and click on the cog icon above the list of messages, select **Share**, and then **Save to Files**. This will create a `.proxymanlogv2` file (a Zip archive containing a JSON representation of each captured request). Attach the saved file (not a screenshot) here.
+        For robot vacuums also use a Man-In-The-Middle (MITM) proxy to capture the MyDyson app's API requests. For example, using the Proxyman app:
+
+        - Install [Proxyman for iOS](https://apps.apple.com/gb/app/proxyman/id1551292695) or [Proxyman for Android](https://play.google.com/store/apps/details?id=com.proxyman.proxymanandroid). (The free version is sufficient; Pro features are not required.)
+          - Open Proxyman and follow the **How to setup** instructions on the **More** tab to install and trust the root CA certificate.
+          - Under **SSL Proxying List**, add `appapi.cp.dyson.com` and enable it.
+          - Start the VPN proxy in Proxyman and verify `Ready to intercept` is displayed.
+          - Open the MyDyson app.
+          - In Proxyman's **Home** tab, locate `appapi.cp.dyson.com` to confirm requests are being actively captured and decrypted.
+        - Exercise as much of the robot vacuum's functionality as possible using the MyDyson app, keeping a note of the sequence of operations performed. Include at least the following:
+          - Start all types of global clean (e.g. different vacuum power levels, mop settings).
+          - Abort an active global clean mid-cycle.
+          - Start zone-configured cleaning with varied settings per zone (vacuum-only, mop-only, vacuum-and-mop, vacuum-then-mop).
+          - Allow a full cleaning cycle to complete naturally (including dock departure and post-clean maintenance).
+          - Load and view the most recent cleaned area map in the app.
+        - Return to Proxyman and disable the VPN.
+        - Select `appapi.cp.dyson.com` on the **Home** tab, tap the settings/cog icon, choose **Share**, and **Save to Files**. This generates a `.proxymanlogv2` archive (a Zip archive containing a JSON representation of each captured request). Attach the saved file (not a screenshot) here.
       placeholder: "Any other relevant information..."
     validations:
       required: false
@@ -183,7 +171,7 @@ body:
     attributes:
       value: |
         **Important Notes:**
-        - 🐞 Most issues cannot be diagnosed without debug logs - please include them.
+        - 🐞 Most issues cannot be diagnosed without complete debug logs; please include them.
         - 🔐 Ensure sensitive information like tokens or passwords are `REDACTED` before sharing.
         - 🔄 Always update to the latest plugin version before reporting bugs.
         - 🧪 This is a personal project, so not all issues may be investigated or resolved. Please do not take it personally.
