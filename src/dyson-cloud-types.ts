@@ -95,11 +95,11 @@ export enum DysonManifestCapability {
     ChangeWiFi                  = 'ChangeWifi',
     ChildLock                   = 'ChildLock',
     CleaningStrategies          = 'CleaningStrategies',
+    DST                         = 'DST',
     Daylight                    = 'Daylight',
     DelayedDryingDuration       = 'DelayedDryingDuration',
     DirectedCleaning            = 'DirectedCleaning',
     DoNotDisturbMode            = 'DoNotDisturbMode',
-    DST                         = 'DST',
     DustDetection               = 'DustDetection',
     EnvironmentalData           = 'EnvironmentalData',
     ExtendedAQ                  = 'ExtendedAQ',
@@ -114,7 +114,8 @@ export enum DysonManifestCapability {
     ReadyOffDock                = 'ReadyOffDock',
     Restrictions                = 'Restrictions',
     Scheduling                  = 'Scheduling',
-    SelfCleanOptionsV           = 'SelfCleanOptionsV2'
+    SelfCleanOptionsV           = 'SelfCleanOptionsV2',
+    SelfCleanV2                 = 'SelfCleanV2'
 };
 export interface DysonManifestFirmware {
     autoUpdateEnabled:          boolean;
