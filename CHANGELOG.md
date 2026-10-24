@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v1.13.3] - 2026-10-24
+### Added
+* Details of fault codes for R2 Nurovi Wash+Dry. (#50)
+* Accept additional manifest capability for R2 Nurovi Wash+Dry. (#50)
+
 ## [v1.13.2] - 2026-10-22
 ### Added
 * Mapped `AZ` product country code to New Zealand for use in subsequent API requests. (#52)
@@ -500,7 +505,8 @@ All notable changes to this project will be documented in this file.
 
 Copyright © 2025-2026 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.13.2...HEAD
+[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.13.3...HEAD
+[v1.13.3]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.13.2...v1.13.3
 [v1.13.2]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.13.1...v1.13.2
 [v1.13.1]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.13.0...v1.13.1
 [v1.13.0]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.12.5...v1.13.0
