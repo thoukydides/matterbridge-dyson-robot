@@ -445,7 +445,18 @@ Matter controllers vary in their support for different device types. This plugin
 
 ### Matter Limitations
 
-The following functionality is not supported by this plugin due to lack of appropriate device types, clusters, or attributes, in the Matter 1.4 specification:
+The following functionality is not supported by this plugin due to lack of appropriate device types, clusters, or attributes, in the Matter 1.6.1 specification:
+<details>
+<summary>Robot Vacuums</summary>
+
+* Detailed cleaning options *(Spot+Scrub Ai or R1/R2/R3 Nurovi)*:
+  - Dry passes
+  - Mop passes
+  - Water level
+  - UV scan
+* Clean type for zone-configured cleans *(360 Vis Nav, Spot+Scrub Ai, or R1/R2/R3 Nurovi)*
+
+</details>
 <details>
 <summary>Air Purifiers</summary>
 
