@@ -596,7 +596,7 @@ This plugin enables essential status monitoring and control interoperability bet
 
 However, Dyson may change their APIs or terms of service at any time, potentially rendering this plugin non-functional or causing unexpected behaviour. By using this plugin, you acknowledge and accept the inherent risks associated with interacting with unofficial APIs. Your use of this plugin is entirely at your own risk. If Dyson chooses to offer an official API or integration mechanism, this project will aim to migrate to that instead.
 
-Dyson, Dyson Cool, Dyson Hot, Dyson Hot+Cool, Dyson Pure, Dyson Pure Cool, Dyson Pure Cool Link, Dyson Pure Hot+Cool Link, Dyson Pure Humidify+Cool, Dyson 360 Eye, Dyson 360 Heurist, Dyson 360 Vis Nav, and Dyson Spot+Clean, are trademarks of Dyson Technology Limited.
+Dyson, Dyson Cool, Dyson Hot, Dyson Hot+Cool, Dyson Pure, Dyson Pure Cool, Dyson Pure Cool Link, Dyson Pure Hot+Cool Link, Dyson Pure Humidify+Cool, Dyson Find+Follow, Dyson 360 Eye, Dyson 360 Heurist, Dyson 360 Vis Nav, Dyson Spot+Clean, and Dyson Nurovi are trademarks of Dyson Technology Limited.
 
 ### ISC License (ISC)
 
