@@ -16,7 +16,11 @@ import {
     Dyson360PowerLevelMap,
     Dyson360CleanSummaryResult
 } from './dyson-device-360-base.js';
-import { Dyson360CleaningStatus, DysonDevice360ZonesMixin } from './dyson-device-360-zones.js';
+import {
+    Dyson360CleaningStatus,
+    Dyson360CurrentZone,
+    DysonDevice360ZonesMixin
+} from './dyson-device-360-zones.js';
 import {
     dysonRenderMap360Eye,
     dysonRenderMap360VisNav
@@ -175,16 +179,19 @@ export class DysonDevice360VisNav extends DysonDevice360ZonesMixin(DysonDevice36
         // Update the Service Area cluster when the zone status changes
         const { currentCleaningMode: cleaningMode, cleaningProgramme, state, zoneStatus } = status;
         let cleaningStatus: Dyson360CleaningStatus | undefined;
+        let currentZone: Dyson360CurrentZone | undefined;
         if (state.startsWith('FULL_CLEAN_')) {
             assertIsDefined(cleaningMode);
             if (cleaningMode === Dyson360CleaningMode.Global) {
                 // No map or zone for global cleans
                 cleaningStatus = { cleaningMode };
             } else if (zoneStatus) {
-                // Live zone status available
-                const { persistentMapId: mapId, zonesDefinitionVersion: mapVersion } = status;
-                // (persistent map might be cleared first at the end of a clean)
-                if (mapId) cleaningStatus = { cleaningMode, mapId, mapVersion, zoneStatus };
+                // Live zone status available (but persistent map might not)
+                const { persistentMapId: mapId, zonesDefinitionVersion: mapVersion, zoneId } = status;
+                if (mapId) {
+                    cleaningStatus = { cleaningMode, mapId, mapVersion, zoneStatus };
+                    if (zoneId) currentZone = { mapId, mapVersion, zoneId };
+                }
             } else if (cleaningProgramme && 'orderedZones' in cleaningProgramme) {
                 // No live zone status, so synthesise from cleaning programme
                 const zones = new Set([
@@ -199,7 +206,7 @@ export class DysonDevice360VisNav extends DysonDevice360ZonesMixin(DysonDevice36
                 };
             }
         }
-        await this.updateZoneStatus(cleaningStatus);
+        await this.updateZoneStatus(cleaningStatus, currentZone);
     }
 
     // Retrieve the latest persistent map metadata

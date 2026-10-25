@@ -5,31 +5,52 @@ import { PowerSource, RvcOperationalState } from 'matterbridge/matter/clusters';
 import { RvcCleanMode360, RvcRunMode360 } from './endpoint-360-behavior.js';
 import {
     Dyson360DockState,
-    Dyson360VacuumMode
+    Dyson360Point,
+    Dyson360VacuumMode,
+    Dyson360ZoneCleanStatus
 } from './dyson-360-types.js';
 import {
     DysonDevice360Base,
     Dyson360PowerLevelMap,
     dyson360MapState
 } from './dyson-device-360-base.js';
-import { DysonDevice360ZoneCommand, DysonDevice360ZonesMixin } from './dyson-device-360-zones.js';
+import {
+    Dyson360CleaningStatus,
+    Dyson360CurrentZone,
+    DysonDevice360ZoneCommand,
+    DysonDevice360ZonesMixin
+} from './dyson-device-360-zones.js';
 import {
     Dyson360PersistentMapMetadataResponseV2,
-    Dyson360PersistentMapMetadataV2
+    Dyson360PersistentMapMetadataV2,
+    Dyson360PersistentMapZoneV2
 } from './dyson-360-cloud-types.js';
 import { DysonMqttStatus360 } from './dyson-mqtt-360.js';
-import { assertIsDefined, formatList, formatMilliseconds, MS, plural, tryListener } from './utils.js';
+import {
+    assertIsDefined,
+    formatList,
+    formatMilliseconds,
+    MS,
+    plural,
+    tryListener
+} from './utils.js';
 import { DysonDeviceConstructorParams } from './dyson-device-base.js';
 import { DysonMqttStatus } from './dyson-mqtt.js';
 import { PeriodicOp } from './periodic-op.js';
 import { DysonMqtt360Jdm, DysonMqtt360JdmEventArgs } from './dyson-mqtt-360-jdm.js';
-import { Endpoint360, EndpointOptions360, UpdatePowerSource360, UpdateRvcOperationalState360 } from './endpoint-360.js';
+import {
+    Endpoint360,
+    EndpointOptions360,
+    UpdatePowerSource360,
+    UpdateRvcOperationalState360
+} from './endpoint-360.js';
 import { Dyson360MappedFaults } from './dyson-device-360-faults.js';
 import { DysonDevice360CommandHandlers } from './dyson-device-360-commands.js';
 import { ifValueChanged } from './decorator-changed.js';
 import { Dyson360JdmPropValues } from './dyson-360-jdm-props-types.js';
 import { Dyson360JdmBoolean } from './dyson-360-jdm-types.js';
 import { DysonCloudStatusCodeError } from './dyson-cloud-error.js';
+import { isPointInPolygon } from './dyson-device-360-polygon.js';
 
 // Spot+Scrub Ai status polling behaviour
 const POLL_STATUS_MS                =  30 * MS; // 30 seconds
@@ -119,16 +140,64 @@ export abstract class DysonDevice360JdmBase extends DysonDevice360ZonesMixin(Dys
     async pollCleaningOp(): Promise<void> {
         if (!this.api) return; // (mock devices do not support this)
         try {
+            // Retrieve the latest cleaning status
             const cleaningMode = this.mqtt.status.currentCleaningMode;
             assertIsDefined(cleaningMode);
             const live = await this.api.getLiveMapsCleaning360V1();
+
+            // Extract the cleaning status and attempt to identify current zone
             const zoneStatus = live.zones.map(({ id, cleanStatus }) => ({ zoneId: id, cleanStatus }));
-            await this.updateZoneStatus({ mapId: live.id, cleaningMode, zoneStatus });
+            const cleaningStatus: Dyson360CleaningStatus = { mapId: live.id, cleaningMode, zoneStatus };
+            const zoneId = live.robotLocation && this.positionToZone(live.robotLocation, live.zones);
+            const currentZone: Dyson360CurrentZone | undefined = zoneId ? { mapId: live.id, zoneId } : undefined;
+            await this.updateZoneStatus(cleaningStatus, currentZone);
         } catch (err) {
             // Live map is only available about 7 seconds after the clean starts
             if (!(err instanceof DysonCloudStatusCodeError && err.statusCode === 404)) throw err;
             this.log.debug('Ignoring 404 response for live cleaning map (zone status not updated)');
         }
+    }
+
+    // Attempt to map a coordinate to a zone
+    positionToZone(position: Dyson360Point, zones: Dyson360PersistentMapZoneV2[]): string | undefined {
+        // Score the likelihood of being within each zone
+        const zoneScore = new Map<string, number>();
+        const addZoneScore = (id: string, score: number): void => {
+            zoneScore.set(id, (zoneScore.get(id) ?? 0) + score);
+        };
+
+        // Check whether the position is within each zone's geometry
+        for (const { id, name, cleanStatus, presentation, visited } of zones) {
+            // Verify that the displayed zone shape is contiguous, as assumed
+            if (!presentation.every((v2, index) => {
+                const v1 = presentation.at(index - 1);
+                return v1?.end.x === v2.start.x && v1.end.y === v2.start.y;
+            })) {
+                this.log.warn(`Zone ${name} (${id}) presentation geometry not contiguous; robot zone may be inaccurate`);
+            }
+
+            // Compare against the displayed zone shape and visited region
+            const walls = presentation.map(p => p.start);
+            if (isPointInPolygon(position, walls))                  addZoneScore(id, 4);
+            if (isPointInPolygon(position, visited))                addZoneScore(id, 2);
+
+            // Break ties by assuming the robot is within the zone being cleaned
+            if (cleanStatus === Dyson360ZoneCleanStatus.InProgress) addZoneScore(id, 1);
+        }
+
+        // Sort the selected zones by descending score and use the highest
+        const orderedZones = [...zoneScore.entries()].sort((a, b) => b[1] - a[1]);
+        const topZones = orderedZones.filter(z => z[1] === orderedZones[0]?.[1]);
+        const location = `location (${position.x}, ${position.y})`;
+        this.log.debug(`Robot ${location}: ${formatList(orderedZones.map(z => `${z[0]} (score ${z[1]})`))}`);
+        if (orderedZones.length === 0) {
+            this.log.info(`Robot ${location} is not within any zone`);
+            return;
+        } else if (1 < topZones.length) {
+            const zoneList = formatList(topZones.map(z => z[0]));
+            this.log.info(`Multiple zones equally likely for robot ${location}: ${zoneList}`);
+        }
+        return topZones[0]?.[0];
     }
 
     // Update cluster attributes when the MQTT status is updated

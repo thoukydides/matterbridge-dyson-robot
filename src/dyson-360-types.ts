@@ -220,9 +220,8 @@ export interface Dyson360ZoneStatus {
 
 // Dyson robot vacuum planned trajectory (Spot+Scrub Ai only)
 export enum Dyson360PresentationType {
-    Perimeter                           = 0,
-    Sweep                               = 1,
-    Turn                                = 2
+    Wall                                = 0,
+    Opening                             = 1
 }
 
 // Dyson robot vacuum map upload status (Spot+Scrub Ai only)

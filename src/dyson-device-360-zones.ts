@@ -77,6 +77,13 @@ export type Dyson360CleaningStatus =
     ({ cleaningMode: Dyson360CleaningMode.Global | Dyson360CleaningMode.Spot } & Partial<Dyson360CleaningStatusFields>)
   | ({ cleaningMode: Dyson360CleaningMode.Zones                              } &         Dyson360CleaningStatusFields );
 
+// Current zone location
+export interface Dyson360CurrentZone {
+    mapId:          string;
+    mapVersion?:    string;
+    zoneId:         string;
+}
+
 // Return the cleaning programme with zone cleaning commands to enable overrides
 export interface DysonDevice360ZoneCommand extends DysonDevice360Command {
     cleaningProgramme:  Dyson360CleaningProgrammeZones;
@@ -153,9 +160,8 @@ export function DysonDevice360ZonesMixin<TBase extends AbstractConstructor<Dyson
         }
 
         // Update the Service Area cluster when the zone status changes
-        async updateZoneStatus(cleaningStatus?: Dyson360CleaningStatus): Promise<void> {
-            const { state, persistentMapId, zonesDefinitionVersion, zoneId } = this.mqtt.status;
-            const { runMode } = dyson360MapState(state);
+        async updateZoneStatus(cleaningStatus?: Dyson360CleaningStatus, currentZone?: Dyson360CurrentZone): Promise<void> {
+            const { runMode } = dyson360MapState(this.mqtt.status.state);
 
             // Update the zone status cache depending on the robot's state
             if (runMode === RvcRunMode360.Mapping) {
@@ -174,8 +180,8 @@ export function DysonDevice360ZonesMixin<TBase extends AbstractConstructor<Dyson
 
             // If the current zone is known then map it to a Matter area
             let currentArea: number | null = null;
-            if (persistentMapId && zoneId && await this.checkMap(persistentMapId, zonesDefinitionVersion)) {
-                currentArea = this.findAreaId(persistentMapId, zoneId);
+            if (currentZone && await this.checkMap(currentZone.mapId, currentZone.mapVersion)) {
+                currentArea = this.findAreaId(currentZone.mapId, currentZone.zoneId);
             }
 
             // If zone cleaning then attempt to set the areas and progress
