@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v1.13.4] - 2026-11-01
+### Changed
+* Mapping between Dyson zones and Matter areas is now persistent and updated whenever the maps are edited.
+* Updated dependencies.
+
 ## [v1.13.3] - 2026-10-24
 ### Added
 * Details of fault codes for R2 Nurovi Wash+Dry. (#50)
@@ -505,7 +510,8 @@ All notable changes to this project will be documented in this file.
 
 Copyright © 2025-2026 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.13.3...HEAD
+[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.13.4...HEAD
+[v1.13.4]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.13.3...v1.13.4
 [v1.13.3]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.13.2...v1.13.3
 [v1.13.2]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.13.1...v1.13.2
 [v1.13.1]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.13.0...v1.13.1
