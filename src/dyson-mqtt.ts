@@ -251,10 +251,10 @@ export abstract class DysonMqtt<T extends ICheckerSuite, S, E extends unknown[] 
 
         // Dispatch the validated message and indicate a status update
         this.logPayload('receive', topic, msg, filter);
-        if (!filter && topicStatus === 'subscribed') {
+        if (!filter) {
             this.updateReachable('msg', !UNREACHABLE_MESSAGES.includes(msg.msg));
             this.emit('message', msg);
-            this.emit('status');
+            if (topicStatus === 'subscribed') this.emit('status');
         }
     }
 
