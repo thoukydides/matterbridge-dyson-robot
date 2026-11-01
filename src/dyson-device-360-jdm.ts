@@ -7,7 +7,8 @@ import {
     Dyson360DockState,
     Dyson360Point,
     Dyson360VacuumMode,
-    Dyson360ZoneCleanStatus
+    Dyson360ZoneCleanStatus,
+    Dyson360ZoneType
 } from './dyson-360-types.js';
 import {
     DysonDevice360Base,
@@ -17,12 +18,15 @@ import {
 import {
     Dyson360CleaningStatus,
     Dyson360CurrentZone,
+    Dyson360CommonAreaTag,
+    Dyson360ZoneFingerprints,
     DysonDevice360ZoneCommand,
     DysonDevice360ZonesMixin
 } from './dyson-device-360-zones.js';
 import {
     Dyson360PersistentMapMetadataResponseV2,
     Dyson360PersistentMapMetadataV2,
+    Dyson360PersistentMapMetadataZoneV2,
     Dyson360PersistentMapZoneV2
 } from './dyson-360-cloud-types.js';
 import { DysonMqttStatus360 } from './dyson-mqtt-360.js';
@@ -51,6 +55,7 @@ import { Dyson360JdmPropValues } from './dyson-360-jdm-props-types.js';
 import { Dyson360JdmBoolean } from './dyson-360-jdm-types.js';
 import { DysonCloudStatusCodeError } from './dyson-cloud-error.js';
 import { isPointInPolygon } from './dyson-device-360-polygon.js';
+import { CommonAreaNamespaceTag } from 'matterbridge/matter';
 
 // Spot+Scrub Ai status polling behaviour
 const POLL_STATUS_MS                =  30 * MS; // 30 seconds
@@ -61,7 +66,9 @@ const POLL_LIVE_MAPS_CLEANING_MS    = 3.5 * MS; // 3½ seconds
 const MASK_INACTIVE_TRANSITION_MS   =   2 * MS; //  2 seconds
 
 // Common base class for Dyson post-360 robot vacuum devices (excluding mop)
-export abstract class DysonDevice360JdmBase extends DysonDevice360ZonesMixin(DysonDevice360Base<DysonMqtt360Jdm>) {
+export abstract class DysonDevice360JdmBase
+    extends DysonDevice360ZonesMixin<Dyson360PersistentMapMetadataV2, typeof DysonDevice360Base<DysonMqtt360Jdm>>
+    (DysonDevice360Base<DysonMqtt360Jdm>) {
 
     // The MQTT client and status update listener with JDM endpoints
     static override readonly mqttConstructor = DysonMqtt360Jdm;
@@ -257,7 +264,7 @@ export abstract class DysonDevice360JdmBase extends DysonDevice360ZonesMixin(Dys
         const { command, cleaningProgramme } = programme;
         const preCommand = async (): Promise<void> => {
             const { persistentMapId } = cleaningProgramme;
-            const map = this.mapFromMatter.values().find(m => m.id === persistentMapId) as Dyson360PersistentMapMetadataV2 | undefined;
+            const map = this.mapFromMatter.values().find(m => m.id === persistentMapId);
             assertIsDefined(map);
 
             // Select and order the zones before the clean is started
@@ -289,6 +296,22 @@ export abstract class DysonDevice360JdmBase extends DysonDevice360ZonesMixin(Dys
     // Retrieve the latest persistent map metadata
     override getPersistentMapMetadata(): Promise<Dyson360PersistentMapMetadataResponseV2> | undefined {
         return this.api?.getPersistentMapMetadata360V2();
+    }
+
+    // Generate fingerprints for a Dyson zone
+    override getZoneFingerprints(zone: Dyson360PersistentMapMetadataZoneV2): Dyson360ZoneFingerprints {
+        const fingerprints = super.getZoneFingerprints(zone);
+        if (zone.type !== Dyson360ZoneType.Custom) fingerprints.type = zone.type;
+        fingerprints.nameLocation = JSON.stringify(zone.nameLocation);
+        return fingerprints;
+    }
+
+    // Map a Dyson zone to a Matter common area tag
+    override getZoneCommonAreaTag(zone: Dyson360PersistentMapMetadataZoneV2): Dyson360CommonAreaTag {
+        // Zone types match Matter location types
+        const type = zone.type.toLowerCase();
+        const key = Object.keys(CommonAreaNamespaceTag).find(k => k.toLowerCase() === type);
+        return key ? CommonAreaNamespaceTag[key as keyof typeof CommonAreaNamespaceTag].tag : null;
     }
 
     // Spot+Scrub Ai does not publish status updates, so poll periodically

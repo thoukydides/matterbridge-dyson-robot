@@ -9,7 +9,8 @@ import {
     Dyson360HeuristPowerMode,
     Dyson360TimelineEvent,
     Dyson360CleaningMode,
-    Dyson360ZoneCleanStatus
+    Dyson360ZoneCleanStatus,
+    Dyson360ZoneIcon
 } from './dyson-360-types.js';
 import {
     DysonDevice360Base,
@@ -18,7 +19,9 @@ import {
 } from './dyson-device-360-base.js';
 import {
     Dyson360CleaningStatus,
+    Dyson360CommonAreaTag,
     Dyson360CurrentZone,
+    Dyson360ZoneFingerprints,
     DysonDevice360ZonesMixin
 } from './dyson-device-360-zones.js';
 import {
@@ -27,6 +30,8 @@ import {
 } from './dyson-device-360-map.js';
 import {
     Dyson360PersistentMapMetadataResponseV1,
+    Dyson360PersistentMapMetadataV1,
+    Dyson360PersistentMapMetadataZoneV1,
     Dyson360PersistentMapResponseV1
 } from './dyson-360-cloud-types.js';
 import { DysonMqttStatus360 } from './dyson-mqtt-360.js';
@@ -34,6 +39,7 @@ import { assertIsDefined } from './utils.js';
 import { DysonMqttStatus } from './dyson-mqtt.js';
 import { DysonDevice360MopMixin } from './dyson-device-360-mop.js';
 import { DysonDevice360JdmBase } from './dyson-device-360-jdm.js';
+import { CommonAreaNamespaceTag } from 'matterbridge/matter';
 
 /* eslint-disable max-len */
 
@@ -77,6 +83,27 @@ const DYSON360_COMPATIBILITY_R1R3_NUROVI =
 These devices are currently treated similarly to a Dyson Spot+Scrub Ai. There is a high likelihood of warnings, errors, or missing functionality.
 
 ${DYSON360_COMPATIBILITY_COMMON}`;
+
+// Mapping of Dyson 360 Vis Nav area icons/names to Matter common areas
+type LocationTypeMapping = Dyson360CommonAreaTag | [RegExp, Dyson360CommonAreaTag][];
+const LOCATION_ICON_MAP: Record<Dyson360ZoneIcon, LocationTypeMapping> = {
+    [Dyson360ZoneIcon.Balcony]:     CommonAreaNamespaceTag.Balcony.tag,
+    [Dyson360ZoneIcon.Bathroom]:    CommonAreaNamespaceTag.Bathroom.tag,
+    [Dyson360ZoneIcon.Bedroom]: [
+        [/^Guest room$/i,           CommonAreaNamespaceTag.GuestBedroom.tag],
+        [/^/,                       CommonAreaNamespaceTag.Bedroom.tag]
+    ],
+    [Dyson360ZoneIcon.DiningRoom]:  CommonAreaNamespaceTag.Dining.tag,
+    [Dyson360ZoneIcon.Hallway]:     CommonAreaNamespaceTag.Hallway.tag,
+    [Dyson360ZoneIcon.Kitchen]:     CommonAreaNamespaceTag.Kitchen.tag,
+    [Dyson360ZoneIcon.LivingRoom]:  CommonAreaNamespaceTag.LivingRoom.tag,
+    [Dyson360ZoneIcon.MainBedroom]: CommonAreaNamespaceTag.PrimaryBedroom.tag,
+    [Dyson360ZoneIcon.Study]:       CommonAreaNamespaceTag.Study.tag,
+    [Dyson360ZoneIcon.Toilet]:      CommonAreaNamespaceTag.Toilet.tag,
+    [Dyson360ZoneIcon.UtilityRoom]: CommonAreaNamespaceTag.UtilityRoom.tag,
+    [Dyson360ZoneIcon.Work]:        CommonAreaNamespaceTag.Office.tag,
+    [Dyson360ZoneIcon.Custom]:      null
+};
 
 /* eslint-enable max-len */
 
@@ -149,7 +176,9 @@ export class DysonDevice360Heurist extends DysonDevice360Base {
 // -----------------------------------------------------------------------------
 
 // A Dyson 360 Vis Nav device
-export class DysonDevice360VisNav extends DysonDevice360ZonesMixin(DysonDevice360Base) {
+export class DysonDevice360VisNav
+    extends DysonDevice360ZonesMixin<Dyson360PersistentMapMetadataV1, typeof DysonDevice360Base>
+    (DysonDevice360Base) {
     static override readonly model = { type: '277', number: 'RB03', name: '360 Vis Nav' };
 
     override getBatteryPartNumber = () => '967864-02';
@@ -212,6 +241,21 @@ export class DysonDevice360VisNav extends DysonDevice360ZonesMixin(DysonDevice36
     // Retrieve the latest persistent map metadata
     override getPersistentMapMetadata(): Promise<Dyson360PersistentMapMetadataResponseV1> | undefined {
         return this.api?.getPersistentMapMetadata360V1();
+    }
+
+    // Generate fingerprints for a Dyson zone
+    override getZoneFingerprints(zone: Dyson360PersistentMapMetadataZoneV1): Dyson360ZoneFingerprints {
+        const fingerprints = super.getZoneFingerprints(zone);
+        if (zone.icon !== Dyson360ZoneIcon.Custom) fingerprints.icon = zone.icon;
+        return fingerprints;
+    }
+
+    // Use explicit table to map 360 Vis Nav zone icon to Matter common area tag
+    override getZoneCommonAreaTag(zone: Dyson360PersistentMapMetadataZoneV1): Dyson360CommonAreaTag {
+        const mapping = LOCATION_ICON_MAP[zone.icon];
+        if (!Array.isArray(mapping)) return mapping;
+        const match = mapping.find(([re]) => re.test(zone.name));
+        return match ? match[1] : null;
     }
 
     // Retrieve details of a completed clean

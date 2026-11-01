@@ -45,7 +45,7 @@ export async function createDysonDevice(
     await mqtt.waitUntilInitialised(MQTT_CACHE_FALLBACK_DELAY);
 
     // Create the Dyson device itself
-    return new deviceClass(log, config, device, mqtt as never, device.api);
+    return new deviceClass(log, config, persist, device, mqtt as never, device.api);
 }
 
 // Test whether a specific model is supported

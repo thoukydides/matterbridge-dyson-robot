@@ -11,6 +11,7 @@ import { DeviceConfigMqtt } from './dyson-mqtt-client-live.js';
 import { EndpointBase } from './endpoint-base.js';
 import { DysonCloudAPIDevice } from './dyson-cloud-api-device.js';
 import { DysonDeviceCompatibility } from './dyson-device-compatibility.js';
+import NodePersist from 'node-persist';
 
 // Dyson model details
 export interface DysonDeviceModel {
@@ -28,11 +29,12 @@ export interface DysonEntityDescription {
 
 // Dyson device constructor parameters
 export type DysonDeviceConstructorParams<MQTT extends DysonMqttLike = DysonMqttLike> = [
-    log:    AnsiLogger,
-    config: Config,
-    device: DeviceConfigMqtt,
-    mqtt:   MQTT,
-    api?:   DysonCloudAPIDevice
+    log:        AnsiLogger,
+    config:     Config,
+    persist:    NodePersist.LocalStorage,
+    device:     DeviceConfigMqtt,
+    mqtt:       MQTT,
+    api?:       DysonCloudAPIDevice
 ];
 
 // A Dyson robot vacuum or air treatment device
@@ -55,6 +57,7 @@ export abstract class DysonDevice<MQTT extends DysonMqttLike = DysonMqttLike> {
     constructor(
         readonly log:       AnsiLogger,
         readonly config:    Config,
+        readonly persist:   NodePersist.LocalStorage,
         readonly device:    DeviceConfigMqtt,
         readonly mqtt:      MQTT,
         readonly api?:      DysonCloudAPIDevice
