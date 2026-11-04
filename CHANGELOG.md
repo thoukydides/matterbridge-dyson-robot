@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v1.14.0] - 2026-11-04
+### Changed
+* *Vacuum* and *Mop* ModeTags applied to RVC Clean Mode more consistently to improve display in Apple Home. (#53)
+
 ## [v1.13.4] - 2026-11-01
 ### Changed
 * Mapping between Dyson zones and Matter areas is now persistent and updated whenever the maps are edited.
@@ -510,7 +514,8 @@ All notable changes to this project will be documented in this file.
 
 Copyright © 2025-2026 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.13.4...HEAD
+[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.14.0...HEAD
+[v1.14.0]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.13.4...v1.14.0
 [v1.13.4]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.13.3...v1.13.4
 [v1.13.3]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.13.2...v1.13.3
 [v1.13.2]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.13.1...v1.13.2
