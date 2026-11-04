@@ -10,7 +10,6 @@ import {
 } from 'matterbridge/matter/clusters';
 import { PowerSourceServer } from 'matterbridge/matter/behaviors';
 import {
-    RvcCleanMode360,
     RvcCleanModeServer360,
     RvcOperationalStateServer360,
     RvcRunMode360,
@@ -18,22 +17,35 @@ import {
     ServiceAreaServer360
 } from './endpoint-360-behavior.js';
 import { RvcOperationalStateError } from './error-360.js';
-import { Endpoint } from 'matterbridge/matter';
-import { assertIsDefined } from './utils.js';
+import { AtLeastOne, Endpoint } from 'matterbridge/matter';
 
 // Device-specific endpoint configuration
 export interface BatteryPowerSourceOptions {
     batteryPartNumber:          string;
 }
-export type RvcCleanModeLabels = [RvcCleanMode360, string][];
+export interface RvcCleanModeDefinition {
+    label:                      string;
+    tags:                       AtLeastOne<keyof typeof RvcCleanMode.ModeTag>;
+}
 export interface RvcCleanModeOptions {
-    labels:                     RvcCleanModeLabels;
+    modes:                      RvcCleanModeDefinition[];
+    vacuumVariants?:            RvcCleanModeDefinition[];
+    mopVariants?:               RvcCleanModeDefinition[];
     simpleModeTags:             boolean;
 }
 export interface RvcOperationalStateOptions {
     supportsEmptyingDustBin:    boolean;
     supportsCleaningMop:        boolean;
 }
+
+// Reverse mapping for RVC Clean Mode to individual modes and variants
+export interface RvcCleanModeOption {
+    label:                      string;
+    modeIndex:                  number;
+    vacuumIndex?:               number;
+    mopIndex?:                  number;
+}
+export type RvcCleanModeMap = Map<number, RvcCleanModeOption>;
 
 // Create the Power Source cluster for the rechargeable battery
 export const batteryPowerSourceBehavior =
@@ -118,69 +130,59 @@ export const rvcCleanModeBehavior =
         }
     });
 export function createRvcCleanModeClusterServer(
-    { behaviors }:              Endpoint,
-    { labels, simpleModeTags }: RvcCleanModeOptions
-): void {
-    // Mode tags to use for each mode (only first tag used in simple mode)
-    const CLEAN_MODE_TAGS: Record<RvcCleanMode360, { value: RvcCleanMode.ModeTag }[]> = {
-        [RvcCleanMode360.Quiet]: [
-            { value: RvcCleanMode.ModeTag.Quiet },
-            { value: RvcCleanMode.ModeTag.Vacuum },
-            { value: RvcCleanMode.ModeTag.LowEnergy },
-            { value: RvcCleanMode.ModeTag.LowNoise },
-            { value: RvcCleanMode.ModeTag.Min },
-            { value: RvcCleanMode.ModeTag.Night }
-        ],
-        [RvcCleanMode360.Quick]: [
-            { value: RvcCleanMode.ModeTag.Quick },
-            { value: RvcCleanMode.ModeTag.Vacuum },
-            { value: RvcCleanMode.ModeTag.LowEnergy },
-            { value: RvcCleanMode.ModeTag.Day }
-        ],
-        [RvcCleanMode360.High]: [
-            { value: RvcCleanMode.ModeTag.DeepClean },
-            { value: RvcCleanMode.ModeTag.Vacuum },
-            { value: RvcCleanMode.ModeTag.Day }
-        ],
-        [RvcCleanMode360.MaxBoost]: [
-            { value: RvcCleanMode.ModeTag.Max },
-            { value: RvcCleanMode.ModeTag.Vacuum },
-            { value: RvcCleanMode.ModeTag.Day }
-        ],
-        [RvcCleanMode360.Auto]: [
-            { value: RvcCleanMode.ModeTag.Auto },
-            { value: RvcCleanMode.ModeTag.Vacuum },
-            { value: RvcCleanMode.ModeTag.Day }
-        ],
-        [RvcCleanMode360.Mop]: [
-            { value: RvcCleanMode.ModeTag.Mop },
-            { value: RvcCleanMode.ModeTag.Day }
-        ],
-        [RvcCleanMode360.VacuumAndMop]: [
-            { value: RvcCleanMode.ModeTag.VacuumThenMop },
-            { value: RvcCleanMode.ModeTag.Vacuum },
-            { value: RvcCleanMode.ModeTag.Mop },
-            { value: RvcCleanMode.ModeTag.DeepClean },
-            { value: RvcCleanMode.ModeTag.Day }
-        ]
-    };
-    const modeTags = (mode: RvcCleanMode360): { value: RvcCleanMode.ModeTag }[] => {
-        const tags = CLEAN_MODE_TAGS[mode];
-        assertIsDefined(tags[0]);
-        return simpleModeTags ? [tags[0]] : tags;
-    };
+    { behaviors }:                                          Endpoint,
+    { modes, vacuumVariants, mopVariants, simpleModeTags }: RvcCleanModeOptions
+): RvcCleanModeMap {
+    // Combine the variants with the main modes for the supported modes list
+    const supportedModes: RvcCleanMode.ModeOption[] = [];
+    const cleanModeMap = new Map<number, RvcCleanModeOption>();
+    for (const [modeIndex, mode] of modes.entries()) {
+        let modeVariants: { mode: RvcCleanModeDefinition, option: Omit<RvcCleanModeOption, 'label'> }[] =
+            [{ mode, option: { modeIndex } }];
+        const modeHasTag = (tag: keyof typeof RvcCleanMode.ModeTag) => mode.tags.includes(tag);
+        const modeVariant = (mode: RvcCleanModeDefinition, variant: RvcCleanModeDefinition): RvcCleanModeDefinition => ({
+            label:  `${mode.label} ${variant.label}`,
+            tags:   [...mode.tags, ...(simpleModeTags ? [variant.tags[0]] : variant.tags)]
+        });
 
-    // Create the cluster
+        // Generate combinations of vacuum and mop variants for the current mode
+        if (vacuumVariants?.length && (modeHasTag('Vacuum') || modeHasTag('VacuumThenMop'))) {
+            modeVariants = modeVariants.flatMap(({ mode, option }) =>
+                vacuumVariants.map((vacuumVariant, vacuumIndex) => ({
+                    mode:   modeVariant(mode, vacuumVariant),
+                    option: { ...option, vacuumIndex }
+                })));
+        }
+        if (mopVariants?.length && (modeHasTag('Mop') || modeHasTag('VacuumThenMop'))) {
+            modeVariants = modeVariants.flatMap(({ mode, option }) =>
+                mopVariants.map((mopVariant, mopIndex) => ({
+                    mode:   modeVariant(mode, mopVariant),
+                    option: { ...option, mopIndex }
+                })));
+        }
+
+        // Add to the list of supported modes and the reverse mapping
+        for (const { mode, option } of modeVariants) {
+            const cleanMode = supportedModes.length;
+            supportedModes.push({
+                label:      mode.label.substring(0, 64),
+                mode:       cleanMode,
+                modeTags:   mode.tags.map(tag => ({ value: RvcCleanMode.ModeTag[tag] }))
+            });
+            cleanModeMap.set(cleanMode, { ...option, label: mode.label });
+        }
+    }
+
+    // Create the RVC Clean Mode cluster
     behaviors.require(rvcCleanModeBehavior, {
         // Constant attributes
-        supportedModes: labels.map(([mode, label]) => ({
-            label,
-            mode,
-            modeTags:   modeTags(mode)
-        })),
+        supportedModes,
         // Variable attributes (with dummy defaults)
-        currentMode:    RvcCleanMode360.Quiet
+        currentMode:    0
     });
+
+    // Return the reverse mapping
+    return cleanModeMap;
 }
 
 // Create the RVC Operational State cluster

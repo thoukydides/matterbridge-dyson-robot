@@ -93,7 +93,7 @@ You can include additional settings in `matterbridge-dyson-robot.config.json` to
 | `provisioningMethod`    | `"Remote Account"` | Selects how the plugin is configured and how it connects to the Dyson devices. See [Alternative Provisioning Methods](#provisioning-methods) (below) for details of each option.
 | `devices`               | `[]`               | Local network and MQTT configuration for each Dyson device when not using the `Remote Account` provisioning method. See below for details.
 | `enableServerRvc`       | `true`             | When set to `false` all devices are exposed via a single Matter bridge. Setting it to `true` exposes any robot vacuum devices as standalone Matter nodes using Matterbridge's `server` mode, with the Matter bridge only used for any air treatment devices. This improves compatibility with Matter controllers such as the Apple Home app, but requires each robot vacuum to be paired individually.
-| `simpleModeTagsRvc`     | `true`             | When set to `false` all relevant ModeTag values are listed for each cleaning mode (e.g. `MaxBoost` might be tagged as *Max*, *Vacuum*, and *Day*). When set to `true` only the single most descriptive ModeTag is published for each cleaning mode. This improves compatibility with Matter controllers such as the Apple Home app, which do not handle multiple mode tags gracefully.
+| `simpleModeTagsRvc`     | `true`             | When set to `false` all relevant ModeTag values are listed for each cleaning mode (e.g. `MaxBoost` might be tagged as *Vacuum*, *Max*, and *Day*). When set to `true` only the overall mode (*Vacuum*) and the single most descriptive variant (*Max*) is published for each cleaning mode. This improves compatibility with Matter controllers such as the Apple Home app, which do not handle multiple mode tags gracefully.
 | `logMapStyle`           | `"Matterbridge"`   | Select how robot vacuum maps are rendered in the log at the end of cleans. When set to `"Matterbridge"` the map is restricted to glyphs that render correctly in the Matterbridge frontend. Change to `Monospaced` for more detailed and clearer maps if the log will be viewed using a monospaced font. Set to `"Off"` to disable logging of maps.
 | `wildcardTopic`         | `true`             | When set to `false` the plugin only subscribes to the essential status MQTT topic(s) appropriate for each device. Setting it to `true` additionally subscribes to a wildcard topic (either `#` for local network connections or `{root_topic}/{username}/#` for AWS IoT connections), receiving additional messages published by the devices or echoed by the MQTT brokers. This is useful for discovering new topics, seeing the commands issued by the MyDyson app (only some commands to robot vacuums), and verifying correct `root_topic` and `username` settings.
 | `blackList`             | `[]`               | If the list is not empty, then any robot vacuum and air treatment devices with matching serial numbers will not be exposed as Matter devices.
@@ -295,15 +295,20 @@ Each robot vacuum appears as a standalone Matter device with a single endpoint. 
   - `Mapping`: Status only (use the MyDyson app to initiate mapping and configure zones).
 
 - **RVC Clean Mode** cluster:
-  | Mode            | 360 Eye | 360 Heurist | 360 Vis Nav / R1 Nurovi | Spot+Scrub Ai / R2/R3 Nurovi |
-  | --------------- | :------ | :---------: | :---------------------: | :--------------------------: |
-  | `Quiet`         | Quiet   | Quiet       | Quiet                   | Quiet                        |
-  | `Quick`         |         |             | Quick                   | Quick                        |
-  | `High`          |         | High        |                         |                              |
-  | `Max`           | Max     | Max         | Boost                   | Boost                        |
-  | `Auto`          |         |             | Auto                    | Auto                         |
-  | `Mop`           |         |             |                         | Wash-only                    |
-  | `VacuumThenMop` |         |             |                         | Vacuum and Wash              |
+  - Overall cleaning mode:
+    | Mode            | 360 Eye / 360 Heurist / 360 Vis Nav / R1 Nurovi | Spot+Scrub Ai / R2/R3 Nurovi |
+    | --------------- | :---------------------------------------------: | :--------------------------: |
+    | `Vacuum`        | Vacuum-only                                     | Vacuum-only                  |
+    | `Mop`           |                                                 | Wash-only                    |
+    | `VacuumThenMop` |                                                 | Vacuum and Wash              |
+  - Vacuum power level:
+    | Mode    | 360 Eye | 360 Heurist | 360 Vis Nav / Spot+Scrub Ai / R1/R2/R3 Nurovi |
+    | ------- | :-----: | :---------: | :-------------------------------------------: |
+    | `Quiet` | Quiet   | Quiet       | Quiet                                         |
+    | `Quick` |         |             | Quick                                         |
+    | `High`  |         | High        |                                               |
+    | `Max`   | Max     | Max         | Boost                                         |
+    | `Auto`  |         |             | Auto                                          |
 
   Changing the *CurrentMode* before starting a clean affects global cleans only. Zone-configured cleans always use the per-zone settings configured in the MyDyson app. During an active clean the *CurrentMode* indicates the instantaneous activity, e.g. `Mop` when washing as part of a vacuum-and-wash. Detailed Dyson Spot+Scrub Ai and Dyson R1/R2/R3 Nurovi cleaning settings (vacuum repetitions, wash repetitions, hydration level, etc) are not exposed to Matter.
 
@@ -477,7 +482,7 @@ The Apple Home app in iOS/iPadOS 18.4 and macOS Sequoia has limited Matter suppo
 
 The Apple Home app expects each robot vacuum to be a standalone, individually-paired Matter node implementing a single endpoint. However, by default Matterbridge acts as a Matter bridge - either a single bridge node for all plugins (*bridge* mode), or a separate bridge node per plugin (*childbridge* mode) - with each plugin's device exposed as an additional child endpoint. The `enableServerRvc` configuration option enables use of Matterbridge's `server` mode for any robot vacuum devices, ensuring full compatibility with the Home app.
 
-For cleaning (power and vacuum/mop) modes the Matter specification encourages tagging each mode with all relevant ModeTag values to describe its characteristics and usage. However, the Home app displays the list of all ModeTag values (e.g. *Deep Clean*, *Low Noise*) rather than the advertised modes (*Quiet*, *Max*, etc) reported by the robot vacuum. The `simpleModeTagsRvc` configuration option selects the single most descriptive ModeTag for each cleaning mode to improve the Home app user interface experience.
+For cleaning (power and vacuum/mop) modes the Matter specification encourages tagging each mode with all relevant ModeTag values to describe its characteristics and usage. However, the Home app ignores the advertised mode labels, and (other than *Vacuum* and *Mop* which are treated specially) just displays a flat list of att ModeTag values.
 </details>
 <details>
 <summary>Air Purifiers</summary>

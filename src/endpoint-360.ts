@@ -25,6 +25,7 @@ import {
     createRvcRunModeClusterServer,
     createServiceAreaClusterServer,
     rvcCleanModeBehavior,
+    RvcCleanModeMap,
     RvcCleanModeOptions,
     rvcOperationalStateBehavior,
     RvcOperationalStateOptions,
@@ -43,7 +44,6 @@ import {
     Behavior360,
     BehaviorDevice360,
     EndpointCommands360,
-    RvcCleanMode360,
     RvcRunMode360
 } from './endpoint-360-behavior.js';
 
@@ -63,6 +63,13 @@ export interface UpdatePowerSource360 {
     batChargeState:         PowerSource.BatChargeState;
     batPercentRemaining:    number | null; // ×2, e.g. 200 for 100%
     status:                 PowerSource.PowerSourceStatus;
+}
+
+// Updates to the RVC Clean Mode cluster attributes
+export interface UpdateRvcCleanMode360 {
+    modeIndex:              number;
+    vacuumIndex?:           number;
+    mopIndex?:              number;
 }
 
 // Updates to the RVC Operational State cluster
@@ -87,6 +94,9 @@ export class Endpoint360 extends EndpointBase {
     // Command handlers
     readonly behaviorDevice360: BehaviorDevice360;
 
+    // Reverse mapping for RVC Clean Mode to individual modes and variants
+    readonly cleanModeMap:      RvcCleanModeMap;
+
     // Start time of the most recent activity
     startActive = 0;
 
@@ -103,7 +113,7 @@ export class Endpoint360 extends EndpointBase {
         // Create the device-specific clusters
         createBatteryPowerSourceClusterServer(this, options.powerSource);
         createRvcRunModeClusterServer(this);
-        createRvcCleanModeClusterServer(this, options.rvcCleanMode);
+        this.cleanModeMap = createRvcCleanModeClusterServer(this, options.rvcCleanMode);
         createRvcOperationalStateClusterServer(this, options.rvcOperationalState);
         if (options.supportsMaps) createServiceAreaClusterServer(this);
 
@@ -180,8 +190,20 @@ export class Endpoint360 extends EndpointBase {
 
     // Update the RVC Clean Mode cluster attributes when required
     @ifValueChanged
-    async updateRvcCleanMode(cleanMode: RvcCleanMode360): Promise<void> {
-        this.log.info(`${AN}RVC Clean Mode${RI}: ${formatEnumLog(RvcCleanMode360, cleanMode)}`);
+    async updateRvcCleanMode(cleanModeIndices: UpdateRvcCleanMode360): Promise<void> {
+        // Map the individual mode and variant indices to the RVC Clean Mode
+        const { modeIndex, vacuumIndex, mopIndex } = cleanModeIndices;
+        const [mode, ...rest] = this.cleanModeMap.entries().filter(([_, option]) =>
+            option.modeIndex === modeIndex
+            && (option.vacuumIndex === undefined || option.vacuumIndex === vacuumIndex)
+            && (option.mopIndex    === undefined || option.mopIndex    === mopIndex)
+        );
+        if (!mode)       throw new Error(`Unknown RVC Clean Mode indices: ${JSON.stringify(cleanModeIndices)}`);
+        if (rest.length) throw new Error(`Ambiguous RVC Clean Mode indices: ${JSON.stringify(cleanModeIndices)}`);
+
+        // Update the Current Mode attribute
+        const [cleanMode, { label }] = mode;
+        this.log.info(`${AN}RVC Clean Mode${RI}: ${AV}${label}${RI} (${AV}${cleanMode}${RI})`);
         await this.updateAttribute(rvcCleanModeBehavior, 'currentMode', cleanMode, this.log);
     }
 

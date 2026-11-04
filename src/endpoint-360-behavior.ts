@@ -31,25 +31,13 @@ export enum RvcRunMode360 {
     Mapping
 }
 
-// Robot Vacuum Cleaner Clean Mode cluster modes
-export enum RvcCleanMode360 {
-    //              360 Eye     Heurist     Vis Nav / R1    Spot+Scrub / R2/R3
-    Quiet,       // Quiet       Quiet       Quiet           Quiet
-    Quick,       //                         Quick           Quick
-    High,        //             High
-    MaxBoost,    // Max         Max         Boost           Boost
-    Auto,        //                         Auto            Auto
-    Mop,         //                                         Mop
-    VacuumAndMop //                                         VacuumAndMop
-}
-
 // OperationalStatus manufacturer error
 export const VENDOR_ERROR_360 = 0x80;
 
 // Endpoint commands
 export interface EndpointCommands360 {
     ChangeRunMode:   (newMode: RvcRunMode360)   => MaybePromise;
-    ChangeCleanMode: (newMode: RvcCleanMode360) => MaybePromise;
+    ChangeCleanMode: (newMode: number)          => MaybePromise;
     Pause:           ()                         => MaybePromise;
     Resume:          ()                         => MaybePromise;
     GoHome:          ()                         => MaybePromise;
@@ -106,7 +94,7 @@ export class RvcRunModeServer360 extends RvcRunModeBehavior {
             log.debug(`RVC Run Mode command: ChangeToMode ${newMode}...`);
             const isSupportedMode = (newMode: number): newMode is RvcRunMode360 =>
                 this.state.supportedModes.some(({ mode }) => mode === newMode);
-            if (!isSupportedMode(newMode)) throw new ChangeToModeError.UnsupportedMode;
+            if (!isSupportedMode(newMode)) throw new ChangeToModeError.UnsupportedMode();
 
             // Attempt to change the mode
             await device.executeCommand('ChangeRunMode', newMode);
@@ -131,9 +119,9 @@ export class RvcCleanModeServer360 extends RvcCleanModeBehavior {
         try {
             // Check whether it is a valid request
             log.debug(`RVC Clean Mode command: ChangeToMode ${newMode}...`);
-            const isSupportedMode = (newMode: number): newMode is RvcCleanMode360 =>
-                this.state.supportedModes.some(({ mode }) => mode === newMode);
-            if (!isSupportedMode(newMode)) throw new ChangeToModeError.UnsupportedMode;
+            if (!this.state.supportedModes.some(({ mode }) => mode === newMode)) {
+                throw new ChangeToModeError.UnsupportedMode();
+            }
 
             // Attempt to change the mode
             await device.executeCommand('ChangeCleanMode', newMode);

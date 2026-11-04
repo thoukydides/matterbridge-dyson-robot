@@ -2,7 +2,6 @@
 // Copyright © 2025-2026 Alexander Thoukydides
 
 import { BasicInformation } from 'matterbridge/matter/clusters';
-import { RvcCleanMode360 } from './endpoint-360-behavior.js';
 import {
     Dyson360VacuumMode,
     Dyson360EyePowerMode,
@@ -68,7 +67,7 @@ There is a high likelihood of warnings, errors, or missing functionality.
 ${DYSON360_COMPATIBILITY_COMMON}`;
 
 const DYSON360_COMPATIBILITY_R2_NUROVI =
-`Support for Dyson 2 Nurovi Wash+Dry (RB07) is incomplete.
+`Support for Dyson R2 Nurovi Wash+Dry (RB07) is incomplete.
 
 Experimental support has been added based on the details provided in issue #50:
     https://github.com/thoukydides/matterbridge-dyson-robot/issues/50
@@ -122,8 +121,8 @@ export class DysonDevice360Eye extends DysonDevice360Base {
     });
 
     override getPowerLevelMaps = (): Dyson360PowerLevelMap[] => [
-        [Dyson360EyePowerMode.Quiet,        RvcCleanMode360.Quiet,      'Quiet'],
-        [Dyson360EyePowerMode.Max,          RvcCleanMode360.MaxBoost,   'Max']
+        [Dyson360EyePowerMode.Quiet,    'Quiet',    ['Quiet', 'Night', 'LowEnergy', 'LowNoise', 'Min']],
+        [Dyson360EyePowerMode.Max,      'Max',      ['Max',   'Day',   'DeepClean']]
     ];
 
     override setPowerLevel = (powerLevel: Dyson360EyePowerMode) => this.mqtt.commandSetPowerMode(powerLevel);
@@ -161,9 +160,9 @@ export class DysonDevice360Heurist extends DysonDevice360Base {
     });
 
     override getPowerLevelMaps = (): Dyson360PowerLevelMap[] => [
-        [Dyson360HeuristPowerMode.Quiet,    RvcCleanMode360.Quiet,      'Quiet'],
-        [Dyson360HeuristPowerMode.High,     RvcCleanMode360.High,       'High'],
-        [Dyson360HeuristPowerMode.Max,      RvcCleanMode360.MaxBoost,   'Max']
+        [Dyson360HeuristPowerMode.Quiet,    'Quiet',    ['Quiet',     'Night', 'LowEnergy', 'LowNoise', 'Min']],
+        [Dyson360HeuristPowerMode.High,     'High',     ['DeepClean', 'Day']],
+        [Dyson360HeuristPowerMode.Max,      'Max',      ['Max',       'Day']]
     ];
 
     override setPowerLevel = (powerLevel: Dyson360HeuristPowerMode) => this.mqtt.commandSetPowerMode(powerLevel);
@@ -189,10 +188,10 @@ export class DysonDevice360VisNav
     });
 
     override getPowerLevelMaps = (): Dyson360PowerLevelMap[] => [
-        [Dyson360VacuumMode.Auto,     RvcCleanMode360.Auto,       'Auto'],
-        [Dyson360VacuumMode.Quick,    RvcCleanMode360.Quick,      'Quick'],
-        [Dyson360VacuumMode.Quiet,    RvcCleanMode360.Quiet,      'Quiet'],
-        [Dyson360VacuumMode.Boost,    RvcCleanMode360.MaxBoost,   'Boost']
+        [Dyson360VacuumMode.Auto,   'Auto',   ['Auto',  'Day']],
+        [Dyson360VacuumMode.Quick,  'Quick',  ['Quick', 'Day',   'LowEnergy']],
+        [Dyson360VacuumMode.Quiet,  'Quiet',  ['Quiet', 'Night', 'LowEnergy', 'LowNoise', 'Min']],
+        [Dyson360VacuumMode.Boost,  'Boost',  ['Max',   'Day',   'DeepClean']]
     ];
 
     override setPowerLevel = (powerLevel: Dyson360VacuumMode) => this.mqtt.commandSetCleaningStrategy(powerLevel);

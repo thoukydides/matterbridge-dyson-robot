@@ -4,11 +4,12 @@
 import { AnsiLogger } from 'matterbridge/logger';
 import { DysonMqtt360, DysonMqtt360Action } from './dyson-mqtt-360.js';
 import { Endpoint360 } from './endpoint-360.js';
-import { RvcCleanMode360, RvcRunMode360 } from './endpoint-360-behavior.js';
+import { RvcRunMode360 } from './endpoint-360-behavior.js';
 import { Dyson360CleaningMode, Dyson360State } from './dyson-360-types.js';
-import { CN, CV, RI } from './logger-options.js';
+import { AV, CN, CV, RI } from './logger-options.js';
 import { ChangeToModeError, RvcOperationalStateError, SelectAreaError } from './error-360.js';
 import { MS } from './utils.js';
+import { RvcCleanModeOption } from './endpoint-360-rvc.js';
 
 // Action to perform in each Dyson robot vacuum state
 type StateAction =
@@ -101,10 +102,13 @@ export class DysonDevice360CommandHandlers {
     }
 
     // Handle RVC Clean Mode cluster ChangeToMode commands
-    attachCleanModeHandler(makePowerCommand: (cleanMode: RvcCleanMode360) => DysonDevice360Command): void {
+    attachCleanModeHandler(makePowerCommand: (cleanModeOptions: RvcCleanModeOption ) => DysonDevice360Command): void {
         this.endpoint.setCommandHandler360('ChangeCleanMode', async newMode => {
-            const { description, command, condition } = makePowerCommand(newMode);
-            this.log.info(`${CN}RVC Clean Mode${RI} ChangeToMode ${formatEnumLog(RvcCleanMode360, newMode)} → ${CV}${description}${RI}`);
+            const options = this.endpoint.cleanModeMap.get(newMode);
+            if (!options) throw new ChangeToModeError.UnsupportedMode();
+            const { description, command, condition } = makePowerCommand(options);
+            this.log.info(`${CN}RVC Clean Mode${RI} ChangeToMode ${AV}${options.label}${RI} (${AV}${newMode}${RI})`
+                          + ` → ${CV}${description}${RI}`);
             await this.issueCommandAndWaitForUpdate(`set power mode ${description}`, command, condition);
         });
     }

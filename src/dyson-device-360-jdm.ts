@@ -2,7 +2,7 @@
 // Copyright © 2026 Alexander Thoukydides
 
 import { PowerSource, RvcOperationalState } from 'matterbridge/matter/clusters';
-import { RvcCleanMode360, RvcRunMode360 } from './endpoint-360-behavior.js';
+import { RvcRunMode360 } from './endpoint-360-behavior.js';
 import {
     Dyson360DockState,
     Dyson360Point,
@@ -74,10 +74,10 @@ export abstract class DysonDevice360JdmBase
     static override readonly mqttConstructor = DysonMqtt360Jdm;
 
     override getPowerLevelMaps = (): Dyson360PowerLevelMap[] => [
-        [Dyson360VacuumMode.Auto,   RvcCleanMode360.Auto,       'Auto'],
-        [Dyson360VacuumMode.Quick,  RvcCleanMode360.Quick,      'Quick'],
-        [Dyson360VacuumMode.Quiet,  RvcCleanMode360.Quiet,      'Quiet'],
-        [Dyson360VacuumMode.Boost,  RvcCleanMode360.MaxBoost,   'Boost']
+        [Dyson360VacuumMode.Auto,   'Auto',     ['Auto',  'Day']],
+        [Dyson360VacuumMode.Quick,  'Quick',    ['Quick', 'Day',   'LowEnergy']],
+        [Dyson360VacuumMode.Quiet,  'Quiet',    ['Quiet', 'Night', 'LowEnergy', 'LowNoise', 'Min']],
+        [Dyson360VacuumMode.Boost,  'Boost',    ['Max',   'Day',   'DeepClean']]
     ];
 
     override setPowerLevel = (powerLevel: Dyson360VacuumMode) => this.mqtt.commandSetCleaningStrategy(powerLevel);
