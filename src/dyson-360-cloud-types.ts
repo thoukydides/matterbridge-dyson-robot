@@ -351,5 +351,6 @@ export interface Dyson360ZoneBehavioursRequestV1 {
 // GET /v1/support/product-faults/{serial}?locale={languagecode}&market={countrycode}&faultCode=<code> (Spot+Scrub Ai only)
 export interface Dyson360FaultDescription extends DysonFaultDescription {
     nextActionRequired?:                Dyson360FaultNextAction;
+    hasPushNotification?:               boolean;
 }
 export type Dyson360FaultResponseV1 = Dyson360FaultDescription[];

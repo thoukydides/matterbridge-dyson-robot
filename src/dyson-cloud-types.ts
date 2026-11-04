@@ -233,6 +233,7 @@ export interface DysonFaultDescriptionPermissive extends DysonFaultDescription {
     id?:                        string;
     nextActionRequired?:        string;
     priority?:                  number;
+    hasPushNotification?:       boolean;
 }
 export type DysonFaultResponseV1 = DysonFaultDescription[];
 export type DysonFaultResponseV1Permissive = DysonFaultDescriptionPermissive[];
