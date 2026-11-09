@@ -111,11 +111,12 @@ const STATE_MAP: Record<Dyson360State, StateMapColumns> = {
     [Dyson360State.MappingRunning]:         ['Mapping',     'Running',          false],
     [Dyson360State.Aborted]:                ['Idle',        'SeekingCharger',   false]
 };
-export function dyson360MapState(state: Dyson360State): {
+export interface Dyson360MappedState {
     runMode:            RvcRunMode360,
     operationalState:   RvcOperationalState.OperationalState,
     isDocked:           boolean
-} {
+}
+export function dyson360MapState(state: Dyson360State): Dyson360MappedState {
     const [runMode, operationState, isDocked] = STATE_MAP[state];
     return {
         runMode:            RvcRunMode360[runMode],
@@ -339,13 +340,14 @@ export abstract class DysonDevice360Base<T extends DysonMqtt360 = DysonMqtt360>
         assertIsDefined(this.endpoint);
 
         // Map the state to cluster attribute values
-        const faults = await this.faultMapper.mapFault(status.state, status.faults, status.activeFaults);
         const cleanMode         = this.mapCleanMode(status);
-        const { runMode }       = dyson360MapState(status.state);
-        const operationalState  = this.mapOperationalState(status, faults);
-        const batteryStatus     = this.mapBatteryStatus(status, faults);
+        const mappedState       = dyson360MapState(status.state);
+        const faults            = await this.faultMapper.mapFault(status.state, status.faults, status.activeFaults);
+        const operationalState  = this.mapOperationalState(status, mappedState, faults);
+        const batteryStatus     = this.mapBatteryStatus(status, mappedState, faults);
 
         // Update all of the clusters
+        const { runMode } = mappedState;
         await Promise.all([
             this.endpoint.updateReachable(status.reachable),
             this.endpoint.updateRvcCleanMode(cleanMode),
@@ -363,8 +365,12 @@ export abstract class DysonDevice360Base<T extends DysonMqtt360 = DysonMqtt360>
     }
 
     // Convert the battery status to Power Source cluster attributes
-    mapBatteryStatus(status: DysonMqttStatus<DysonMqttStatus360>, faults: Dyson360MappedFaults): UpdatePowerSource360 {
-        const { operationalState, isDocked } = dyson360MapState(status.state);
+    mapBatteryStatus(
+        status:         DysonMqttStatus<DysonMqttStatus360>,
+        mappedState:    Dyson360MappedState,
+        faults:         Dyson360MappedFaults
+    ): UpdatePowerSource360 {
+        const { operationalState, isDocked } = mappedState;
         const { batteryChargeLevel } = status;
         const { activeBatFaults, activeBatChargeFaults } = faults;
         if (!isDocked) activeBatChargeFaults.length = 0;
@@ -399,8 +405,11 @@ export abstract class DysonDevice360Base<T extends DysonMqtt360 = DysonMqtt360>
     }
 
     // Convert the status to RVC Operational State cluster attributes
-    mapOperationalState(status: DysonMqttStatus<DysonMqttStatus360>, faults: Dyson360MappedFaults): UpdateRvcOperationalState360 {
-        const mappedState = dyson360MapState(status.state);
+    mapOperationalState(
+        _status:        DysonMqttStatus<DysonMqttStatus360>,
+        mappedState:    Dyson360MappedState,
+        faults:         Dyson360MappedFaults
+    ): UpdateRvcOperationalState360 {
         const isActive = mappedState.runMode !== RvcRunMode360.Idle;
 
         // Ensure consistent Operational State and Operational Error

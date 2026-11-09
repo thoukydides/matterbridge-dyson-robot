@@ -13,7 +13,8 @@ import {
 import {
     DysonDevice360Base,
     Dyson360PowerLevelMap,
-    dyson360MapState
+    dyson360MapState,
+    Dyson360MappedState
 } from './dyson-device-360-base.js';
 import {
     Dyson360CleaningStatus,
@@ -242,8 +243,12 @@ export abstract class DysonDevice360JdmBase
     }
 
     // Convert the battery status to Power Source cluster attributes
-    override mapBatteryStatus(status: DysonMqttStatus<DysonMqttStatus360>, faults: Dyson360MappedFaults): UpdatePowerSource360 {
-        const batteryStatus = super.mapBatteryStatus(status, faults);
+    override mapBatteryStatus(
+        status:         DysonMqttStatus<DysonMqttStatus360>,
+        mappedState:    Dyson360MappedState,
+        faults:         Dyson360MappedFaults
+    ): UpdatePowerSource360 {
+        const batteryStatus = super.mapBatteryStatus(status, mappedState, faults);
 
         // Override the state-derived charging status based on JDM properties
         if (this.mqtt.jdmProps.charge_state === Dyson360JdmBoolean.True) {
@@ -330,8 +335,12 @@ export abstract class DysonDevice360JdmBase
     }
 
     // Convert the status to RVC Operational State cluster attributes
-    override mapOperationalState(status: DysonMqttStatus<DysonMqttStatus360>, faults: Dyson360MappedFaults): UpdateRvcOperationalState360 {
-        const state = super.mapOperationalState(status, faults);
+    override mapOperationalState(
+        status:         DysonMqttStatus<DysonMqttStatus360>,
+        mappedState:    Dyson360MappedState,
+        faults:         Dyson360MappedFaults
+    ): UpdateRvcOperationalState360 {
+        const state = super.mapOperationalState(status, mappedState, faults);
 
         // Override the Operational State if the dock is busy
         const DOCK_STATE_MAP: Record<Dyson360DockState, keyof typeof RvcOperationalState.OperationalState | undefined> = {
@@ -349,18 +358,20 @@ export abstract class DysonDevice360JdmBase
     async findFaultOnline(faultCode: string): Promise<string | undefined> {
         // Retrieve the support information for this fault code from the API
         if (!this.api) return; // (mock devices do not support this)
-        const details = await this.api.getFaultDetails360V1(faultCode);
-        if (!details.length) throw new Error('No online product support result');
-        if (!details.some(d => d.codes.includes(faultCode))) {
+        const rawDetails = await this.api.getFaultDetails360V1(faultCode);
+        if (!rawDetails.length) throw new Error('No online product support result');
+        if (!rawDetails.some(d => d.codes.includes(faultCode))) {
             this.log.error('Online product support does not appear to be for the requested fault code');
         }
+        const details = rawDetails.filter(d => d.title.length);
+        if (!details.length) throw new Error('Online product support returned empty fault title');
 
         // Log detailed support information
         this.log.warn(`Online product support for fault ${faultCode}...`);
         for (const entry of details) {
             const codes = `${plural(entry.codes.length, 'fault code', false)} ${formatList(entry.codes)}`;
             let description = `[${entry.severity}] "${entry.title}" (${codes})`;
-            if (entry.nextActionRequired) description += `- ${entry.nextActionRequired}`;
+            if (entry.nextActionRequired) description += ` - ${entry.nextActionRequired}`;
             this.log.warn(`${description}: "${entry.description}"`);
         }
 
