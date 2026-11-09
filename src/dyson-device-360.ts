@@ -69,8 +69,9 @@ ${DYSON360_COMPATIBILITY_COMMON}`;
 const DYSON360_COMPATIBILITY_R2_NUROVI =
 `Support for Dyson R2 Nurovi Wash+Dry (RB07) is incomplete.
 
-Experimental support has been added based on the details provided in issue #50:
+Experimental support has been added based on the details provided in issues #50 and #53:
     https://github.com/thoukydides/matterbridge-dyson-robot/issues/50
+    https://github.com/thoukydides/matterbridge-dyson-robot/issues/53
 
 There is a high likelihood of warnings, errors, or missing functionality.
 

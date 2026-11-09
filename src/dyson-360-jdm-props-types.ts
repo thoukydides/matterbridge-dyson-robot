@@ -14,11 +14,14 @@ import {
     Dyson360JdmResponseCode,
     Dyson360JdmOutOfBoxState,
     Dyson360JdmPrivacy,
-    Dyson360JdmDustAction
+    Dyson360JdmDustAction,
+    Dyson360JdmEmptyBinType,
+    Dyson360Mode
 } from './dyson-360-jdm-types.js';
 
 // Dyson robot vacuum JDM property value types
 export interface Dyson360JdmPropValues {
+    active_climbing_en?:        null;                           // ?
     airdry_frequency?:          number;                         // = airDryFrequency
     alarm?:                     Dyson360JdmBoolean;             // Voice notifications (≠ CURRENT-STATE alarm is for find-my-robot chime)
     auto_water_complete_flag?:  Dyson360JdmBoolean | null;      // Plumbed-in dock?
@@ -30,10 +33,10 @@ export interface Dyson360JdmPropValues {
     child_lock?:                Dyson360JdmBoolean;             // = childLock
     clean_finish?:              number;                         // Time clean completed                         (0 or seconds since epoch)
     clean_id?:                  string;                         // = cleanId
-    clean_wash_attachment?:     null;                           // ?
+    clean_wash_attachment?:     Dyson360JdmBoolean | null;      // ?
     cleaning_area?:             number;                         // Area cleaned                                 dm²
     cleaning_time?:             number;                         // = cleanDuration                              (but minutes, not seconds)
-//    cloth_state?:               unknown;                        // ?
+    continue_clean?:            null;                           // ?
     cur_path?:                  number[];                       // = globalPosition [id, x[0], y[0], angle[0], update[0], ..., timestamp]
     current_map_id?:            number;                         // = persistentMapId                            (number, not string)
     custom_type?:               Dyson360JdmBoolean;             // ?
@@ -42,8 +45,8 @@ export interface Dyson360JdmPropValues {
     dock_hypa?:                 number;                         // = consumables[{ type: 'dockFilter' }]        (% used?, absent = -1)
     dust_action?:               Dyson360JdmDustAction;          // Auto-emptying dustbin on dock
     dust_auto_state?:           Dyson360JdmBoolean;             // = collectDustOnSelfClean
-    empty_bin_time?:            null;                           // ?
-    empty_bin_type?:            null;                           // ?
+    empty_bin_time?:            number | null;                  // ?
+    empty_bin_type?:            Dyson360JdmEmptyBinType | null; // ?
     fault?:                     number;                         // = activeFaults[].faultCode, 0 for none
     global_clean_status?:       number | null;                  // ?
     hot_water_mop?:             Dyson360JdmBoolean;             // = hotWaterMop
@@ -51,7 +54,7 @@ export interface Dyson360JdmPropValues {
     hypa?:                      number;                         // = consumables[{ type: 'robotFilter' }]       (% used?, absent = -1)
     ioniser?:                   number;                         // = consumables[{ type: 'ioniserCartridge' }]  (% used?, absent = -1)
     main_brush?:                number;                         // = consumables[{ type: 'brushBar' }]          (% used?, absent = -1)
-    mode?:                      0 | 1;                          // ?
+    mode?:                      Dyson360Mode;                   // ?
     mop_life?:                  number;                         // = consumables[{ type: 'mopRoller' }]         (% used?, absent = -1)
     mop_pad_life?:              number | null;                  // = consumables[{ type: 'mopPad' }]            (% used?, absent = -1)
     oob_state?:                 Dyson360JdmOutOfBoxState;       // = outOfBoxState
@@ -61,9 +64,6 @@ export interface Dyson360JdmPropValues {
     quiet_begin_time?:          number;                         // = doNotDisturbMode.startTime                 (minutes since midnight)
     quiet_end_time?:            number;                         // = doNotDisturbMode.endTime                   (minutes since midnight)
     quiet_is_open?:             Dyson360JdmBoolean;             // = doNotDisturbMode.isOn
-//    reserved_hypa?:             unknown;                        // ?
-//    reserved_main_brush?:       unknown;                        // ?
-//    reserved_side_brush?:       unknown;                        // ?
     robot_auto_updown_type?:    string | null;                  // Internal model number e.g '804A'
     side_brush?:                number;                         // = consumables[{ type: 'sideBrushes' }]       (% used?, absent = -1)
     station_act?:               Dyson360JdmDockState;           // = dockState
@@ -71,6 +71,7 @@ export interface Dyson360JdmPropValues {
     store_demo_mode?:           Dyson360JdmBoolean | null;      // ?
     sweep_type?:                Dyson360JdmSweepType;           // ?
     taskBeginTs?:               number | null;                  // = taskBeginTime                              (seconds since epoch)
+    under_curtain_clean?:       null;                           // ?
     voice_type?:                Dyson360JdmLanguage;            // = voiceLanguage
     volume?:                    number;                         // = volume                                     0-100%
     wash_back_frequency?:       number;                         // = backWashFrequency
@@ -80,7 +81,8 @@ export interface Dyson360JdmPropValues {
 
 // Dyson robot vacuum JDM property names
 export type Dyson360JdmProp = // keyof Dyson360JdmPropValues
-    'airdry_frequency'
+    'active_climbing_en'
+  | 'airdry_frequency'
   | 'alarm'
   | 'auto_water_complete_flag'
   | 'auto_water_self_check'
@@ -94,7 +96,7 @@ export type Dyson360JdmProp = // keyof Dyson360JdmPropValues
   | 'clean_wash_attachment'
   | 'cleaning_area'
   | 'cleaning_time'
-//  | 'cloth_state'
+  | 'continue_clean'
   | 'cur_path'
   | 'current_map_id'
   | 'custom_type'
@@ -122,9 +124,6 @@ export type Dyson360JdmProp = // keyof Dyson360JdmPropValues
   | 'quiet_begin_time'
   | 'quiet_end_time'
   | 'quiet_is_open'
-//  | 'reserved_hypa'
-//  | 'reserved_main_brush'
-//  | 'reserved_side_brush'
   | 'robot_auto_updown_type'
   | 'side_brush'
   | 'station_act'
@@ -132,6 +131,7 @@ export type Dyson360JdmProp = // keyof Dyson360JdmPropValues
   | 'store_demo_mode'
   | 'sweep_type'
   | 'taskBeginTs'
+  | 'under_curtain_clean'
   | 'voice_type'
   | 'volume'
   | 'wash_back_frequency'

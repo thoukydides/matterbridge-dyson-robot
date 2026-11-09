@@ -128,7 +128,7 @@ export interface Dyson360PersistentMapZonesDefinitionV1 {
     persistentMapName:                  string;             // e.g. 'Downstairs'
     persistentMapOffset:                Dyson360PointRotated;
     persistentMapVersion:               number;             // e.g. 1
-    thresholds:                         Dyson360PersistentMapThreshold[];
+    thresholds?:                        Dyson360PersistentMapThreshold[];
     zoneProperties:                     Dyson360PersistentMapMetadataZoneProperties[],
     zones:                              Dyson360PersistentMapMetadataZoneV1[],
     zonesMap:                           Dyson360PersistentMapBitmap;

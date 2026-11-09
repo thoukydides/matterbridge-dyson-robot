@@ -46,6 +46,11 @@ export enum Dyson360JdmBackWashType {
     AfterClean                      = 2
 }
 
+// Dyson robot vacuum JDM trigger for emptying dust bin
+export enum Dyson360JdmEmptyBinType {
+    Time                            = 2
+}
+
 // Dyson robot vacuum JDM end of clean task status
 export enum Dyson360JdmTaskStatus {
     Finished                        = 1,
@@ -74,21 +79,9 @@ export enum Dyson360JdmPreferMode {
 
 // Dyson robot vacuum JDM language (REST API uses locale code)
 export enum Dyson360JdmLanguage {
-    ChineseSimplified               = 0,    // zh-CN
-    ChineseSimplifiedAlternate      = 1,    // zh-CN / zh-SG
     EnglishAmerican                 = 2,    // en-US
-    Spanish                         = 3,    // es-ES / es-US
-    German                          = 4,    // de-DE
-    French                          = 5,    // fr-FR
-    Polish                          = 6,    // pl-PL
     Italian                         = 7,    // it-IT
-    Russian                         = 8,    // ru-RU
-    ChineseTraditionalHongKong      = 9,    // zh-HK
-    Thai                            = 10,   // th-TH
-    Korean                          = 11,   // ko-KR
-    EnglishBritish                  = 12,   // en-GB
-    Portuguese                      = 13,   // pt-PT / pt-BR
-    ChineseTraditionalTaiwan        = 14,   // zh-TW
+    EnglishBritish                  = 35,   // en-GB
     FrenchCanadian                  = 36    // fr-CA
 }
 
@@ -257,7 +250,7 @@ export interface Dyson360JdmMapListItem {
 // Result of modifying a map
 export interface Dyson360JdmMapChange {
     map_id:         number;
-    map_type:       Dyson360JdmRestrictionBehaviour | 0;
+    map_type:       Dyson360MapType;
     timestamp:      number;                 // Seconds since epoch
     package?:       Dyson360JdmPackage;     // (service.adjust_furniture only)
 }
@@ -296,7 +289,7 @@ export type Dyson360JdmRoomPreference = [
     Dyson360JdmVacuumMode,                  // = vacuumPowerMode
     Dyson360JdmWaterLevel,                  // = waterLevel
     Dyson360JdmMopPasses,                   // = mopPasses-1 (0 = one pass, 1 = two passes)
-    0,                                      // Carpet flag?
+    Dyson360JdmVacuumPasses,                // = dryPasses-1 (0 = one pass, 1 = two passes)
     Dyson360JdmBoolean,                     // = zones[].isSelected
     0,                                      // ?
     number,                                 // = zones[].order
@@ -310,7 +303,7 @@ export type Dyson360JdmRoomPreferenceSet = [
     Dyson360JdmVacuumMode,                  // = vacuumPowerMode
     Dyson360JdmWaterLevel,                  // = waterLevel
     Dyson360JdmMopPasses,                   // = mopPasses-1 (0 = one pass, 1 = two passes)
-    0,                                      // Carpet flag?
+    Dyson360JdmVacuumPasses,                // = dryPasses-1 (0 = one pass, 1 = two passes)
     Dyson360JdmBoolean,                     // = zones[].isSelected
     0,                                      // ?
     number                                  // = zones[].order
@@ -334,6 +327,19 @@ export type Dyson360JdmRestriction = [
     number, number,                         // (x[2], y[2])
     number, number                          // (x[3], y[3])
 ];
+
+// Dyson robot vacuum JDM map type
+export enum Dyson360MapType {
+    Unknown0                            = 0,
+    Unknown3                            = 3
+}
+
+// Dyson robot vacuum JDM mode
+export enum Dyson360Mode {
+    Unknown0                            = 0,
+    Unknown1                            = 1,
+    Unknown2                            = 2
+}
 
 // Dyson robot vacuum JDM furniture
 export enum Dyson360JdmFurnitureType {

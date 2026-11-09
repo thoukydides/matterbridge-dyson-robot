@@ -1,6 +1,7 @@
 // Matterbridge plugin for Dyson robot vacuum and air treatment devices
 // Copyright © 2025-2026 Alexander Thoukydides
 
+import { Dyson360JdmBoolean } from './dyson-360-jdm-types.js';
 import {
     Dyson360ActiveFault,
     Dyson360BackWashType,
@@ -27,7 +28,8 @@ import {
     Dyson360CleaningProgrammeZones,
     Dyson360CleaningProgrammeGlobal,
     Dyson360VoiceDownloadStatus,
-    Dyson360RobotGlobalPosition
+    Dyson360RobotGlobalPosition,
+    Dyson360EmptyBinType
 } from './dyson-360-types.js';
 import { DysonMsgCommand, DysonMsg } from './dyson-types.js';
 
@@ -110,6 +112,7 @@ export interface Dyson360MsgCurrentStateState extends DysonMsg {
     channel?:                           string; // Wi-Fi channel number
     childLock?:                         boolean;
     cleanDuration?:                     number; // seconds
+    cleanWashAttachment?:               Dyson360JdmBoolean;
     cleanId?:                           string; // UUID
     cleaningProgramme?:                 Dyson360CleaningProgramme;
     cleaningState?:                     Dyson360CleaningState;
@@ -126,6 +129,8 @@ export interface Dyson360MsgCurrentStateState extends DysonMsg {
     dockCommissioningSupported?:        boolean;
     dockState?:                         Dyson360DockState;
     doNotDisturbMode?:                  Dyson360DoNotDisturbMode;
+    emptyBinTime?:                      number;
+    emptyBinType?:                      Dyson360EmptyBinType;
     faults?:                            Dyson360Faults;
     fullCleanAction?:                   Dyson360FullCleanAction;
     fullCleanType?:                     Dyson360CleaningType;

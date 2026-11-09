@@ -202,7 +202,8 @@ export type Dyson360CleaningProgramme =
 export enum Dyson360CleanType {
     Vacuum                              = 'vacuum',
     Mop                                 = 'mop',
-    VacuumAndMop                        = 'vacuumAndMop'
+    VacuumAndMop                        = 'vacuumAndMop',
+    VacuumThenMop                       = 'vacuumThenMop'
 }
 
 // Dyson robot vacuum zone status (360 Heurist and later)
@@ -422,6 +423,11 @@ export enum Dyson360BackWashType {
     AfterClean                          = 'AFTER_CLEAN',
     Room                                = 'ROOM',
     Time                                = 'TIME'
+}
+
+// Dyson robot vacuum trigger for emptying dust bin (Spot+Scrub Ai only)
+export enum Dyson360EmptyBinType {
+    Time                                = 'time'
 }
 
 // Dyson robot vacuum dock state (Spot+Scrub Ai only)
