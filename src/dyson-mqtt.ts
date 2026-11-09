@@ -169,7 +169,10 @@ export abstract class DysonMqtt<T extends ICheckerSuite, S, E extends unknown[] 
         if (reachable) {
             // Cancel any pending down timer for this reason
             const handle = this.downTimerHandle.get(key);
-            clearTimeout(handle);
+            if (handle) {
+                this.log.debug(`Cancelling down timer for '${key}'`);
+                clearTimeout(handle);
+            }
             this.downTimerHandle.delete(key);
 
             // Mark the device as reachable if there are no active down timers
@@ -252,9 +255,11 @@ export abstract class DysonMqtt<T extends ICheckerSuite, S, E extends unknown[] 
         // Dispatch the validated message and indicate a status update
         this.logPayload('receive', topic, msg, filter);
         if (!filter) {
-            this.updateReachable('msg', !UNREACHABLE_MESSAGES.includes(msg.msg));
+            if (topicStatus === 'subscribed') {
+                this.updateReachable('msg', !UNREACHABLE_MESSAGES.includes(msg.msg));
+                this.emit('status');
+            }
             this.emit('message', msg);
-            if (topicStatus === 'subscribed') this.emit('status');
         }
     }
 

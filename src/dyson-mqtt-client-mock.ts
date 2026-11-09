@@ -139,6 +139,10 @@ export class DysonMqttClientMock extends DysonMqttClient {
                 const isCommand = 'time' in json || 'version' in json;
                 if (isCommand)  return `${topicBase}/command/jdm`;
                 else            return `${topicBase}/status/jdm`;
+            } else if ('mapId' in json) {
+                // JDM format map status message
+                return `${topicBase}/status/jdm/map`;
+
             }
         } catch { /* empty */ }
 

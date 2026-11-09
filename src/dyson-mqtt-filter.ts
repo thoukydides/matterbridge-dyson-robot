@@ -20,14 +20,9 @@ export class DysonMqttFilter {
     // Filter a received message
     filter(msg: DysonMsg): DysonMqttFiltered | undefined {
         const lastMsg = this.lastMsg.get(msg.msg);
-        if (lastMsg) {
-            if (msg.time && lastMsg.time && msg.time < lastMsg.time) {
-                return 'reordered';
-            }
-            if ((msg.time || lastMsg.time) && isDeepStrictEqual(msg, lastMsg)) {
-                // (don't filter messages without timestamps)
-                return 'duplicate';
-            }
+        if (msg.time && lastMsg?.time) { // (only filter messages with timestamps)
+            if (msg.time < lastMsg.time)            return 'reordered';
+            if (isDeepStrictEqual(msg, lastMsg))    return 'duplicate';
         }
         this.lastMsg.set(msg.msg, structuredClone(msg));
     }
