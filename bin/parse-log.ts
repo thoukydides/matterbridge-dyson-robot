@@ -13,7 +13,7 @@ const ANSI_ESCAPE_REGEXP            = /\x1B(?:\[[0-9;]*[msuK])?/g;
 const OTHER_CTRL_REGEXP             = /\x1B/g;
 
 // Match log file entries
-const LOG_REGEXP                    = /^\[\d\d:\d\d:\d\d.\d\d\d\] \[([^\]]+)\] (.*)$/gm;
+const LOG_REGEXP                    = /^\[\d\d:\d\d:\d\d.\d\d\d\] \[([^\]]+)\](?: \[\w+\])? (.*)$/gm;
 const LOG_MQTT_RX_REGEXP            = /^MQTT receive: (\{.*\}) topic '([^']*)'$/;
 const LOG_MQTT_TI_TOPIC_REGEXP      = /^MQTT topic '([^']*)':$/;
 const LOG_MQTT_TI_VALIDATION_REGEXP = /^\s*[└├│][└├│─ ]+(.*)$/;
