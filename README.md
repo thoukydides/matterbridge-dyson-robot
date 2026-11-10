@@ -296,11 +296,11 @@ Each robot vacuum appears as a standalone Matter device with a single endpoint. 
 
 - **RVC Clean Mode** cluster:
   - Overall cleaning mode:
-    | Mode            | 360 Eye / 360 Heurist / 360 Vis Nav / R1 Nurovi | Spot+Scrub Ai / R2/R3 Nurovi |
-    | --------------- | :---------------------------------------------: | :--------------------------: |
-    | `Vacuum`        | Vacuum-only                                     | Vacuum-only                  |
-    | `Mop`           |                                                 | Wash-only                    |
-    | `VacuumThenMop` |                                                 | Vacuum and Wash              |
+    | Mode               | 360 Eye / 360 Heurist / 360 Vis Nav / R1 Nurovi | Spot+Scrub Ai / R2/R3 Nurovi |
+    | ------------------ | :---------------------------------------------: | :--------------------------: |
+    | `Vacuum`           | Vacuum-only                                     | Vacuum-only                  |
+    | `Mop`              |                                                 | Wash-only                    |
+    | `Vacuum` and `Mop` |                                                 | Vacuum and/then Wash         |
   - Vacuum power level:
     | Mode    | 360 Eye | 360 Heurist | 360 Vis Nav / Spot+Scrub Ai / R1/R2/R3 Nurovi |
     | ------- | :-----: | :---------: | :-------------------------------------------: |
