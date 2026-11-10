@@ -211,16 +211,13 @@ export class DysonDevice360VisNav
         let currentZone: Dyson360CurrentZone | undefined;
         if (state.startsWith('FULL_CLEAN_')) {
             assertIsDefined(cleaningMode);
+            const { persistentMapId: mapId, zonesDefinitionVersion: mapVersion, zoneId } = status;
             if (cleaningMode === Dyson360CleaningMode.Global) {
-                // No map or zone for global cleans
+                // No zone status for global cleans
                 cleaningStatus = { cleaningMode };
             } else if (zoneStatus) {
                 // Live zone status available (but persistent map might not)
-                const { persistentMapId: mapId, zonesDefinitionVersion: mapVersion, zoneId } = status;
-                if (mapId) {
-                    cleaningStatus = { cleaningMode, mapId, mapVersion, zoneStatus };
-                    if (zoneId) currentZone = { mapId, mapVersion, zoneId };
-                }
+                if (mapId) cleaningStatus = { cleaningMode, mapId, mapVersion, zoneStatus };
             } else if (cleaningProgramme && 'orderedZones' in cleaningProgramme) {
                 // No live zone status, so synthesise from cleaning programme
                 const zones = new Set([
@@ -233,7 +230,11 @@ export class DysonDevice360VisNav
                     mapVersion: cleaningProgramme.zonesDefinitionLastUpdatedDate ?? undefined,
                     zoneStatus: [...zones].map(zoneId => ({ zoneId, cleanStatus: Dyson360ZoneCleanStatus.Pending }))
                 };
+                this.log.debug(`ZONE STATUS FROM PROGRAM: ${JSON.stringify(cleaningStatus)}`);
             }
+
+            // The robot's current zone might be known regardless of clean type
+            if (mapId && zoneId) currentZone = { mapId, mapVersion, zoneId };
         }
         await this.updateZoneStatus(cleaningStatus, currentZone);
     }
