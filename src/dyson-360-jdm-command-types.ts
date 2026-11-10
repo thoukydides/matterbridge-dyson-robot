@@ -26,7 +26,8 @@ import {
     Dyson360JdmRoomPreferenceSet,
     Dyson360JdmPreferMode,
     Dyson360JdmConsumable,
-    Dyson360JdmMsg
+    Dyson360JdmMsg,
+    Dyson360JdmRoomPreference
 } from './dyson-360-jdm-types.js';
 
 // =============================================================================
@@ -73,7 +74,7 @@ export interface Dyson360JdmCommandServiceAddOrder extends Dyson360JdmCommandBas
         prefer_type:        Dyson360JdmPreferMode;
         repeat:             Dyson360JdmBoolean.True;
         room_count:         number;                         // Total zones in map, not schedule
-        room_preference:    Dyson360JdmRoomPreferenceSet[];
+        room_preference:    Dyson360JdmRoomPreference[];    // (not Dyson360JdmRoomPreferenceSet)
         time_zone:          number;                         // Offset in seconds, e.g. 3600 = BST = UTC+1
         uv_switch:          Dyson360JdmUvSwitch[];          // Observed as 0 for zones being mop
     }
@@ -247,6 +248,16 @@ export interface Dyson360JdmCommandServiceSetPreferenceType extends Dyson360JdmC
     params: {
         prefer_type:        Dyson360JdmPreferMode;
     };
+}
+
+// Change quiet hours
+export interface Dyson360JdmCommandServiceSetQuietTime extends Dyson360JdmCommandBase {
+    method:                 'service.set_quiet_time';
+    params: {
+        is_open:            Dyson360JdmBoolean;
+        quiet_begin_time:   number;                         // = doNotDisturbMode.startTime (minutes since midnight)
+        quiet_end_time:     number;                         // = doNotDisturbMode.endTime   (minutes since midnight)
+    }
 }
 
 // Set timezone (for schedules)

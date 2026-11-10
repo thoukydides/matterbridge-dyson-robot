@@ -143,6 +143,7 @@ export interface Dyson360JdmStatusServiceNoData extends Dyson360JdmStatusBase {
                           | 'service.set_cur_map'                   // Active map changed (duplicates data.result key)
                           | 'service.set_preference'                // Per-zone cleaning configuration changed
                           | 'service.set_preference_type'           // Per-zone cleaning configuration type changed
+                          | 'service.set_quiet_time'                // Quiet hours changed
                           | 'service.set_robot_time_zone'           // Timezone set (for schedules)
                           | 'service.set_room_clean'                // Cleaning started or paused
                           | 'service.start_explore'                 // Mapping started

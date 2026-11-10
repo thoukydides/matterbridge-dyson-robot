@@ -71,6 +71,13 @@ export enum Dyson360JdmDustAction {
     CollectDust2                    = 2
 }
 
+// Dyson robot vacuum JDM clean wash attachment
+export enum Dyson360JdmCleanWashAttachment {
+    Unknown0                        = 0,
+    Unknown1                        = 1,
+    Unknown2                        = 2,
+}
+
 // Dyson robot vacuum JDM whole floor or per-zone preferences active
 export enum Dyson360JdmPreferMode {
     Standard                        = 0,    // Standard whole-floor clean
@@ -251,7 +258,8 @@ export interface Dyson360JdmMapListItem {
 export interface Dyson360JdmMapChange {
     map_id:         number;
     map_type:       Dyson360MapType;
-    timestamp:      number;                 // Seconds since epoch
+    timestamp?:     number;                 // Seconds since epoch
+    'timestamp '?:  number;                 // Typo of 'timestamp'!
     package?:       Dyson360JdmPackage;     // (service.adjust_furniture only)
 }
 

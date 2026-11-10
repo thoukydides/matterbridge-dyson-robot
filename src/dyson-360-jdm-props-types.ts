@@ -16,7 +16,9 @@ import {
     Dyson360JdmPrivacy,
     Dyson360JdmDustAction,
     Dyson360JdmEmptyBinType,
-    Dyson360Mode
+    Dyson360Mode,
+    Dyson360JdmCleanWashAttachment,
+    Dyson360JdmWaterLevel
 } from './dyson-360-jdm-types.js';
 
 // Dyson robot vacuum JDM property value types
@@ -33,7 +35,7 @@ export interface Dyson360JdmPropValues {
     child_lock?:                Dyson360JdmBoolean;             // = childLock
     clean_finish?:              number;                         // Time clean completed                         (0 or seconds since epoch)
     clean_id?:                  string;                         // = cleanId
-    clean_wash_attachment?:     Dyson360JdmBoolean | null;      // ?
+    clean_wash_attachment?:     Dyson360JdmCleanWashAttachment | null; // ?
     cleaning_area?:             number;                         // Area cleaned                                 dm²
     cleaning_time?:             number;                         // = cleanDuration                              (but minutes, not seconds)
     continue_clean?:            null;                           // ?
@@ -75,6 +77,7 @@ export interface Dyson360JdmPropValues {
     voice_type?:                Dyson360JdmLanguage;            // = voiceLanguage
     volume?:                    number;                         // = volume                                     0-100%
     wash_back_frequency?:       number;                         // = backWashFrequency
+    water?:                     Dyson360JdmWaterLevel;          // = waterLevel
     work_mode?:                 Dyson360JdmWorkMode;            // ≈ state (but very finely grained)
     work_time?:                 Dyson360JdmWorkTime;            // Countdown of dock actions
 }
@@ -135,6 +138,7 @@ export type Dyson360JdmProp = // keyof Dyson360JdmPropValues
   | 'voice_type'
   | 'volume'
   | 'wash_back_frequency'
+  | 'water'
   | 'work_mode'
   | 'work_time';
 
