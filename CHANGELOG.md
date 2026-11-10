@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+## [v1.14.2] - 2026-11-10
+### Changed
+* Restored setting 360 Vis Nav current area during global cleans.
+
 ## [v1.14.1] - 2026-11-09
 ### Added
 * Accept additional API request and MQTT message formats for R2 Nurovi. (#53)
@@ -520,7 +524,8 @@ All notable changes to this project will be documented in this file.
 
 Copyright © 2025-2026 Alexander Thoukydides
 
-[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.14.1...HEAD
+[Unreleased]:       https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.14.2...HEAD
+[v1.14.2]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.14.1...v1.14.2
 [v1.14.1]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.14.0...v1.14.1
 [v1.14.0]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.13.4...v1.14.0
 [v1.13.4]:          https://github.com/thoukydides/matterbridge-dyson-robot/compare/v1.13.3...v1.13.4
